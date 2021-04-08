@@ -1,0 +1,24 @@
+.title-collapse {
+    background-color: #17A2B8;
+}
+
+.title-collapse h5 button {
+    color: #FFFFFF;
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.title-collapse h5 button:hover {
+    color: #343A40;
+}
+
+.count-news {
+    color: #FFFFFF;
+    float: right;
+    margin-top: -35px;
+}
+
+.text-th {
+    color: #FFFFFF;
+}
