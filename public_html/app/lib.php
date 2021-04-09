@@ -51,10 +51,57 @@ EOF;
 /**
  * Notification error
  */
-function sytemError(){
+function systemError(){
     closeDB();
     //Print error
     systemErrorPrint();
     exit();
+}
+
+/**
+ * Eliminate full-width and half-width spaces
+ * @param $str
+ * @return string
+ */
+function trimBlank($str){
+    $stringValue = $str;
+    $stringValue=trim($stringValue);
+    
+    return $stringValue;
+}
+
+/**
+ * Get param
+ * @return array
+ */
+function getParam(){
+    $param = array();
+    if($_SERVER["REQUEST_METHOD"] == "POST"){
+        $a = $_POST;
+    }else{
+        $a = $_GET;
+    }
+    foreach($a as $k => $v) {
+        if (is_array($v)) {
+            foreach($v as $k2 => $v2) {
+                if(get_magic_quotes_gpc()) {
+                    $v2 = stripslashes($v2);
+                }
+                $v2 = htmlspecialchars($v2,ENT_QUOTES);
+                $v2 = trimBlank($v2);
+                $param[$k][$k2] = $v2;
+            }
+        }else{
+            if(get_magic_quotes_gpc()) {
+                $v = stripslashes($v);
+            }
+            $v = htmlspecialchars($v,ENT_QUOTES);
+            //        $v = mb_convert_encoding($v, 'UTF-8', 'sjis-win');
+            //        $v = mb_convert_encoding($v, 'UTF-8');
+            $v = trimBlank($v);
+            $param[$k] = $v;
+        }
+    }
+    return $param;
 }
 ?>

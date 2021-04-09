@@ -17,4 +17,7 @@ $TEMP_APP_PRELOADER_PATH = './templates/preloader.tpl';
 
 //Menu
 $TEMP_APP_MENU_PATH = './templates/menu.tpl';
+
+//Menu system admin
+$TEMP_APP_MENUSYSTEM_PATH = './templates/menu-system.tpl';
 ?>

@@ -9,8 +9,18 @@ $func_id = 'dashboard';
 
 session_start();
 
+//Get param
+$param = getParam();
+
+$role = $_SESSION['role'] ?? '';
+
 //Connect DB
 $con = openDB();
+
+if (!isset($_SESSION['loginId'])){
+    header('location: login.php');
+    exit();
+}
 
 //-----------------------------------------------------------
 // HTML
@@ -41,7 +51,11 @@ include ($TEMP_APP_PRELOADER_PATH);
 include ($TEMP_APP_HEADER_PATH);
 
 //Menu
-include ($TEMP_APP_MENU_PATH);
+if ($role == '1'){
+    include ($TEMP_APP_MENUSYSTEM_PATH);
+} else {
+    include ($TEMP_APP_MENU_PATH);
+}
 
 //Conntent
 echo <<<EOF

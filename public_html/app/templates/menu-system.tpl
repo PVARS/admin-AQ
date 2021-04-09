@@ -87,6 +87,29 @@ print <<<EOF
                     </li>
                 </ul>
             </li>
+            <li class="nav-item">
+                <a href="javascript:void(0)" class="nav-link">
+                    <i class="nav-icon fas fa-user"></i>
+                    <p>
+                        Quản lí tài khoản
+                        <i class="fas fa-angle-left right"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="detail-user.php" class="nav-link">
+                            <i class="fas fa-user-plus nav-icon"></i>
+                            <p>Tạo tài khoản</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="list-users.php" class="nav-link">
+                            <i class="fas fa-list-ul nav-icon"></i>
+                            <p>Danh sách tài khoản</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
         </ul>
         <form action="logout.php" method="POST">
             <a href="javascript:void(0)" style="position: absolute; bottom: 0; margin-bottom: 20px">
