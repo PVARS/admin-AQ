@@ -12,6 +12,12 @@ session_start();
 //Connect DB
 $con = openDB();
 
+if (!isset($_SESSION['loginId']) || !strlen($_SESSION['loginId'])){
+    systemErrorPrint();
+    exit();
+} else {
+    session_unset();
+}
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------

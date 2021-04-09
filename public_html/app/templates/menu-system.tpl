@@ -111,12 +111,10 @@ print <<<EOF
                 </ul>
             </li>
         </ul>
-        <form action="logout.php" method="POST">
-            <a href="javascript:void(0)" style="position: absolute; bottom: 0; margin-bottom: 20px">
-                <i class="fas fa-sign-out-alt nav-icon" style="font-size: 20px"></i>&nbsp
-                Đăng xuất
-            </a>
-        </form>
+        <a href="logout.php" style="position: absolute; bottom: 0; margin-bottom: 20px">
+            <i class="fas fa-sign-out-alt nav-icon" style="font-size: 20px"></i>&nbsp
+            Đăng xuất
+        </a>
     </nav>
     <!-- /.sidebar-menu -->
 </div>
