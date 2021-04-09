@@ -3,8 +3,8 @@ $dsn = array(
     'host'     => 'localhost',
     'port'     => '5432',
     'user'     => 'postgres',
-    'dbname'   => 'arsequan',
-    'password' => '123456'
+    'dbname'   => 'demo',
+    'password' => 'levanluu123'
 );
 ?>
 

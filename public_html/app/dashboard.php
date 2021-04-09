@@ -57,7 +57,6 @@ if ($role == '1'){
     include ($TEMP_APP_MENU_PATH);
 }
 
-//Conntent
 echo <<<EOF
 <div class="content-wrapper">
             <!-- Content Header (Page header) -->
