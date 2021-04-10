@@ -9,6 +9,8 @@ $func_id = 'dashboard';
 
 session_start();
 
+// current datetime
+$current_day = timezone();
 //Get param
 $param = getParam();
 
@@ -20,6 +22,49 @@ $con = openDB();
 if (!isset($_SESSION['loginId'])){
     header('location: login.php');
     exit();
+}
+// total article count
+$sql = "";
+$sql .= "SELECT COUNT(id)      ";
+$sql .= " AS count_news        ";
+$sql .= "FROM news             ";
+$query = pg_query($con, $sql);
+if(!$query){
+    echo pg_last_error($con);
+    exit();
+}
+while ($number_news = pg_fetch_row($query)){
+    $count_news = $number_news[0];
+}
+
+//total post of new day
+$sql = "";
+$sql .= "SELECT COUNT(id)                           ";
+$sql .= " AS post_new_day                           ";
+$sql .= " FROM news                                 ";
+$sql .= " WHERE createdate = '".$current_day."'       ";
+
+$res = pg_query($con, $sql);
+if(!$res){
+    echo pg_last_error($con);
+    exit();
+}
+while ($number_day = pg_fetch_row($res)){
+    $count_news_day = $number_day[0];
+}
+
+// number of accounts
+$sql = "";
+$sql .= "SELECT COUNT(id)      ";
+$sql .= " AS count_users        ";
+$sql .= "FROM users             ";
+$resu = pg_query($con, $sql);
+if(!$query){
+    echo pg_last_error($con);
+    exit();
+}
+while ($number_users = pg_fetch_row($resu)){
+    $count_users = $number_users[0];
 }
 
 //-----------------------------------------------------------
@@ -90,7 +135,7 @@ echo <<<EOF
                             <!-- small box -->
                             <div class="small-box bg-info">
                                 <div class="inner">
-                                    <h3>150</h3>
+                                    <h3>$count_news</h3>
 
                                     <p>Tổng bài viết</p>
                                 </div>
@@ -105,7 +150,7 @@ echo <<<EOF
                             <!-- small box -->
                             <div class="small-box bg-success">
                                 <div class="inner">
-                                    <h3>53</h3>
+                                    <h3>$count_news_day</h3>
 
                                     <p>Bài đăng trong ngày</p>
                                 </div>
@@ -120,7 +165,7 @@ echo <<<EOF
                             <!-- small box -->
                             <div class="small-box bg-warning">
                                 <div class="inner">
-                                    <h3>44</h3>
+                                    <h3>$count_users</h3>
 
                                     <p>Số lượng tài khoản</p>
                                 </div>
