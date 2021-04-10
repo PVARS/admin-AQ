@@ -16,7 +16,6 @@ $maxPassword = 16;
 $cookie_name = 'siteAuth';
 $cookie_time = (3600 * 24 ); // 1 day
 
-
 session_start();
 
 //Connect DB
@@ -31,7 +30,6 @@ $check_rm = $param['remember'] ?? '';
 
 if(isset($cookie_name)){
     if(isset($_COOKIE[$cookie_name])){
-        $_SESSION['loginId'] = getUsernameInCookie($cookie_name);
         header('location: dashboard.php');
         exit();
     }

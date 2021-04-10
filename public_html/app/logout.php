@@ -16,6 +16,7 @@ if (!isset($_SESSION['loginId']) || !strlen($_SESSION['loginId'])){
     systemErrorPrint();
     exit();
 } else {
+    
     // Unset Cookie
     $cookie_name = 'siteAuth';
     if(isset($cookie_name)){
