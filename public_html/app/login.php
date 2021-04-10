@@ -12,6 +12,11 @@ $maxLoginId = 254;
 $minStr = 6;
 $maxPassword = 16;
 
+// Set Variable Cookie
+$cookie_name = 'siteAuth';
+$cookie_time = (3600 * 24 ); // 1 day
+
+
 session_start();
 
 //Connect DB
@@ -22,6 +27,14 @@ $param = getParam();
 
 $loginId  = $param['loginId'] ?? '';
 $password = $param['password'] ?? '';
+$check_rm = $param['remember'] ?? '';
+
+if(isset($cookie_name)){
+    if(isset($_COOKIE[$cookie_name])){
+        header('location: dashboard.php');
+        exit();
+    }
+}
 
 $checkLogin = checkLoginId($con, $param, $func_id, $loginId, $password);
 $validate = validateData($param, $loginId, $password, $minStr, $maxLoginId, $maxPassword, $checkLogin);
@@ -109,7 +122,7 @@ echo <<<EOF
                     <div class="row">
                         <div class="col-7">
                             <div class="icheck-primary">
-                                <input type="checkbox" id="remember">
+                                <input type="checkbox" id="remember" name="remember">
                                 <label for="remember">Lưu đăng nhập</label>
                             </div>
                         </div>
@@ -169,10 +182,15 @@ function checkLoginId($con, $param, $func_id, $loginId, $password){
         $_SESSION['loginId'] = $userInf['loginid'];
         $_SESSION['role'] = $userInf['role'];
     }
+    
     return $userInf;
 }
 
 function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $maxPassword, $checkLogin){
+    
+    // Call local variable
+    global $cookie_name, $cookie_time, $check_rm;
+
     $mes = [
         'chk_required'   => [],
         'chk_format'     => [],
@@ -203,6 +221,12 @@ function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $ma
     
     if (empty($msg)){
         if (!empty($checkLogin)){
+
+            // SET COOKIE
+            if ($check_rm == 'on') {
+                setcookie ($cookie_name, 'usr='.$loginId.'&hash=vehhd6vejs8au', time() + $cookie_time);
+            }
+
             header('location: dashboard.php');
             exit();
         } else {
@@ -213,4 +237,3 @@ function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $ma
     return $msg;
 }
 ?>
-
