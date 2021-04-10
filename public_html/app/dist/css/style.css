@@ -22,3 +22,7 @@
 .text-th {
     color: #FFFFFF;
 }
+
+.swal2-styled.swal2-confirm{
+    background-color: #17a2b8 !important;
+}

@@ -10,7 +10,7 @@ $func_id = 'dashboard';
 session_start();
 
 // current datetime
-$current_day = timezone();
+$current_day = getDateVn();
 //Get param
 $param = getParam();
 

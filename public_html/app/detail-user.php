@@ -70,8 +70,8 @@ echo <<<EOF
                         <!-- /.col -->
                         <div class="col-sm-6">
                             <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
-                                <li class="breadcrumb-item active">Danh sách tài khoản</li>
+                                <li class="breadcrumb-item"><a href="dashboard.php">Trang chủ</a></li>
+                                <li class="breadcrumb-item active">Tạo tài khoản</li>
                             </ol>
                         </div>
                         <!-- /.col -->

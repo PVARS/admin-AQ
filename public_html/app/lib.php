@@ -7,7 +7,6 @@ function openDB(){
     global $DB_CONNECT_PATH;
 
     require (dirname(__FILE__) . $DB_CONNECT_PATH);
- 
     $host = 'host = '.$dsn['host'].' port = '.$dsn['port'].' user = '.$dsn['user'].' dbname = '.$dsn['dbname'].' password = '.$dsn['password'];
     $con = @pg_connect($host);
     
@@ -105,10 +104,24 @@ function getParam(){
     }
     return $param;
 }
-// current date
-    function timezone(){
-       date_default_timezone_set("Asia/Ho_Chi_Minh");
-       $date = date("d-m-yy h:i:sa");
-       return $date;
-    }
+
+/**
+ * Get date time current
+ * @return false|string
+ */
+function getDateTime(){
+    date_default_timezone_set("Asia/Ho_Chi_Minh");
+    $dateTime = date("d-m-yy h:i:sa");
+    return $dateTime;
+}
+
+/**
+ * Get date
+ * @return false|string
+ */
+function getDateVn(){
+    date_default_timezone_set("Asia/Ho_Chi_Minh");
+    $date = date("yy-m-d");
+    return $date;
+}
 ?>
