@@ -20,7 +20,9 @@ if (!isset($_SESSION['loginId']) || !strlen($_SESSION['loginId'])){
     $cookie_name = 'siteAuth';
     if(isset($cookie_name)){
         if(isset($_COOKIE[$cookie_name])){
-            setcookie ($cookie_name, '', time() - 3600);
+            unset($_COOKIE[$cookie_name]); 
+            setcookie ($cookie_name, '', time() - 3600, '/');
+            $_SESSION['loginId'] = '';
         }
     }
 

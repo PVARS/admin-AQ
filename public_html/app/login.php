@@ -31,6 +31,7 @@ $check_rm = $param['remember'] ?? '';
 
 if(isset($cookie_name)){
     if(isset($_COOKIE[$cookie_name])){
+        $_SESSION['loginId'] = getUsernameInCookie($cookie_name);
         header('location: dashboard.php');
         exit();
     }
@@ -138,7 +139,7 @@ echo <<<EOF
                         <!-- /.col -->
                         <div class="col-5">
                             <input type="hidden" name="registFlg" value="1">
-                            <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+                            <button type="submit" name="login" class="btn btn-primary btn-block">Đăng nhập</button>
                         </div>
                         <!-- /.col -->
                     </div>
@@ -248,8 +249,9 @@ function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $ma
         if (!empty($checkLogin)){
 
             // SET COOKIE
-            if ($check_rm == 'on') {
-                setcookie ($cookie_name, 'usr='.$loginId.'&hash=vehhd6vejs8au', time() + $cookie_time);
+            if (!empty($check_rm)) {
+                $_SESSION['username']=$loginId;
+                setcookie ($cookie_name, 'usr='.$loginId.'&hash=vehhd6vejs8au,', time() + $cookie_time, '/');
             }
 
             header('location: dashboard.php');
@@ -260,5 +262,19 @@ function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $ma
     }
     
     return $msg;
+}
+/**
+ * Get Username in Cookie
+ * @param $str
+ * @param $cookie_name
+ * @return string
+ */
+function getUsernameInCookie($cookie_name){
+    $str = '';
+    if(isset($cookie_name)){
+        $str = explode('usr=', $_COOKIE[$cookie_name]);
+        $str = explode('&', $str[1]);
+    }
+    return $str[0];
 }
 ?>
