@@ -9,6 +9,7 @@ $func_id = 'list_student';
 $maxStr = 200;
 $message = '';
 $messageClass = '';
+$unBan = 0; //0: un ban; 1: ban
 
 session_start();
 
@@ -24,6 +25,8 @@ $fullName = $param['fullname'] ?? '';
 $loginId = $param['loginId'] ?? '';
 $dateForm = $param['dateForm'] ?? '';
 $dateTo = $param['dateTo'] ?? '';
+$uid = $param['uid'] ?? '';
+$mode = $param['mode'] ?? '';
 
 //Set data to combox role
 $htmlRole = '';
@@ -31,10 +34,15 @@ $htmlRole = getAllRole($con, $func_id, $roleParam);
 
 //Get data user
 $htmlUser = '';
-$htmlUser = getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam);
+$htmlUser = getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode);
 
 if (!isset($_SESSION['loginId'])) {
     header('location: login.php');
+    exit();
+}
+
+if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
+    header('location: error404.php');
     exit();
 }
 
@@ -52,8 +60,15 @@ if ($param) {
         }
         
         if (empty($mes)){
-            getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam);
+            getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode);
         }
+    }
+    if ($mode == 'ban'){
+        banUser($con, $func_id, $uid);
+    }
+    
+    if ($mode == 'unban'){
+        unBanUser($con, $func_id, $uid);
     }
 }
 
@@ -97,6 +112,42 @@ $scriptHTML = <<< EOF
             sweetConfirm(1, message, function(result) {
                 if (result){
                     window.location.href = that.href;
+                }
+            });
+        });
+        
+        //Button Ban
+        $('.ban_user').on('click', function(e) {
+            e.preventDefault();
+            var message = "Tài khoản này sẽ bị khoá. Bạn có chắc chắn?";
+            var form = $(this).closest("form");
+            sweetConfirm(2, message, function(result) {
+                if (result){
+                    form.submit();
+                }
+            });
+        });
+        
+        //Button un ban
+        $('.un_ban_user').on('click', function(e) {
+            e.preventDefault();
+            var message = "Tài khoản này sẽ được khôi phục. Bạn có chắc chắn?";
+            var form = $(this).closest("form");
+            sweetConfirm(4, message, function(result) {
+                if (result){
+                    form.submit();
+                }
+            });
+        });
+        
+        //Button edit
+        $('.edit_user').on('click', function(e) {
+            e.preventDefault();
+            var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
+            var form = $(this).closest("form");
+            sweetConfirm(3, message, function(result) {
+                if (result){
+                    form.submit();
                 }
             });
         });
@@ -229,7 +280,7 @@ echo <<<EOF
                             <table class="table table-hover text-nowrap table-bordered" style="background-color: #FFFFFF;">
                                 <thead style="background-color: #17A2B8;">
                                     <tr>
-                                        <th style="width: 5%;" class="text-th">STT</th>
+                                        <th style="text-align: center; width: 5%;" class="text-th">STT</th>
                                         <th style="width: 35%;" class="text-th">Họ tên</th>
                                         <th style="width: 20%;" class="text-th">Tên đăng nhập</th>
                                         <th style="text-align: center; width: 20%;" class="text-th">Vai trò</th>
@@ -327,7 +378,18 @@ function validateDataSearch($fullName, $loginId, $dateForm, $dateTo, $maxStr)
     return $mes;
 }
 
-function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam){
+/**
+ * Search function
+ * @param $con
+ * @param $func_id
+ * @param $fullName
+ * @param $loginId
+ * @param $dateForm
+ * @param $dateTo
+ * @param $roleParam
+ * @return string
+ */
+function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode){
     $pg_param = array();
     $pg_sql = array();
     $recCnt = 0;
@@ -370,6 +432,7 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
     $sql .= "     , users.fullname            ";
     $sql .= "     , users.loginid             ";
     $sql .= "     , users.status              ";
+    $sql .= "     , users.role                ";
     $sql .= "     , role.rolename             ";
     $sql .= "  FROM users                     ";
     $sql .= "  INNER JOIN role                ";
@@ -378,7 +441,6 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
     $sql .= $wheresql;
     $sql .= " ORDER BY role ASC               ";
     
-    $query = '';
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
@@ -391,9 +453,49 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
         while ($row = pg_fetch_assoc($query)){
             if ($row['status'] == 't'){
                 $strStatus = "Đang hoạt động";
+                $iconBg = "btn-danger";
+                $iconStatus = "fa-ban";
+                $btnStatus = "ban_user";
+                $mode = "ban";
             } else {
                 $strStatus = "Vô hiệu hoá";
+                $iconBg = "btn-success";
+                $iconStatus = "fa-check";
+                $btnStatus = "un_ban_user";
+                $mode = "unban";
             }
+
+            $htmlButtonBan = '';
+            if ($_SESSION['role'] == $row['role']){
+                $htmlButtonBan .= <<< EOF
+                    <button class="btn btn-block {$iconBg} btn-sm" disabled><i class="fas fa-ban"></i></button>
+
+EOF;
+            } else {
+                $htmlButtonBan .= <<< EOF
+                    <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                        <input type="hidden" name="uid" value="{$row['id']}">
+                        <input type="hidden" name="mode" value="{$mode}">
+                        <a href="#" class="btn btn-block {$iconBg} btn-sm {$btnStatus}"><i class="fas {$iconStatus}"></i></a>
+                    </form>
+EOF;
+            }
+            
+            $htmlEditButton = '';
+            if ($_SESSION['role'] != 1){
+                $htmlEditButton .= <<< EOF
+                    <button class="btn btn-block btn-primary btn-sm edit_user" disabled><i class="fas fa-edit"></i></button>
+EOF;
+            } else {
+                $htmlEditButton .=<<< EOF
+                    <form action="detail-user.php" method="POST">
+                        <input type="hidden" name="mode" value="update">
+                        <input type="hidden" name="uid" value="{$row['id']}">
+                        <a href="" class="btn btn-block btn-primary btn-sm edit_user"><i class="fas fa-edit"></i></a>
+                    </form>
+EOF;
+            }
+            
             $cnt++;
             $html .= <<< EOF
                 <tr>
@@ -403,15 +505,10 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
                     <td style="text-align: center; width: 20%;">{$row['rolename']}</td>
                     <td style="text-align: center; width: 20%;">{$strStatus}</td>
                     <td style="text-align: center; width: 5%;">
-                        <form action="detail-user.php" method="POST">
-                            <input type="hidden" name="uid" value="{$row['id']}">
-                            <a href="" class="btn btn-block btn-primary btn-sm"><i class="fas fa-edit"></i></a>
-                        </form>
+                        {$htmlEditButton}
                     </td>
                     <td style="text-align: center; width: 5%;">
-                        <form action="" method="POST">
-                            <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm"><i class="fas fa-trash"></i></a>
-                        </form>
+                        {$htmlButtonBan}
                     </td>
                 </tr>
 EOF;
@@ -431,6 +528,42 @@ EOF;
 
     }
     return $html;
+}
+
+function banUser($con, $func_id, $uid){
+    $pg_param = array();
+    $pg_param[] = $uid;
+    $recCnt = 0;
+    
+    $sql = "";
+    $sql .= "UPDATE users                             ";
+    $sql .= "   SET status = false                    ";
+    $sql .= " WHERE deldate IS NULL                   ";
+    $sql .= "   AND users.id = $1                     ";
+    
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+    header('location: list-users.php');
+}
+
+function unBanUser($con, $func_id, $uid){
+    $pg_param = array();
+    $pg_param[] = $uid;
+    $recCnt = 0;
+    
+    $sql = "";
+    $sql .= "UPDATE users                             ";
+    $sql .= "   SET status = true                     ";
+    $sql .= " WHERE deldate IS NULL                   ";
+    $sql .= "   AND users.id = $1                     ";
+    
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+    header('location: list-users.php');
 }
 ?>
 

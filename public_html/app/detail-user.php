@@ -13,6 +13,8 @@ session_start();
 $param = getParam();
 
 $role = $_SESSION['role'] ?? '';
+$mode = $param['mode'] ?? 'new';
+$uid = $param['uid'] ?? '';
 
 //Connect DB
 $con = openDB();
@@ -21,6 +23,27 @@ if (!isset($_SESSION['loginId'])){
     header('location: login.php');
     exit();
 }
+
+//Get user inf
+$userInf = getUserInf($con, $func_id, $uid);
+if (isset($uid) && (mb_strlen($uid) > 0)){
+    $valueFullname = $userInf['fullname'];
+    $valueRoleName = $userInf['rolename'];
+    $valueRole = $userInf['role'];
+    $valueEmail = $userInf['email'];
+    $valueLoginId = $userInf['loginid'];
+    $valuePassword = $userInf['password'];
+} else {
+    $valueFullname = $param['fullname'] ?? '';
+    $valueRole = $param['rolename'] ?? '';
+    $valueEmail = $param['email'] ?? '';
+    $valueLoginId = $param['loginid'] ?? '';
+    $valuePassword = $param['password'] ?? '';
+}
+
+//Get role combox
+$htmlRoleSelect = getComboxRole($con, $func_id, $valueRole);
+
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
@@ -44,7 +67,7 @@ echo <<<EOF
 EOF;
 
 //Preloader
-include ($TEMP_APP_PRELOADER_PATH);
+//include ($TEMP_APP_PRELOADER_PATH);
 
 //Header
 include ($TEMP_APP_HEADER_PATH);
@@ -95,35 +118,32 @@ echo <<<EOF
                                     <div class="card-body">
                                         <label>Họ tên</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Họ tên">
+                                            <input type="text" class="form-control" placeholder="Họ tên" name="fullname" value="{$valueFullname}">
                                         </div>
 
                                         <label>Người tạo</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" value="Lê Văn Lưu" readonly>
+                                            <input type="text" class="form-control" value="Lê Văn Lưu" readonly name="createBy">
                                         </div>
 
                                         <label>Vai trò</label>
                                         <div class="input-group mb-3">
-                                            <select class="custom-select">
-                                                <option>option 1</option>
-                                                <option>option 2</option>
-                                              </select>
+                                            {$htmlRoleSelect}
                                         </div>
 
                                         <label>Email</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Email">
+                                            <input type="text" class="form-control" placeholder="Email" value="{$valueEmail}">
                                         </div>
 
                                         <label>Tên đăng nhập</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Tên đăng nhập">
+                                            <input type="text" class="form-control" placeholder="Tên đăng nhập" name="loginId" value="{$valueLoginId}">
                                         </div>
 
                                         <label>Mật khẩu</label>
                                         <div class="input-group mb-3">
-                                            <input type="password" class="form-control" placeholder="Mật khẩu">
+                                            <input type="password" class="form-control" placeholder="Mật khẩu" name="password" value="{$valuePassword}">
                                         </div>
                                     </div>
                                     <!-- /.card-body -->
@@ -156,5 +176,70 @@ echo <<<EOF
 </html>
 EOF;
 
+function getUserInf($con, $func_id, $uid){
+    $pg_param = array();
+    $userArray = array();
+    $pg_param[] = $uid;
+    $recCnt = 0;
+    
+    $sql = "";
+    $sql .= "SELECT users.id                  ";
+    $sql .= "     , users.fullname            ";
+    $sql .= "     , users.email               ";
+    $sql .= "     , users.loginid             ";
+    $sql .= "     , users.createby            ";
+    $sql .= "     , users.password            ";
+    $sql .= "     , users.role                ";
+    $sql .= "     , role.rolename             ";
+    $sql .= "  FROM users                     ";
+    $sql .= "  INNER JOIN role                ";
+    $sql .= "    ON users.role = role.id      ";
+    $sql .= " WHERE deldate IS NULL           ";
+    $sql .= "  AND users.id = $1               ";
+    
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+    
+    if ($recCnt != 0){
+        $userArray = pg_fetch_assoc($query);
+    }
+    return $userArray;
+}
+
+function getComboxRole($con, $func_id, $valueRole){
+    $pg_param = array();
+    $recCnt = 0;
+    
+    $sql = "";
+    $sql .= "SELECT DISTINCT     ";
+    $sql .= "       id           ";
+    $sql .= "     , rolename     ";
+    $sql .= "  FROM role         ";
+    $sql .= "  ORDER BY id ASC   ";
+    
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+    
+    $html = '<select class="custom-select" name="role">';
+    if ($recCnt != 0){
+        while ($row = pg_fetch_assoc($query)){
+            $selected = '';
+            if ($valueRole == $row['id']){
+                $selected = 'selected="selected"';
+            }
+            $html .= '<option value="'.$row['id'].'" '.$selected.'>'.$row['rolename'].'</option>';
+        }
+    }
+    $html .= '</select>';
+    return $html;
+}
 ?>
 

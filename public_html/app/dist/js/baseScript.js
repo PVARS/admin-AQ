@@ -6,6 +6,21 @@ function sweetConfirm(type,message,callback) {
             title = 'XOÁ';
             break;
         }
+
+        case 2 : {
+            title = 'KHOÁ';
+            break;
+        }
+
+        case 3 : {
+            title = 'CHỈNH SỬA';
+            break;
+        }
+
+        case 4 : {
+            title = 'MỞ KHOÁ';
+            break;
+        }
         default : {
             break;
         }
