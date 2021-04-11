@@ -30,6 +30,7 @@ $check_rm = $param['remember'] ?? '';
 
 if(isset($cookie_name)){
     if(isset($_COOKIE[$cookie_name])){
+        $_SESSION['loginId'] = getUsernameInCookie($cookie_name);
         header('location: dashboard.php');
         exit();
     }
