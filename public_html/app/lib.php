@@ -111,7 +111,7 @@ function getParam(){
  */
 function getDateTime(){
     date_default_timezone_set("Asia/Ho_Chi_Minh");
-    $dateTime = date("d-m-yy h:i:sa");
+    $dateTime = date("Y-m-d h:i:sa");
     return $dateTime;
 }
 
@@ -121,7 +121,7 @@ function getDateTime(){
  */
 function getDateVn(){
     date_default_timezone_set("Asia/Ho_Chi_Minh");
-    $date = date("yy-m-d");
+    $date = date("Y-m-d");
     return $date;
 }
 ?>
