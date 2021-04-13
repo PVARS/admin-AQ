@@ -29,6 +29,36 @@ if (!isset($_SESSION['loginId']) || !isset($_SESSION['fullname'])){
 //Get date
 $date = getDateVn();
 
+//Validate
+$validate = validateData($param);
+
+if ($param){
+    if (isset($param['registFlg']) && $param['registFlg'] == 1){
+        $mes = $validate;
+        
+        if (empty($mes)){
+            //Insert
+            if ($mode == 'new'){
+                if ($_SESSION['fullname'] != $param['createBy']){
+                    $mes[] = 'Tạo tài khoản không thành công';
+                } else {
+                    insertUser($con, $func_id, $param);
+                }
+            }
+            //Update
+            if ($mode == 'update'){
+                updatetUser($con, $func_id, $param, $uid);
+            }
+        }
+        
+        $message = join('<br>', $mes);
+        if (strlen($message)) {
+            $messageClass = 'alert-danger';
+            $iconClass = 'fas fa-ban';
+        }
+    }
+}
+
 if (isset($uid) && (mb_strlen($uid) > 0)){
     //Get user inf
     $userInf = getUserInf($con, $func_id, $uid);
@@ -49,30 +79,6 @@ if (isset($uid) && (mb_strlen($uid) > 0)){
 
 //Get role combox
 $htmlRoleSelect = getComboxRole($con, $func_id, $valueRole);
-//Validate
-$validate = validateData($valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword);
-
-if ($param){
-    if (isset($param['registFlg']) && $param['registFlg'] == 1){
-        $mes = $validate;
-        
-        if (empty($mes)){
-            if ($mode == 'new'){
-                if ($_SESSION['fullname'] != $param['createBy']){
-                    $mes[] = 'Tạo tài khoản không thành công';
-                } else {
-                    insertUser($con, $func_id, $valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword, $param);
-                }
-            }
-        }
-        
-        $message = join('<br>', $mes);
-        if (strlen($message)) {
-            $messageClass = 'alert-danger';
-            $iconClass = 'fas fa-ban';
-        }
-    }
-}
 
 //Message HTML
 if(isset($_SESSION['message']) && strlen($_SESSION['message'])){
@@ -206,7 +212,8 @@ echo <<<EOF
                                     <div class="card-footer">
                                         <input type="hidden" name="mode" value="{$mode}">
                                         <input type="hidden" name="registFlg" value="1">
-                                        <input type="hidden" name="createDate" value="{$date}">
+                                        <input type="hidden" name="getDay" value="{$date}">
+                                        <input type="hidden" name="uid" value="{$uid}">
                                         <button type="submit" class="btn btn-primary float-right" style="background-color: #17a2b8;">
                                             <i class="fas fa-save"></i>
                                             &nbspLưu
@@ -319,21 +326,16 @@ function getComboxRole($con, $func_id, $valueRole){
  * Add user function
  * @param $con
  * @param $func_id
- * @param $valueFullname
- * @param $valueRole
- * @param $valueEmail
- * @param $valueLoginId
- * @param $valuePassword
  * @param $param
  */
-function insertUser($con, $func_id, $valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword, $param){
+function insertUser($con, $func_id, $param){
     $pg_param = array();
-    $pg_param[] = $valueFullname;
-    $pg_param[] = $param['createDate'];
-    $pg_param[] = $valueRole;
-    $pg_param[] = $valueEmail;
-    $pg_param[] = $valueLoginId;
-    $pg_param[] = md5($valuePassword);
+    $pg_param[] = $param['fullname'];
+    $pg_param[] = $param['getDay'];
+    $pg_param[] = $param['role'];
+    $pg_param[] = $param['email'];
+    $pg_param[] = $param['loginId'];
+    $pg_param[] = $param['password'];
     
     $sql = "";
     $sql .= "INSERT INTO users(             ";
@@ -365,6 +367,45 @@ function insertUser($con, $func_id, $valueFullname, $valueRole, $valueEmail, $va
     exit();
 }
 
+/**
+ * Update user function
+ * @param $con
+ * @param $func_id
+ * @param $param
+ * @param $uid
+ */
+function updatetUser($con, $func_id, $param, $uid){
+    $pg_param = array();
+    $pg_param[] = $param['fullname'];
+    $pg_param[] = $param['getDay'];
+    $pg_param[] = $param['role'];
+    $pg_param[] = $param['email'];
+    $pg_param[] = $param['loginId'];
+    $pg_param[] = $param['password'];
+    $pg_param[] = $uid;
+    
+    $sql = "";
+    $sql .= "UPDATE users SET                    ";
+    $sql .= "            fullname = $1           ";
+    $sql .= "          , updatedate = $2         ";
+    $sql .= "          , role = $3               ";
+    $sql .= "          , email = $4              ";
+    $sql .= "          , loginid = $5            ";
+    $sql .= "          , password = $6           ";
+    $sql .= "          WHERE id = $7             ";
+    
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+    
+    $_SESSION['message'] = 'Cập nhật tài khoản thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+    
+    header('location: list-users.php');
+    exit();
+}
 
 /**
  * Validation data
@@ -375,50 +416,50 @@ function insertUser($con, $func_id, $valueFullname, $valueRole, $valueEmail, $va
  * @param $valuePassword
  * @return array
  */
-function validateData($valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword){
+function validateData($param){
     $mes = [
         'chk_required'   => [],
         'chk_format'     => [],
         'chk_max_length' => []
     ];
     
-    if (empty($valueFullname)){
+    if (empty($param['fullname'])){
         $mes['chk_required'][] = 'Vui lòng nhập họ tên.';
     } else {
-        if (mb_strlen($valueFullname) > 254){
+        if (mb_strlen($param['fullname']) > 254){
             $mes['chk_max_length'][] = 'Họ tên phải bé hơn 254 ký tự.';
         }
     }
     
-    if (empty($valueEmail)){
+    if (empty($param['email'])){
         $mes['chk_required'][] = 'Vui lòng nhập email.';
     } else {
-        if (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $valueEmail)){
+        if (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $param['email'])){
             $mes['chk_format'][] = 'Email không đúng định dạng. Ví dụ: abc@gmail.com';
         }
-        if (mb_strlen($valueEmail) > 254 || mb_strlen($valueEmail) < 6){
+        if (mb_strlen($param['email']) > 254 || mb_strlen($param['email']) < 6){
             $mes['chk_max_length'][] = 'Email phải lớn hơn 6 ký tự và bé hơn 254 ký tự.';
         }
     }
     
-    if (empty($valueLoginId)){
+    if (empty($param['loginId'])){
         $mes['chk_required'][] = 'Vui lòng nhập tên đăng nhập.';
     } else {
-        if (!preg_match('/^[0-9A-Za-z]/', $valueLoginId) || preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $valueLoginId)){
+        if (!preg_match('/^[0-9A-Za-z]/', $param['loginId']) || preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $param['loginId'])){
             $mes['chk_format'][] = 'Tên đăng nhập không được chứa kí tự đặc biệt.';
         }
-        if (mb_strlen($valueLoginId) > 254 || mb_strlen($valueLoginId) < 6){
+        if (mb_strlen($param['loginId']) > 254 || mb_strlen($param['loginId']) < 6){
             $mes['chk_max_length'][] = 'Tên đăng nhập phải hơn 6 ký tự và bé hơn 254 ký tự.';
         }
     }
     
-    if (empty($valuePassword)){
+    if (empty($param['password'])){
         $mes['chk_required'][] = 'Vui lòng nhập mật khẩu.';
     } else {
-        if (!preg_match('/^(?=.*[0-9A-Za-z])/', $valuePassword) || !preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $valuePassword)){
+        if (!preg_match('/^(?=.*[0-9A-Za-z])/', $param['password']) || !preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $param['password'])){
             $mes['chk_format'][] = 'Mật khẩu không đúng định dạng, phải có ít nhất 1 chữ hoặc số và ký tự đặc biệt.';
         }
-        if (mb_strlen($valuePassword) > 16 || mb_strlen($valuePassword) < 6){
+        if (mb_strlen($param['password']) > 16 || mb_strlen($param['password']) < 6){
             $mes['chk_max_length'][] = 'Mật khẩu phải lớn hơn 6 ký tự và bé hơn 16 ký tự.';
         }
     }

@@ -35,6 +35,8 @@ print <<< EOF
 <script src="dist/js/demo.js"></script>
 <!-- Sweetalert2 - Alert box -->
 <script src="plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<!-- Paginate  -->
+<script src="plugins/PaginateMyTable/PaginateMyTable.js"></script>
 <!-- Base script -->
 <script src="dist/js/baseScript.js"></script>
 <script>

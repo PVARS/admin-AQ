@@ -31,6 +31,8 @@ print <<< EOF
 <link rel="stylesheet" href="dist/css/style.css">
 <!-- summernote -->
 <link rel="stylesheet" href="plugins/summernote/summernote-bs4.min.css">
+<!-- Paginate  -->
+<link rel="stylesheet" href="plugins/PaginateMyTable/PaginateMyTable.css">
 {$cssHTML}
 EOF;
 ?>

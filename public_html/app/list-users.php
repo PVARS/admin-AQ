@@ -152,6 +152,17 @@ $scriptHTML = <<< EOF
                 }
             });
         });
+        
+        //paginate
+        $(document).ready(function() {
+            $(".table").paginate({
+                rows: 5,           // Set number of rows per page. Default: 5
+                position: "top",   // Set position of pager. Default: "bottom"
+                jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
+                showIfLess: false, // Don't show pager if table has only one page. Default: true
+                numOfPages: 5
+            });
+        });
     });
 </script>
 EOF;
