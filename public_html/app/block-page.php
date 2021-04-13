@@ -5,7 +5,7 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'list_student';
+$func_id = 'block-page';
 
 session_start();
 
@@ -16,17 +16,9 @@ if (!isset($_SESSION['loginId']) || !strlen($_SESSION['loginId'])){
     systemErrorPrint();
     exit();
 } else {
-    // Unset Cookie
-    $cookie_name = 'siteAuth';
-    if(isset($cookie_name)){
-        if(isset($_COOKIE[$cookie_name])){
-            unset($_COOKIE[$cookie_name]); 
-            setcookie ($cookie_name, '', time() - 3600, '/');
-            $_SESSION['loginId'] = '';
-        }
-    }
     session_unset();
 }
+
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
@@ -56,13 +48,13 @@ include ($TEMP_APP_PRELOADER_PATH);
 echo <<<EOF
 <div class="card card-outline card-primary">
             <div class="card-header text-center">
-                <a href="logout.php" class="h1"><b>Arsenal</b>Quán</a>
+                <a href="block-page.php" class="h1"><b>Arsenal</b>Quán</a>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-12">
                         <div class="icheck-primary">
-                            Bạn đã đăng xuất khỏi hệ thống. <a href="login.php">Đăng nhập?</a>
+                            Tài khoản của bạn đã bị khoá. Trở lại <a href="login.php">đăng nhập?</a>
                         </div>
                     </div>
                 <!-- /.col -->

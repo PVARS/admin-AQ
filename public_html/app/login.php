@@ -172,8 +172,10 @@ function checkLoginId($con, $param, $func_id, $loginId, $password){
     
     $sql = "";
     $sql .="SELECT loginid              ";
+    $sql .="     , fullname             ";
     $sql .="     , password             ";
     $sql .="     , role                 ";
+    $sql .="     , status               ";
     $sql .="  FROM users                ";
     $sql .=" WHERE loginid = $1         ";
     $sql .="   AND password  = $2       ";
@@ -190,6 +192,7 @@ function checkLoginId($con, $param, $func_id, $loginId, $password){
         $userInf = pg_fetch_assoc($query);
         $_SESSION['loginId'] = $userInf['loginid'];
         $_SESSION['role'] = $userInf['role'];
+        $_SESSION['fullname'] = $userInf['fullname'];
     }
     return $userInf;
 }
@@ -247,14 +250,19 @@ function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $ma
     if (empty($msg)){
         if (!empty($checkLogin)){
 
-            // SET COOKIE
-            if (!empty($check_rm)) {
-                $_SESSION['username']=$loginId;
-                setcookie ($cookie_name, 'usr='.$loginId.'&hash=vehhd6vejs8au,', time() + $cookie_time, '/');
+            if ($checkLogin['status'] == 'f'){
+                header('location: block-page.php');
+                exit();
+            } else {
+                // SET COOKIE
+                if (!empty($check_rm)) {
+                    $_SESSION['username']=$loginId;
+                    setcookie ($cookie_name, 'usr='.$loginId.'&hash=vehhd6vejs8au,', time() + $cookie_time, '/');
+                }
+    
+                header('location: dashboard.php');
+                exit();
             }
-
-            header('location: dashboard.php');
-            exit();
         } else {
             $msg[] = 'Tên đăng nhập hoặc mật khẩu không đúng';
         }

@@ -5,7 +5,9 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'list_student';
+$func_id = 'detail_user';
+$message = '';
+$messageClass = '';
 
 session_start();
 
@@ -19,14 +21,18 @@ $uid = $param['uid'] ?? '';
 //Connect DB
 $con = openDB();
 
-if (!isset($_SESSION['loginId'])){
+if (!isset($_SESSION['loginId']) || !isset($_SESSION['fullname'])){
     header('location: login.php');
     exit();
 }
 
-//Get user inf
-$userInf = getUserInf($con, $func_id, $uid);
+//Get date
+$date = getDateVn();
+
 if (isset($uid) && (mb_strlen($uid) > 0)){
+    //Get user inf
+    $userInf = getUserInf($con, $func_id, $uid);
+    
     $valueFullname = $userInf['fullname'];
     $valueRoleName = $userInf['rolename'];
     $valueRole = $userInf['role'];
@@ -35,14 +41,63 @@ if (isset($uid) && (mb_strlen($uid) > 0)){
     $valuePassword = $userInf['password'];
 } else {
     $valueFullname = $param['fullname'] ?? '';
-    $valueRole = $param['rolename'] ?? '';
+    $valueRole = $param['role'] ?? '';
     $valueEmail = $param['email'] ?? '';
-    $valueLoginId = $param['loginid'] ?? '';
+    $valueLoginId = $param['loginId'] ?? '';
     $valuePassword = $param['password'] ?? '';
 }
 
 //Get role combox
 $htmlRoleSelect = getComboxRole($con, $func_id, $valueRole);
+//Validate
+$validate = validateData($valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword);
+
+if ($param){
+    if (isset($param['registFlg']) && $param['registFlg'] == 1){
+        $mes = $validate;
+        
+        if (empty($mes)){
+            if ($mode == 'new'){
+                if ($_SESSION['fullname'] != $param['createBy']){
+                    $mes[] = 'Tạo tài khoản không thành công';
+                } else {
+                    insertUser($con, $func_id, $valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword, $param);
+                }
+            }
+        }
+        
+        $message = join('<br>', $mes);
+        if (strlen($message)) {
+            $messageClass = 'alert-danger';
+            $iconClass = 'fas fa-ban';
+        }
+    }
+}
+
+//Message HTML
+if(isset($_SESSION['message']) && strlen($_SESSION['message'])){
+    $message      .= $_SESSION['message'];
+    $messageClass .= $_SESSION['messageClass'];
+    $iconClass    .= $_SESSION['iconClass'];
+    $_SESSION['message']      = '';
+    $_SESSION['messageClass'] = '';
+    $_SESSION['iconClass']    = '';
+}
+$messageHtml  = '';
+if(strlen($message)){
+    $messageHtml = <<< EOF
+    <div class="alert {$messageClass} alert-dismissible">
+        <div class="row">
+            <div class="icon">
+                <i class="{$iconClass}"></i>
+            </div>
+            <div class="col-10">
+                {$message}
+            </div>
+        </div>
+    </div>
+EOF;
+}
 
 //-----------------------------------------------------------
 // HTML
@@ -110,7 +165,8 @@ echo <<<EOF
                 <div class="container-fluid">
                     <div class="row">
                         <div class="card-body">
-                            <form action="" method="POST">
+                            {$messageHtml}
+                            <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
                                 <div class="card card-info">
                                     <div class="card-header">
                                         <h3 class="card-title">Tạo tài khoản</h3>
@@ -123,7 +179,7 @@ echo <<<EOF
 
                                         <label>Người tạo</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" value="Lê Văn Lưu" readonly name="createBy">
+                                            <input type="text" class="form-control" value="{$_SESSION['fullname']}" readonly name="createBy">
                                         </div>
 
                                         <label>Vai trò</label>
@@ -133,7 +189,7 @@ echo <<<EOF
 
                                         <label>Email</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Email" value="{$valueEmail}">
+                                            <input type="text"  class="form-control" placeholder="Email" name="email" value="{$valueEmail}">
                                         </div>
 
                                         <label>Tên đăng nhập</label>
@@ -148,6 +204,9 @@ echo <<<EOF
                                     </div>
                                     <!-- /.card-body -->
                                     <div class="card-footer">
+                                        <input type="hidden" name="mode" value="{$mode}">
+                                        <input type="hidden" name="registFlg" value="1">
+                                        <input type="hidden" name="createDate" value="{$date}">
                                         <button type="submit" class="btn btn-primary float-right" style="background-color: #17a2b8;">
                                             <i class="fas fa-save"></i>
                                             &nbspLưu
@@ -176,6 +235,13 @@ echo <<<EOF
 </html>
 EOF;
 
+/**
+ * get user inf
+ * @param $con
+ * @param $func_id
+ * @param $uid
+ * @return array
+ */
 function getUserInf($con, $func_id, $uid){
     $pg_param = array();
     $userArray = array();
@@ -195,7 +261,7 @@ function getUserInf($con, $func_id, $uid){
     $sql .= "  INNER JOIN role                ";
     $sql .= "    ON users.role = role.id      ";
     $sql .= " WHERE deldate IS NULL           ";
-    $sql .= "  AND users.id = $1               ";
+    $sql .= "  AND users.id = $1              ";
     
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -210,6 +276,13 @@ function getUserInf($con, $func_id, $uid){
     return $userArray;
 }
 
+/**
+ * Get role combox
+ * @param $con
+ * @param $func_id
+ * @param $valueRole
+ * @return string
+ */
 function getComboxRole($con, $func_id, $valueRole){
     $pg_param = array();
     $recCnt = 0;
@@ -240,6 +313,122 @@ function getComboxRole($con, $func_id, $valueRole){
     }
     $html .= '</select>';
     return $html;
+}
+
+/**
+ * Add user function
+ * @param $con
+ * @param $func_id
+ * @param $valueFullname
+ * @param $valueRole
+ * @param $valueEmail
+ * @param $valueLoginId
+ * @param $valuePassword
+ * @param $param
+ */
+function insertUser($con, $func_id, $valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword, $param){
+    $pg_param = array();
+    $pg_param[] = $valueFullname;
+    $pg_param[] = $param['createDate'];
+    $pg_param[] = $valueRole;
+    $pg_param[] = $valueEmail;
+    $pg_param[] = $valueLoginId;
+    $pg_param[] = md5($valuePassword);
+    
+    $sql = "";
+    $sql .= "INSERT INTO users(             ";
+    $sql .= "            fullname           ";
+    $sql .= "          , createdate         ";
+    $sql .= "          , role               ";
+    $sql .= "          , email              ";
+    $sql .= "          , loginid            ";
+    $sql .= "          , password)          ";
+    $sql .= "  VALUES(                      ";
+    $sql .= "            $1                 ";
+    $sql .= "          , $2                 ";
+    $sql .= "          , $3                 ";
+    $sql .= "          , $4                 ";
+    $sql .= "          , $5                 ";
+    $sql .= "          , $6                 ";
+    $sql .= "  )                            ";
+    
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+    
+    $_SESSION['message'] = 'Tạo tài khoản thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+    
+    header('location: list-users.php');
+    exit();
+}
+
+
+/**
+ * Validation data
+ * @param $valueFullname
+ * @param $valueRole
+ * @param $valueEmail
+ * @param $valueLoginId
+ * @param $valuePassword
+ * @return array
+ */
+function validateData($valueFullname, $valueRole, $valueEmail, $valueLoginId, $valuePassword){
+    $mes = [
+        'chk_required'   => [],
+        'chk_format'     => [],
+        'chk_max_length' => []
+    ];
+    
+    if (empty($valueFullname)){
+        $mes['chk_required'][] = 'Vui lòng nhập họ tên.';
+    } else {
+        if (mb_strlen($valueFullname) > 254){
+            $mes['chk_max_length'][] = 'Họ tên phải bé hơn 254 ký tự.';
+        }
+    }
+    
+    if (empty($valueEmail)){
+        $mes['chk_required'][] = 'Vui lòng nhập email.';
+    } else {
+        if (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $valueEmail)){
+            $mes['chk_format'][] = 'Email không đúng định dạng. Ví dụ: abc@gmail.com';
+        }
+        if (mb_strlen($valueEmail) > 254 || mb_strlen($valueEmail) < 6){
+            $mes['chk_max_length'][] = 'Email phải lớn hơn 6 ký tự và bé hơn 254 ký tự.';
+        }
+    }
+    
+    if (empty($valueLoginId)){
+        $mes['chk_required'][] = 'Vui lòng nhập tên đăng nhập.';
+    } else {
+        if (!preg_match('/^[0-9A-Za-z]/', $valueLoginId) || preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $valueLoginId)){
+            $mes['chk_format'][] = 'Tên đăng nhập không được chứa kí tự đặc biệt.';
+        }
+        if (mb_strlen($valueLoginId) > 254 || mb_strlen($valueLoginId) < 6){
+            $mes['chk_max_length'][] = 'Tên đăng nhập phải hơn 6 ký tự và bé hơn 254 ký tự.';
+        }
+    }
+    
+    if (empty($valuePassword)){
+        $mes['chk_required'][] = 'Vui lòng nhập mật khẩu.';
+    } else {
+        if (!preg_match('/^(?=.*[0-9A-Za-z])/', $valuePassword) || !preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $valuePassword)){
+            $mes['chk_format'][] = 'Mật khẩu không đúng định dạng, phải có ít nhất 1 chữ hoặc số và ký tự đặc biệt.';
+        }
+        if (mb_strlen($valuePassword) > 16 || mb_strlen($valuePassword) < 6){
+            $mes['chk_max_length'][] = 'Mật khẩu phải lớn hơn 6 ký tự và bé hơn 16 ký tự.';
+        }
+    }
+    
+    $msg = array_merge(
+        $mes['chk_required'],
+        $mes['chk_format'],
+        $mes['chk_max_length']
+    );
+    return $msg;
 }
 ?>
 

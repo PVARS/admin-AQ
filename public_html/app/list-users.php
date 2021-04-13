@@ -5,10 +5,11 @@ require_once('config.php');
 require_once('lib.php');
 
 //Initialization
-$func_id = 'list_student';
+$func_id = 'list_users';
 $maxStr = 200;
 $message = '';
 $messageClass = '';
+$iconClass = '';
 $unBan = 0; //0: un ban; 1: ban
 
 session_start();
@@ -530,6 +531,12 @@ EOF;
     return $html;
 }
 
+/**
+ * Blocl user function
+ * @param $con
+ * @param $func_id
+ * @param $uid
+ */
 function banUser($con, $func_id, $uid){
     $pg_param = array();
     $pg_param[] = $uid;
