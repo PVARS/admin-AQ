@@ -18,6 +18,8 @@ $con = openDB();
 //get staticts current day
 $htmlcategory = getcategory($con, $current_day, $func_id);
 
+//get news with max views
+$htmlviews    = get_news($con,$func_id);
 //Get param
 $param = getParam();
 
@@ -166,35 +168,7 @@ echo <<<EOF
                         <div class="col-sm-12" style="margin-top: 20px;">
                             <div id="accordion">
                                 <div class="card">
-                                    <div class="card-header title-collapse" id="headingOne">
-                                        <h5 class="mb-0 col-6">
-                                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                                tin chuyển nhượng
-                                            </button>
-                                        </h5>
-                                        <h5 class="count-news">
-                                            Số lượng - 100
-                                        </h5>
-                                    </div>
-
-                                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-                                        <div class="card-body table-responsive p-0">
-                                            <table class="table table-hover text-nowrap table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th style="width: 10%;">STT</th>
-                                                        <th style="width: 30%;">Tiêu đề</th>
-                                                        <th style="width: 20%;">Người đăng</th>
-                                                        <th style="text-align: center; width: 20%;">Thời gian</th>
-                                                        <th colspan="2"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                   {$htmlcategory}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                                   {$htmlcategory}
                                 </div>
                             </div>
                         </div>
@@ -215,23 +189,7 @@ echo <<<EOF
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td style="width: 5%;">1</td>
-                                            <td style="width: 35%;">Chỉ trích bủa vây, Arteta gặp nạn lớn ở Arsenal </td>
-                                            <td style="width: 20%;">Lê Văn Lư</td>
-                                            <td style="text-align: center; width: 20%;">07/04/2021</td>
-                                            <td style="text-align: center; width: 20%;">100</td>
-                                            <td style="text-align: center; width: 5%;">
-                                                <form action="" method="POST">
-                                                    <a href="javascript:void(0)" class="btn btn-block btn-primary btn-sm"><i class="fas fa-edit"></i></a>
-                                                </form>
-                                            </td>
-                                            <td style="text-align: center; width: 5%;">
-                                                <form action="" method="POST">
-                                                    <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm"><i class="fas fa-trash"></i></a>
-                                                </form>
-                                            </td>
-                                        </tr>
+                                         {$htmlviews}
                                     </tbody>
                                 </table>
                             </div>
@@ -271,6 +229,16 @@ $scriptHTML = <<< EOF
                 }
             });
         });
+        //paginate
+        $(document).ready(function() {
+            $(".date_post").paginate({
+                rows: 1,           // Set number of rows per page. Default: 5
+                position: "bottom",   // Set position of pager. Default: "bottom"
+                jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
+                showIfLess: false, // Don't show pager if table has only one page. Default: true
+                numOfPages: 2
+            });
+        });
     });
 </script>
 EOF;
@@ -287,7 +255,7 @@ function getcategory($con, $current_day, $func_id){
     $index = 0;
     $recCnt = 0;
     $sql = "";
-    $sql .= "SELECT news.id, news.title                     ";
+    $sql .= "SELECT news.id, news.title                      ";
     $sql .= " ,users.fullname , users.role                   ";
     $sql .= " ,news.createdate                               ";
     $sql .= " FROM news                                      ";
@@ -301,13 +269,13 @@ function getcategory($con, $current_day, $func_id){
         $recCnt = pg_num_rows($query);
     }
     $html = '';
-    if ($recCnt != 0){
-        while ($row = pg_fetch_assoc($query)){
+    if ($recCnt != 0) {
+        while ($row = pg_fetch_assoc($query)) {
             $index++;
 
             // check role for button delete
             $htmlButtondelete = '';
-            if ($_SESSION['role'] == $row['role']){
+            if ($_SESSION['role'] == $row['role']) {
                 $htmlButtondelete .= <<< EOF
                 <form action="" method="POST">
                         <a href="" class="btn btn-block btn-danger btn-sm sc_user"><i class="fas fa-trash"></i></a>
@@ -321,7 +289,7 @@ EOF;
 
             // check role for button edit
             $htmlButtonedit = '';
-            if ($_SESSION['role'] == $row['role']){
+            if ($_SESSION['role'] == $row['role']) {
                 $htmlButtonedit .= <<< EOF
                 <form action="detail-news.php" method="POST">
                    <input type="hidden" name="mode" value="update">
@@ -354,8 +322,111 @@ EOF;
 
 EOF;
         }
+
+    }else {
+        $html .= <<< EOF
+            <tr>
+			<td colspan = 7>
+				<h3 class="card-title">
+					<i class="fas fa-bullseye fa-fw" style="color: red"></i>
+					Không có dữ liệu
+				</h3>
+			</td>
+		</tr>
+EOF;
+    }
+        $htmlfulltable = '';
+        $htmlfulltable .= <<<EOF
+            <div class="card-header title-collapse" id="headingOne">
+                 <h5 class="mb-0 col-6">
+                      <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                           tin chuyển nhượng
+                       </button>
+                 </h5>
+                 <h5 class="count-news">
+                     Số lượng - $index
+                 </h5>
+             </div>
+
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                <div class="card-body table-responsive p-0">
+                    <table class="table date_post table-hover text-nowrap table-bordered">
+                        <thead>
+                            <tr>
+                               <th style="width: 10%;">STT</th>
+                               <th style="width: 30%;">Tiêu đề</th>
+                               <th style="width: 20%;">Người đăng</th>
+                               <th style="text-align: center; width: 20%;">Thời gian</th>
+                               <th colspan="2"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           {$html}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+EOF;
+
+    return $htmlfulltable;
+}
+
+/**
+ * get data news with max views
+ * @param $con
+ * @param $func_id
+ * @return string
+ */
+
+function get_news($con, $func_id){
+    $pg_param = array();
+    $index = 0;
+    $recCnt = 0;
+    $sql = "";
+    $sql .= "SELECT news.id, news.title                      ";
+    $sql .= " ,users.fullname , users.role                   ";
+    $sql .= " ,news.createdate, news.view                    ";
+    $sql .= " FROM news                                      ";
+    $sql .= " INNER JOIN users                               ";
+    $sql .= " ON news.createby = users.id                    ";
+    $sql .= " WHERE view = (                                 ";
+    $sql .= " SELECT MAX(view)                              ";
+    $sql .= " FROM news )                                    ";
+    $query = pg_query_params($con, $sql, $pg_param);
+
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+    $html = '';
+    if ($recCnt != 0) {
+        while ($row = pg_fetch_assoc($query)) {
+            $index++;
+
+            $html .= <<<EOF
+                 <tr>
+                     <td style="width: 5%;">{$index}</td>
+                     <td style="width: 35%;">{$row['title']}</td>
+                     <td style="width: 20%;">{$row['fullname']}</td>
+                     <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
+                     <td style="text-align: center; width: 20%;">{$row['view']}</td>
+                     <td style="text-align: center; width: 5%;">
+                         <form action="" method="POST">
+                             <button class="btn btn-block btn-primary btn-sm " disabled><i class="fas fa-edit"></i></button>
+                         </form>
+                     </td>
+                     <td style="text-align: center; width: 5%;">
+                         <form action="" method="POST">
+                             <button class="btn btn-block btn-danger btn-sm" disabled><i class="fas fa-ban"></i></button>
+                         </form>
+                     </td>
+                  </tr>
+EOF;
+
     }
     return $html;
+}
 }
 
 /**
@@ -423,7 +494,6 @@ function total_account($con) {
     }
     return $count_users;
 }
-
 
 //Footer
 include ($TEMP_APP_FOOTER_PATH);
