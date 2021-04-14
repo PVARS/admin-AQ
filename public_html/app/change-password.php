@@ -312,7 +312,7 @@ function updatePassword($con, $email, $token, $password)
 function checkUserAndTimeToken($con, $maxDatetimeToken, $email, $token)
 {
     $return = false;
-    $range_datetime = 1;
+    $range_datetime = -1;
     $user = array();
     $pg_param = array();
     $pg_param[0] = $email;
@@ -339,7 +339,7 @@ function checkUserAndTimeToken($con, $maxDatetimeToken, $email, $token)
     }
 
     // Check datetime token
-    if ($range_datetime >= $maxDatetimeToken) {
+    if ($range_datetime >= $maxDatetimeToken || $range_datetime < 0) {
         $pg_param[1] = NULL; // Set token
         $pg_param[2] = NULL; // Set date_token
 
