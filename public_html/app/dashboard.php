@@ -244,13 +244,7 @@ echo <<<EOF
             <!-- /.content -->
         </div>
 EOF;
-/*
- *
- *
- * script dialog popup
- *
- *
- */
+
 $titleHTML = '';
 $cssHTML = '';
 $scriptHTML = <<< EOF
@@ -281,8 +275,12 @@ $scriptHTML = <<< EOF
 </script>
 EOF;
 
-/*
+/**
  * function get databae tabel
+ * @param $con
+ * @param $current_day
+ * @param $func_id
+ * @return string
  */
 function getcategory($con, $current_day, $func_id){
     $pg_param = array();
@@ -307,7 +305,7 @@ function getcategory($con, $current_day, $func_id){
         while ($row = pg_fetch_assoc($query)){
             $index++;
 
-// check role for button delete
+            // check role for button delete
             $htmlButtondelete = '';
             if ($_SESSION['role'] == $row['role']){
                 $htmlButtondelete .= <<< EOF
@@ -321,7 +319,7 @@ EOF;
 EOF;
             }
 
-// check role for button edit
+            // check role for button edit
             $htmlButtonedit = '';
             if ($_SESSION['role'] == $row['role']){
                 $htmlButtonedit .= <<< EOF
@@ -360,8 +358,10 @@ EOF;
     return $html;
 }
 
-/*
+/**
  * total article count
+ * @param $con
+ * @return mixed
  */
 function total_article($con){
     $sql = "";
@@ -379,8 +379,11 @@ function total_article($con){
     return $count_news;
 }
 
-/*
+/**
  * total post of new day
+ * @param $con
+ * @param $current_day
+ * @return mixed
  */
 function total_post($con, $current_day){
     $sql = "";
@@ -400,8 +403,10 @@ function total_post($con, $current_day){
     return $count_news_day;
 }
 
-/*
+/**
  * number of accounts
+ * @param $con
+ * @return mixed
  */
 function total_account($con) {
     $sql = "";
