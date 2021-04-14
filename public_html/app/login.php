@@ -8,6 +8,7 @@ require_once ('lib.php');
 $func_id = 'login';
 $message = '';
 $messageClass = '';
+$iconClass = '';
 $maxLoginId = 254;
 $minStr = 6;
 $maxPassword = 16;
@@ -139,6 +140,9 @@ echo <<<EOF
                         <div class="col-5">
                             <input type="hidden" name="registFlg" value="1">
                             <button type="submit" name="login" class="btn btn-primary btn-block">Đăng nhập</button>
+                        </div>
+                        <div class="col-12 text-center mt-3">
+                            <a href="send-mail.php" target="__blank">Quên mật khẩu?</a>
                         </div>
                         <!-- /.col -->
                     </div>
