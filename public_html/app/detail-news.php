@@ -11,6 +11,8 @@ session_start();
 
 //Get param
 $param = getParam();
+$mode = $param['mode'] ?? 'new';
+$nid = $param['nid'] ?? '';
 
 $role = $_SESSION['role'] ?? '';
 
@@ -21,6 +23,28 @@ if (!isset($_SESSION['loginId'])){
     header('location: login.php');
     exit();
 }
+
+//get data edits
+if(isset($nid) && (mb_strlen($nid) > 0)){
+    $edit_new       = get_newsedit($con, $func_id,$nid);
+    $valuetitle     = $edit_new['title'] ;
+    $valuecategory  = $edit_new['category'];
+    $valueshortdes  = $edit_new['shortdescription'];
+    $valueusers     = $edit_new['fullname'];
+    $valuethumbnail = $edit_new['thumbnail'];
+    $valuecontent   = $edit_new['content'];
+} else {
+    $valuetitle     = $param['title'] ?? '' ;
+    $valueRole      = $param['category'] ?? '';
+    $valueshortdes  = $param['shortdescription'] ?? '';
+    $valueusers     = $param['fullname'] ?? '';
+    $valuethumbnail = $param['thumbnail'] ?? '';
+    $valuecontent   = $param['content'] ?? '';
+}
+
+//get combobox
+$showcategoryhtml = show_category($con, $func_id, $valuecategory);
+
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
@@ -95,40 +119,34 @@ echo <<<EOF
                                     <div class="card-body">
                                         <label>Danh mục</label>
                                         <div class="input-group mb-3">
-                                            <select class="custom-select">
-                                                <option>option 1</option>
-                                                <option>option 2</option>
-                                                <option>option 3</option>
-                                                <option>option 4</option>
-                                                <option>option 5</option>
-                                              </select>
+                                            {$showcategoryhtml}
                                         </div>
 
                                         <label>Tiêu đề</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Tiêu đề">
+                                            <input type="text" class="form-control" placeholder="Tiêu đề" value="{$valuetitle}">
                                         </div>
 
                                         <label>Mô tả ngắn</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Mô tả ngắn">
+                                            <input type="text" class="form-control" placeholder="Mô tả ngắn" value="{$valueshortdes}}">
                                         </div>
 
                                         <label>Người đăng</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" value="Lê Văn Lưu" readonly>
+                                            <input type="text" class="form-control" value="{$valueusers}" readonly>
                                         </div>
 
                                         <label>Thumbnail</label>
                                         <div class="input-group mb-3">
                                             <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="customFile">
+                                                <input type="file" class="custom-file-input" id="customFile" value="{$valuethumbnail}">
                                                 <label class="custom-file-label" for="customFile">Chọn file</label>
                                             </div>
                                         </div>
 
                                         <label>Nội dung</label>
-                                        <textarea id="summernote"></textarea>
+                                        <textarea id="summernote">{$valuecontent}</textarea>
                                     </div>
                                     <!-- /.card-body -->
                                     <div class="card-footer">
@@ -155,6 +173,73 @@ echo <<<EOF
             <!-- /.content -->
         </div>
 EOF;
+/*
+ * function get data edit with nid;
+ */
+function get_newsedit($con, $func_id, $nid){
+
+    $editArray = array();
+    $pg_param = array();
+    $pg_param[] = $nid;
+    $recCnt = 0;
+    $sql = "";
+    $sql .= "SELECT news.title                               ";
+    $sql .= " ,news.shortdescription                         ";
+    $sql .= " ,users.fullname                                ";
+    $sql .=" ,news.thumbnail                                 ";
+    $sql .=" ,news.category                                  ";
+    $sql .=" ,news.content                                   ";
+    $sql .= " FROM news                                      ";
+    $sql .= " INNER JOIN users                               ";
+    $sql .= " ON news.createby = users.id                    ";
+//    $sql .= " INNER JOIN category                            ";
+//    $sql .= " ON category.id = news.category                 ";
+    $sql .= " WHERE news.id = $1                             ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $editArray = pg_fetch_assoc($query);
+    }
+    return $editArray;
+}
+
+/*
+ * get category in form edit
+ * Function works with combobox
+*/
+function show_category($con, $func_id, $valuecategory){
+    $pg_param = array();
+    $recCnt = 0;
+    $sql = '';
+    $sql .= 'SELECT *FROM category ';
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    $html = '<select class="custom-select" name="category">';
+    if ($recCnt != 0){
+        while ($row = pg_fetch_assoc($query)){
+            $selected = '';
+            if ($valuecategory == $row['id']){
+                $selected = 'selected="selected"';
+            }
+            $html .= '<option value="'.$row['id'].'" '.$selected.'>'.$row['category'].'</option>';
+        }
+    }
+    $html .= '</select>';
+    return $html;
+
+}
 
 //Footer
 include ($TEMP_APP_FOOTER_PATH);

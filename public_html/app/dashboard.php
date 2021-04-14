@@ -11,61 +11,26 @@ session_start();
 
 // current datetime
 $current_day = getDateVn();
+
+//Connect DB
+$con = openDB();
+
+//get staticts current day
+$htmlcategory = getcategory($con, $current_day, $func_id);
+
 //Get param
 $param = getParam();
 
 $role = $_SESSION['role'] ?? '';
 
-//Connect DB
-$con = openDB();
-
 if (!isset($_SESSION['loginId'])){
     header('location: login.php');
     exit();
 }
-// total article count
-$sql = "";
-$sql .= "SELECT COUNT(id)      ";
-$sql .= " AS count_news        ";
-$sql .= "FROM news             ";
-$query = pg_query($con, $sql);
-if(!$query){
-    echo pg_last_error($con);
-    exit();
-}
-while ($number_news = pg_fetch_row($query)){
-    $count_news = $number_news[0];
-}
 
-//total post of new day
-$sql = "";
-$sql .= "SELECT COUNT(id)                           ";
-$sql .= " AS post_new_day                           ";
-$sql .= " FROM news                                 ";
-$sql .= " WHERE createdate = '".$current_day."'       ";
-
-$res = pg_query($con, $sql);
-if(!$res){
-    echo pg_last_error($con);
-    exit();
-}
-while ($number_day = pg_fetch_row($res)){
-    $count_news_day = $number_day[0];
-}
-
-// number of accounts
-$sql = "";
-$sql .= "SELECT COUNT(id)      ";
-$sql .= " AS count_users        ";
-$sql .= "FROM users             ";
-$resu = pg_query($con, $sql);
-if(!$query){
-    echo pg_last_error($con);
-    exit();
-}
-while ($number_users = pg_fetch_row($resu)){
-    $count_users = $number_users[0];
-}
+$totalarticle = total_article($con);
+$totalpost    = total_post($con, $current_day);
+$totalaccount = total_account($con);
 
 //-----------------------------------------------------------
 // HTML
@@ -135,7 +100,7 @@ echo <<<EOF
                             <!-- small box -->
                             <div class="small-box bg-info">
                                 <div class="inner">
-                                    <h3>$count_news</h3>
+                                    <h3>{$totalarticle}</h3>
 
                                     <p>Tổng bài viết</p>
                                 </div>
@@ -150,7 +115,7 @@ echo <<<EOF
                             <!-- small box -->
                             <div class="small-box bg-success">
                                 <div class="inner">
-                                    <h3>$count_news_day</h3>
+                                    <h3>{$totalpost}</h3>
 
                                     <p>Bài đăng trong ngày</p>
                                 </div>
@@ -165,7 +130,7 @@ echo <<<EOF
                             <!-- small box -->
                             <div class="small-box bg-warning">
                                 <div class="inner">
-                                    <h3>$count_users</h3>
+                                    <h3>{$totalaccount}</h3>
 
                                     <p>Số lượng tài khoản</p>
                                 </div>
@@ -225,22 +190,7 @@ echo <<<EOF
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr>
-                                                        <td style="width: 20%;">1</td>
-                                                        <td style="width: 30%;">Chỉ trích bủa vây, Arteta gặp nạn lớn ở Arsenal </td>
-                                                        <td style="width: 20%;">Lê Văn Lư</td>
-                                                        <td style="text-align: center; width: 20%;">15:00</td>
-                                                        <td style="text-align: center; width: 5%;">
-                                                            <form action="" method="POST">
-                                                                <a href="javascript:void(0)" class="btn btn-block btn-primary btn-sm"><i class="fas fa-edit"></i></a>
-                                                            </form>
-                                                        </td>
-                                                        <td style="text-align: center; width: 5%;">
-                                                            <form action="" method="POST">
-                                                                <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm"><i class="fas fa-trash"></i></a>
-                                                            </form>
-                                                        </td>
-                                                    </tr>
+                                                   {$htmlcategory}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -294,6 +244,181 @@ echo <<<EOF
             <!-- /.content -->
         </div>
 EOF;
+/*
+ *
+ *
+ * script dialog popup
+ *
+ *
+ */
+$titleHTML = '';
+$cssHTML = '';
+$scriptHTML = <<< EOF
+<script>
+    $(function() {
+        //Button delete
+        $('.sc_user').on('click', function(e) {
+            e.preventDefault();
+            var message = "Bài viết này sẽ bị xoá. Bạn có chắc chắn";
+            var that = $(this)[0];
+            sweetConfirm(1, message, function(result) {
+                if (result){
+                    window.location.href = that.href;
+                }
+            });
+        });
+      $('.sc_edit').on('click', function(e) {
+            e.preventDefault();
+            var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
+            var form = $(this).closest("form");
+            sweetConfirm(3, message, function(result) {
+                if (result){
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+EOF;
+
+/*
+ * function get databae tabel
+ */
+function getcategory($con, $current_day, $func_id){
+    $pg_param = array();
+    $index = 0;
+    $recCnt = 0;
+    $sql = "";
+    $sql .= "SELECT news.id, news.title                     ";
+    $sql .= " ,users.fullname , users.role                   ";
+    $sql .= " ,news.createdate                               ";
+    $sql .= " FROM news                                      ";
+    $sql .= " INNER JOIN users                               ";
+    $sql .= " ON news.createby = users.id                    ";
+    $sql .= " WHERE news.createdate = '".$current_day."'     ";
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+    $html = '';
+    if ($recCnt != 0){
+        while ($row = pg_fetch_assoc($query)){
+            $index++;
+
+// check role for button delete
+            $htmlButtondelete = '';
+            if ($_SESSION['role'] == $row['role']){
+                $htmlButtondelete .= <<< EOF
+                <form action="" method="POST">
+                        <a href="" class="btn btn-block btn-danger btn-sm sc_user"><i class="fas fa-trash"></i></a>
+                </form>
+EOF;
+            } else {
+                $htmlButtondelete .= <<< EOF
+                     <a class="btn btn-block btn-danger btn-sm" disabled><i class="fas fa-ban"></i></a>
+EOF;
+            }
+
+// check role for button edit
+            $htmlButtonedit = '';
+            if ($_SESSION['role'] == $row['role']){
+                $htmlButtonedit .= <<< EOF
+                <form action="detail-news.php" method="POST">
+                   <input type="hidden" name="mode" value="update">
+                   <input type="hidden" name="nid" value="{$row['id']}">
+                   <a href="" class="btn btn-block btn-primary btn-sm sc_edit" ><i class="fas fa-edit"></i></a>
+                </form>
+                   
+EOF;
+            } else {
+                $htmlButtonedit .= <<<EOF
+                     <button class="btn btn-block btn-primary btn-sm " disabled><i class="fas fa-edit"></i></button>
+EOF;
+            }
+
+            $html .= <<<EOF
+                       <tr>
+                            <td style="width: 20%;">{$index}</td>
+                            <td style="width: 30%;">{$row['title']}</td>
+                            <td style="width: 20%;">{$row['fullname']}</td>
+                            <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
+                            <td style="text-align: center; width: 5%;">
+                                   {$htmlButtonedit}
+                            </td>
+                            <td style="text-align: center; width: 5%;">
+                                   {$htmlButtondelete}
+                            </td>
+                        </tr>
+                        
+                
+
+EOF;
+        }
+    }
+    return $html;
+}
+
+/*
+ * total article count
+ */
+function total_article($con){
+    $sql = "";
+    $sql .= "SELECT COUNT(id)      ";
+    $sql .= " AS count_news        ";
+    $sql .= "FROM news             ";
+    $query = pg_query($con, $sql);
+    if(!$query){
+        echo pg_last_error($con);
+        exit();
+    }
+    while ($number_news = pg_fetch_row($query)){
+        $count_news = $number_news[0];
+    }
+    return $count_news;
+}
+
+/*
+ * total post of new day
+ */
+function total_post($con, $current_day){
+    $sql = "";
+    $sql .= "SELECT COUNT(id)                           ";
+    $sql .= " AS post_new_day                           ";
+    $sql .= " FROM news                                 ";
+    $sql .= " WHERE createdate = '".$current_day."'       ";
+
+    $res = pg_query($con, $sql);
+    if(!$res){
+        echo pg_last_error($con);
+        exit();
+    }
+    while ($number_day = pg_fetch_row($res)){
+        $count_news_day = $number_day[0];
+    }
+    return $count_news_day;
+}
+
+/*
+ * number of accounts
+ */
+function total_account($con) {
+    $sql = "";
+    $sql .= "SELECT COUNT(id)      ";
+    $sql .= " AS count_users        ";
+    $sql .= "FROM users             ";
+    $resu = pg_query($con, $sql);
+    if(!$resu){
+        echo pg_last_error($con);
+        exit();
+    }
+    while ($number_users = pg_fetch_row($resu)){
+        $count_users = $number_users[0];
+    }
+    return $count_users;
+}
+
 
 //Footer
 include ($TEMP_APP_FOOTER_PATH);
