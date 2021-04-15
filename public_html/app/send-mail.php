@@ -3,8 +3,8 @@
 use PHPMailer\PHPMailer\PHPMailer;
 
 //Common setting
-require_once ('config.php');
-require_once ('lib.php');
+require_once('config.php');
+require_once('lib.php');
 require_once('../app/plugins/PHPMailer/PHPMailer.php');
 require_once('../app/plugins/PHPMailer/SMTP.php');
 require_once('../app/plugins/PHPMailer/Exception.php');
@@ -103,7 +103,7 @@ echo <<<EOF
 EOF;
 
 //Meta CSS
-include ($TEMP_APP_META_PATH);
+include($TEMP_APP_META_PATH);
 
 echo <<<EOF
 </head>
@@ -165,7 +165,7 @@ echo <<<EOF
 EOF;
 
 //Meta JS
-include ($TEMP_APP_METAJS_PATH);
+include($TEMP_APP_METAJS_PATH);
 echo <<<EOF
     </div>
 </body>
@@ -212,7 +212,7 @@ function validateForm($con, $func_id, $f_loginid, $f_email)
 
     if (empty($mes['chk_required']) && empty($mes['chk_format']) && empty($mes['chk_max_length'])) {
         // Check loginId and mail is exist
-        if (!$user = getUser($con, $func_id, $f_loginid, $f_email)){
+        if (!$user = getUser($con, $func_id, $f_loginid, $f_email)) {
             $mes = [
                 'chk_required' => [],
                 'chk_format' => [],
@@ -272,11 +272,12 @@ function getUser($con, $func_id, $loginid, $email)
  */
 function createTokenAndSendMail($con, $user, $f_email, $func_id)
 {
+    $loginId = $user['loginid'];
     // Set Token to email
-    $token = md5($f_email) . rand(10, 9999);
+    $token = md5($loginId) . rand(10, 9999);
     // Set link in mail
     $link = $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' .
-        'change-password.php' . "?uid=" . $f_email . "&token=" . $token;
+        'change-password.php' . "?uid=" . $loginId . "&token=" . $token;
 
     $fullname = $user['fullname'];
     $pg_param = array();

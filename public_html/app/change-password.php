@@ -13,7 +13,7 @@ $iconClass = '';
 $minLoginId = 6;
 $maxPassword = 16;
 $maxLoginId = 254;
-$maxDatetimeToken = 60 * 15; // 15 minutes
+//$maxDatetimeToken = 60 * 15; // 15 minutes
 $messageFlg = 0; // 1: visible; 0: invisible
 
 session_start();
@@ -23,74 +23,39 @@ $con = openDB();
 
 //Get param
 $param = getParam();
-$url_page = $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'] ?? '';
-$url_email = $param['uid'] ?? '';
+
+$url_page = 'change-password.php?' . $_SERVER['QUERY_STRING'] ?? '';
+$url_loginId = $param['uid'] ?? '';
 $url_token = $param['token'] ?? '';
 $f_password = $param['password'] ?? '';
 $f_cpassword = $param['passwordConfirm'] ?? '';
-$_SESSION['url_change_password'] = '';
-$_SESSION['url_email'] = '';
-$_SESSION['url_token'] = '';
 
-// Set session
-if (empty($_SESSION['url_change_password'])) {
-    $_SESSION['url_change_password'] = $_SERVER['REQUEST_URI'];
-    $_SESSION['url_email'] = getString($_SERVER['QUERY_STRING'], 'uid=');
-    $_SESSION['url_token'] = getString($_SERVER['QUERY_STRING'], 'token=');
+$arr_qs = getString($_SERVER['QUERY_STRING']);
+if (empty($url_loginId) && empty($url_token)) {
+    $url_loginId = $arr_qs[0];  // Set loginId
+    $url_token = $arr_qs[1];    // Set token
 }
 
-// Check that email and token exist
-if (empty($url_email) && empty($url_token)) {
-    if (!empty($validate)) {
-        unset($_SESSION['url_change_password']);
-        unset($_SESSION['url_email']);
-        unset($_SESSION['url_token']);
+//checkValidate($con, $func_id, $url_loginId, $url_token, $f_password, $f_cpassword);
 
-        $_SESSION['message'] = 'Đường dẫn không tồn tại';
-        $_SESSION['messageClass'] = 'alert-danger';
-        $_SESSION['iconClass'] = 'fas fa-check-circle';
-
-        header('location: login.php');
-        exit();
-    }
-}
-
-$validate = checkValidate($f_password, $f_cpassword);
-$validate2 = checkUserAndTimeToken($con, $maxDatetimeToken, $url_email, $url_token);
-
-// Is button submit?
-if (!empty($_POST)) {
-    checkUserAndTimeToken($con, $maxDatetimeToken, $_SESSION['url_email'], $_SESSION['url_token']);
-    if ($validate2 == false) {
-        unset($_SESSION['url_change_password']);
-        unset($_SESSION['url_email']);
-        unset($_SESSION['url_token']);
-
-        $_SESSION['message'] = 'Đường dẫn không tồn tại';
-        $_SESSION['messageClass'] = 'alert-danger';
-        $_SESSION['iconClass'] = 'fas fa-ban';
-
-        header('location: login.php');
-        exit();
-    } else if (empty($validate)) {
-
-        updatePassword($con, $_SESSION['url_email'], $_SESSION['url_token'], $f_password);
-
-        unset($_SESSION['url_change_password']);
-        unset($_SESSION['url_email']);
-        unset($_SESSION['url_token']);
-
-        $_SESSION['message'] = 'Mật khẩu của bạn đã cập nhật';
-        $_SESSION['messageClass'] = 'alert-success';
-        $_SESSION['iconClass'] = 'fas fa-check-circle';
-        header('location: login.php');
-        exit();
-    }
-}
+$validate = checkValidate($con, $func_id, $url_loginId, $url_token, $f_password, $f_cpassword);
 
 if ($param) {
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
         $mes = $validate;
+        if (empty($mes)) {
+            $messageFlg = 1;
+        }
+
+//        if ($messageFlg == 1) {
+//            updatePassword($con, $func_id, $url_loginId, $url_token, $f_password);
+//
+//            $_SESSION['message'] = 'Mật khẩu của bạn đã cập nhật';
+//            $_SESSION['messageClass'] = 'alert-success';
+//            $_SESSION['iconClass'] = 'fas fa-check-circle';
+//            header('location: login.php');
+//            exit();
+//        }
 
         $message = join('<br>', $mes);
         if (strlen($message)) {
@@ -135,16 +100,18 @@ $scriptHTML = '';
 $scriptHTML = <<<EOF
 <script>
 $(function() {
-    if ({$messageFlg} == 1){
-        Swal.fire({
-                icon: 'warning',
-                title: 'Đường dẫn không tồn tại',
-                text: 'Đường dẫn không tồn tại hoặc đã hết hạn. Bạn vui lòng kiểm tra lại hoặc gửi lại yêu cầu!',
-                type: "warning"
-            }).then(function() {
-                window.location.href = "login.php";
-            });
-    };
+        $('#btn-cpass').on('click', function(e) {
+            e.preventDefault();
+            var message = "Mật khẩu của bạn sẽ được thay đổi. Bạn chắc chứ?";
+            var form = $(this).closest("form");
+            if ({$messageFlg} == 1){
+                sweetConfirm(3, message, function(result) {
+                    if (result){
+                        form.submit();
+                    }
+                });
+            }
+        });
 });
 </script>
 EOF;
@@ -175,7 +142,7 @@ echo <<<EOF
                 <a href="send-mail.php" class="h1"><b>Arsenal</b>Quán</a>
             </div>
             <div class="card-body">
-                <form action="{$_SESSION['url_change_password']}" method="POST">
+                <form action="{$url_page}" method="POST">
                     <div class="input-group mb-3">
                         <input type="password" name="password" class="form-control" placeholder="Mật khẩu mới" value="" autocomplete="off">
                         <div class="input-group-append">
@@ -196,7 +163,7 @@ echo <<<EOF
                         <!-- /.col -->
                         <div class="col-5">
                             <input type="hidden" name="registFlg" value="1">
-                            <button type="submit" name="login" class="btn btn-primary btn-block">Xác nhận</button>
+                            <button type="submit" name="btn-cpass" id="btn-cpass" class="btn btn-primary btn-block">Xác nhận</button>
                         </div>
                         <!-- /.col -->
                     </div>
@@ -220,10 +187,19 @@ EOF;
  * @param comfirm password
  * @return message
  */
-function checkValidate($f_password, $f_cpassword)
+function checkValidate($con, $func_id, $url_loginid, $url_token, $f_password, $f_cpassword)
 {
 
-    global $maxPassword, $minLoginId;
+    global $maxPassword, $minLoginId, $messageFlg;
+
+    if (!$user = getUser($con, $func_id, $url_loginid, $url_token)) {
+        $_SESSION['message'] = 'Đường dẫn không tồn tại';
+        $_SESSION['messageClass'] = 'alert-danger';
+        $_SESSION['iconClass'] = 'fas fa-check-circle';
+
+        header('location: login.php');
+        exit();
+    }
 
     $mes = [
         'chk_required' => [],
@@ -265,6 +241,10 @@ function checkValidate($f_password, $f_cpassword)
         $mes['chk_match'],
     );
 
+    if (empty($msg)) {
+        $messageFlg = 0;
+    }
+
     return $msg;
 }
 
@@ -277,14 +257,13 @@ function checkValidate($f_password, $f_cpassword)
  * @param comfirm password
  * @return boolean
  */
-function updatePassword($con, $email, $token, $password)
+function updatePassword($con, $fun_id, $uid, $token, $password)
 {
     $pg_param = array();
-    $pg_param[0] = $email;
+    $pg_param[0] = $uid;
     $pg_param[1] = $token;
 
     // update password
-    $message = 1;
     $pg_param[1] = null; // set token is empty in params
     $pg_param[2] = null; // set date_token is empty in params
     $pg_param[3] = $password;
@@ -294,99 +273,12 @@ function updatePassword($con, $email, $token, $password)
     $sql .= "SET reset_link_token = $2,     ";
     $sql .= "date_token = $3,               ";
     $sql .= "password = $4                  ";
-    $sql .= "WHERE email = $1               ";
+    $sql .= "WHERE loginid = $1               ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, TRUE));
     }
-}
-
-/**
- * Check time token
- * @param con
- * @param maxDate
- * @param token
- * @return boolean
- */
-function checkUserAndTimeToken($con, $maxDatetimeToken, $email, $token)
-{
-    $return = false;
-    $range_datetime = -1;
-    $user = array();
-    $pg_param = array();
-    $pg_param[0] = $email;
-    $pg_param[1] = $token;
-
-    // Check email and token exist
-    $sql = "";
-    $sql .= "SELECT * FROM users         ";
-    $sql .= "WHERE email = $1            ";
-    $sql .= "AND reset_link_token  = $2  ";
-    $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query) {
-        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, TRUE));
-    } else {
-        $user = pg_fetch_assoc($query);
-        $row = pg_num_rows($query);
-    }
-
-    // Check user exst and Set datetime token
-    if ($row != 0) {
-        $datetime_now = strtotime(getDateTime());
-        $datetime_token = strtotime($user['date_token']);
-        $range_datetime = $datetime_now - $datetime_token;
-    }
-
-    // Check datetime token
-    if ($range_datetime >= $maxDatetimeToken || $range_datetime < 0) {
-        $pg_param[1] = NULL; // Set token
-        $pg_param[2] = NULL; // Set date_token
-
-        $sql = "";
-        $sql .= "UPDATE users               ";
-        $sql .= "SET reset_link_token = $2, ";
-        $sql .= "date_token = $3            ";
-        $sql .= "WHERE email = $1           ";
-        $query = pg_query_params($con, $sql, $pg_param);
-        if (!$query) {
-            systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, TRUE));
-        }
-
-    } else {
-        $return = true;
-    }
-
-    // Check link
-    if ($return == false) {
-        unset($_SESSION['url_change_password']);
-        unset($_SESSION['url_email']);
-        unset($_SESSION['url_token']);
-
-        $_SESSION['message'] = 'Đường dẫn của bạn đã hết hạn';
-        $_SESSION['messageClass'] = 'alert-danger';
-        $_SESSION['iconClass'] = 'fas fa-ban';
-
-        header('location: login.php');
-        exit();
-    }
-
-    return $return;
-}
-
-/**
- * @param $strInput
- * @param $strValue
- * @return mixed
- */
-function getString($strInput, $strValue)
-{
-    $str = '';
-    if (isset($strInput)) {
-        $str = explode($strValue, $strInput);
-        $str = explode('&', $str[1]);
-    }
-    return $str[0];
 }
 
 /**
@@ -397,18 +289,18 @@ function getString($strInput, $strValue)
  * @param $token
  * @return array
  */
-function getUser($con, $func_id, $email, $token)
+function getUser($con, $func_id, $loginid, $token)
 {
     $user = array();
     $pg_param = array();
-    $pg_param[0] = $email;
+    $pg_param[0] = $loginid;
     $pg_param[1] = $token;
 
     // Check email and token exist
     $sql = "";
     $sql .= "SELECT * FROM users    ";
-    $sql .= "WHERE reset_link_token = $2     ";
-    $sql .= "AND email  = $1        ";
+    $sql .= "WHERE loginid = $1     ";
+    $sql .= "AND reset_link_token = $2        ";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, TRUE));
@@ -417,6 +309,34 @@ function getUser($con, $func_id, $email, $token)
     }
 
     return $user;
+}
+
+/**
+ * @param $strInput
+ * @param $strValue
+ * @return mixed
+ */
+function getString($strInput)
+{
+    $array = [
+        'uid' => [],
+        'token' => [],
+    ];
+
+    if (isset($strInput)) {
+        $str = explode('=', $strInput);
+        $array['token'][] = $str[2];
+
+        $str = explode('&', $str[1]);
+        $array['uid'][] = $str[0];
+    }
+
+    $arr = array_merge(
+        $array['uid'],
+        $array['token'],
+    );
+
+    return $arr;
 }
 
 ?>
