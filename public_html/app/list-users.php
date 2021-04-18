@@ -378,16 +378,29 @@ EOF;
  */
 function validateDataSearch($fullName, $loginId, $dateForm, $dateTo, $maxStr)
 {
-    $mes = array();
+    $mes = [
+        'chk_format'     => [],
+        'chk_max_length' => []
+    ];
     
     if (mb_strlen($fullName) > $maxStr) {
-        $mes[] = 'Họ tên không được nhập quá ' . $maxStr . ' ký tự.';
+        $mes['chk_max_length'][] = 'Họ tên không được nhập quá ' . $maxStr . ' ký tự.';
     }
     
     if (mb_strlen($loginId) > $maxStr) {
-        $mes[] = 'Tên đăng nhập không được nhập quá ' . $maxStr . ' ký tự.';
+        $mes['chk_max_length'][] = 'Tên đăng nhập không được nhập quá ' . $maxStr . ' ký tự.';
     }
-    return $mes;
+    
+    if (strtotime($dateForm) > strtotime($dateTo)){
+        $mes['chk_format'][] = 'Không thể tìm kiếm với thông tin ' .$dateForm. ' lớn hơn '.$dateTo.'';
+    }
+    
+    $msg = array_merge(
+        $mes['chk_format'],
+        $mes['chk_max_length']
+    );
+    
+    return $msg;
 }
 
 /**
@@ -420,13 +433,13 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
     }
     
     if (!empty($dateForm) && (mb_strlen($dateForm) > 0)){
-        $pg_param[] = '%'.$dateForm.'%';
+        $pg_param[] = $dateForm;
         $cnt++;
-        $pg_sql[] = " AND createDate >= ".$cnt."              ";
+        $pg_sql[] = " AND createDate >= $".$cnt."              ";
     }
     
     if (!empty($dateTo) && (mb_strlen($dateTo) > 0)){
-        $pg_param[] = '%'.$dateTo.'%';
+        $pg_param[] = $dateTo;
         $cnt++;
         $pg_sql[] = " AND createDate <= $".$cnt."              ";
     }
