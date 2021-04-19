@@ -31,7 +31,10 @@ $check_rm = $param['remember'] ?? '';
 
 if(isset($cookie_name)){
     if(isset($_COOKIE[$cookie_name])){
-        $_SESSION['loginId'] = getUsernameInCookie($cookie_name);
+        $loginId = getUsernameInCookie($cookie_name);
+        $role = getRoleUserByLoginId($con, $func_id, $loginId);
+        $_SESSION['loginId'] = $loginId;
+        $_SESSION['role'] = $role;
         header('location: dashboard.php');
         exit();
     }
@@ -288,4 +291,34 @@ function getUsernameInCookie($cookie_name){
     }
     return $str[0];
 }
+
+/**
+ * Get Role by Loginid
+ * @param $con
+ * @param $func_id
+ * @param $uid
+ * @return mixed
+ */
+function getRoleUserByLoginId($con, $func_id, $uid){
+    $user = array();
+    $pg_param = array();
+    $pg_param[] = $uid;
+
+    $sql = "";
+    $sql .= "SELECT role                ";
+    $sql .= "FROM users                 ";
+    $sql .= "WHERE loginid = $1         ";
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }else {
+        $recCnt = pg_num_rows($query);
+    }
+    if ($recCnt != 0){
+        $user = pg_fetch_assoc($query);
+    }
+
+    return $user['role'];
+}
+
 ?>

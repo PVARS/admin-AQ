@@ -5,16 +5,29 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'list_student';
+$func_id        = 'list_student';
+$userLogin      = array();
+$imageAtt       = '';
+$valuecategory  = '';
 
 session_start();
 
 //Get param
 $param = getParam();
-$mode = $param['mode'] ?? 'new';
-$nid = $param['nid'] ?? '';
+$mode  = $param['mode'] ?? 'new';
+$nid   = $param['nid'] ?? '';
 
-$role = $_SESSION['role'] ?? '';
+$role  = $_SESSION['role'] ?? '';
+
+/*data in form*/
+$submit       = $param['btn_saveOrUpdate'] ?? '';
+$f_category   = $param['category'] ?? '';
+$f_title      = $param['title'] ?? '' ;
+$f_shortdes   = $param['shortdescription'] ?? '';
+$f_fullname   = $param['fullname'] ?? '';
+$f_thumbnail  = $param['thumbnail'] ?? '';
+$f_urlImamge  = $param['urlImage'] ?? '';
+$f_content    = $param['content'] ?? '';
 
 //Connect DB
 $con = openDB();
@@ -22,6 +35,19 @@ $con = openDB();
 if (!isset($_SESSION['loginId'])){
     header('location: login.php');
     exit();
+}
+
+// Get id and fullname user
+$userLogin = getUserByLoginId($con, $func_id, $_SESSION['loginId']);
+
+if (isset($submit) && (mb_strlen($submit) > 0)) {
+
+    if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
+        updateNews($con, $func_id, $param, $userLogin['id']);
+    } else { /*Insert News*/
+        insertNews($con, $func_id, $param, $userLogin['id']);
+    }
+
 }
 
 //get data edits
@@ -32,14 +58,21 @@ if(isset($nid) && (mb_strlen($nid) > 0)){
     $valueshortdes  = $edit_new['shortdescription'];
     $valueusers     = $edit_new['fullname'];
     $valuethumbnail = $edit_new['thumbnail'];
+    $f_urlImamge    = $edit_new['thumbnail']; // set url image
     $valuecontent   = $edit_new['content'];
 } else {
     $valuetitle     = $param['title'] ?? '' ;
     $valueRole      = $param['category'] ?? '';
     $valueshortdes  = $param['shortdescription'] ?? '';
-    $valueusers     = $param['fullname'] ?? '';
+//    $valueusers     = $param['fullname'] ?? '';
+    $valueusers     = $userLogin['fullname'];
     $valuethumbnail = $param['thumbnail'] ?? '';
     $valuecontent   = $param['content'] ?? '';
+}
+
+// Set param url image
+if (isset($f_urlImamge) && (mb_strlen($f_urlImamge) > 0)) {
+    $imageAtt = 'src="' . $f_urlImamge . '" class="mb-2" height="100"';
 }
 
 //get combobox
@@ -50,7 +83,99 @@ $showcategoryhtml = show_category($con, $func_id, $valuecategory);
 //-----------------------------------------------------------
 $titleHTML = '';
 $cssHTML = '';
-$scriptHTML = '';
+$scriptHTML = <<<EOF
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-storage.js"></script>
+    
+<!-- TODO: Add SDKs for Firebase products that you want to use 
+https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-analytics.js"></script>
+
+<script>
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    var firebaseConfig = {
+        apiKey: "AIzaSyBTF-NeiTUHRLqArhelm_AfCJ-bWgq8Umg",
+        authDomain: "arsenalquan-82401.firebaseapp.com",
+        projectId: "arsenalquan-82401",
+        storageBucket: "arsenalquan-82401.appspot.com",
+        messagingSenderId: "426824354942",
+        appId: "1:426824354942:web:1acc2d5be62d6d72191c2f",
+        measurementId: "G-B0TKQTF919"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    /*Check file user input*/
+    function validateFileType(){
+        let file = document.getElementById("thumbnail");
+        var fileName = file.value,
+            idxDot = fileName.lastIndexOf(".") + 1,
+            extFile = fileName.substr(idxDot, fileName.length).toLowerCase();
+
+        if (extFile=="jpg" || extFile=="jpeg" || extFile=="png"){ /*return true*/
+            // Show image seleced
+            var selectedFile = event.target.files[0];
+            var reader = new FileReader();
+            var imgtag = document.getElementById("image");
+            var image_db = document.getElementById("image_db");
+            imgtag.style.display = "block";
+            image_db.style.display = "none";
+            imgtag.title = selectedFile.name;
+            reader.onload = function(event) {
+                imgtag.src = event.target.result;
+            };
+            reader.readAsDataURL(selectedFile);
+        }else{ /*return false*/
+            alert("Only jpg/jpeg and png files are allowed!");
+            file.value = "";  // Reset the input so no files are uploaded
+            document.getElementById("urlImage").value = '';
+            document.getElementById("image").style.display = "none";
+            document.getElementById("image").src = '';
+        }
+    }
+
+    /*Submit form and upload file image*/
+    function uploadImage() {
+        var file_image = document.getElementById("thumbnail");
+        var url_image = document.getElementById("urlImage");
+        document.getElementById("btn_saveOrUpdate").value = 'save';
+        
+        /*Check file exist*/
+        if (url_image.value == "" && file_image.files.length == 0){
+            alert("Image Upload no file selected");
+        } else if (file_image.files.length == 0){ 
+            document.getElementById("ismForm").submit(); /*Submit form*/
+        } else{     
+            /*Setting gif loader*/
+            document.getElementById("submit_saveOrUpdate").style.display = "none";
+            document.getElementById("submit_disable").style.display = "block";
+            
+            /*Upload file to Firebase*/
+            const ref = firebase.storage().ref();
+            const file = document.querySelector("#thumbnail").files[0];
+            const name = file.name;
+            const metadata = {
+                contentType: file.type
+            };
+            const task = ref.child(name).put(file, metadata);
+    
+            task
+                .then(snapshot => snapshot.ref.getDownloadURL())
+                .then(url =>{
+                    document.getElementById('image').style.display = "block";
+                    document.getElementById("urlImage").value = url;
+                    const image = document.querySelector('#image');
+                    image.src = url;
+                    document.getElementById("ismForm").submit(); /*Submit form*/
+                });
+        }
+    }
+</script>
+EOF;
 
 echo <<<EOF
 <!DOCTYPE html>
@@ -111,7 +236,8 @@ echo <<<EOF
                 <div class="container-fluid">
                     <div class="row">
                         <div class="card-body">
-                            <form action="" method="POST">
+                            <form action="{$_SERVER['SCRIPT_NAME']}" id="ismForm" method="POST">
+                                <input type="hidden" name="nid" value="{$nid}">
                                 <div class="card card-info">
                                     <div class="card-header">
                                         <h3 class="card-title">Thêm bài viết</h3>
@@ -124,35 +250,45 @@ echo <<<EOF
 
                                         <label>Tiêu đề</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Tiêu đề" value="{$valuetitle}">
+                                            <input type="text" name="title" class="form-control" placeholder="Tiêu đề" value="{$valuetitle}">
                                         </div>
 
                                         <label>Mô tả ngắn</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Mô tả ngắn" value="{$valueshortdes}}">
+                                            <input type="text" name="shortdescription" class="form-control" placeholder="Mô tả ngắn" value="{$valueshortdes}">
                                         </div>
 
                                         <label>Người đăng</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" value="{$valueusers}" readonly>
+                                            <input type="text" name="fullname" class="form-control" value="{$valueusers}" readonly>
                                         </div>
 
                                         <label>Thumbnail</label>
+                                        <input type="hidden" class="form-control" name="urlImage" id="urlImage" value="{$f_urlImamge}" readonly>
+                                        <div class="input-group">
+                                            <img id="image" class="mb-2" height="100" style="display: none;"/>
+                                        </div>
+                                        <div class="input-group">
+                                            <img id="image_db" {$imageAtt}/>
+                                        </div>
                                         <div class="input-group mb-3">
                                             <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="customFile" value="{$valuethumbnail}">
+                                                <input type="file" class="custom-file-input" id="thumbnail" value="{$valuethumbnail}" accept=".jpg,.jpeg,.png" onchange="validateFileType()">
                                                 <label class="custom-file-label" for="customFile">Chọn file</label>
                                             </div>
                                         </div>
 
                                         <label>Nội dung</label>
-                                        <textarea id="summernote">{$valuecontent}</textarea>
+                                        <textarea id="summernote" name="content">{$valuecontent}</textarea>
                                     </div>
                                     <!-- /.card-body -->
                                     <div class="card-footer">
-                                        <button type="submit" class="btn btn-primary float-right" style="background-color: #17a2b8;">
-                                            <i class="fas fa-save"></i>
-                                            &nbspLưu
+                                        <input type="hidden" name="btn_saveOrUpdate" id="btn_saveOrUpdate" value="saveOrUpdate">
+                                        <span type="submit" class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
+                                            <i class="fas fa-save"></i>&nbspLưu
+                                        </span>
+                                        <button class="btn btn-primary float-right" id="submit_disable" disabled style="display: none;">
+                                            <i class="fas fa-save"></i>&nbspLưu
                                         </button>
                                         <a href="#" id="btn_clear">
                                             <button type="button" class="btn btn-danger">
@@ -250,6 +386,110 @@ echo <<<EOF
 </body>
 </html>
 EOF;
+
+/**
+ * Get id, fullname of user by loginid
+ * @param $con
+ * @param $func_id
+ * @param $uid
+ * @return array
+ */
+function getUserByLoginId($con, $func_id, $uid){
+    $user = array();
+    $pg_param = array();
+    $pg_param[] = $uid;
+
+    $sql = "";
+    $sql .= "SELECT id, fullname        ";
+    $sql .= "FROM users                 ";
+    $sql .= "WHERE loginid = $1         ";
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }else {
+        $recCnt = pg_num_rows($query);
+    }
+    if ($recCnt != 0){
+        $user = pg_fetch_assoc($query);
+    }
+
+    return $user;
+}
+
+/**
+ * Insert News
+ * @param $con
+ * @param $func_id
+ * @param $param
+ * @param $idUser
+ */
+function insertNews($con, $func_id, $param, $idUser){
+    $pg_param = array();
+    $pg_param[]    = $param['category'];
+    $pg_param[]        = $param['title'];
+    $pg_param[]     = $param['shortdescription'];
+    $pg_param[]    = $param['urlImage'];
+    $pg_param[]      = $param['content'];
+    $pg_param[]      = $idUser;
+
+    $sql = "";
+    $sql .= "INSERT INTO news(              ";
+    $sql .= "            category           ";
+    $sql .= "          , title              ";
+    $sql .= "          , shortdescription   ";
+    $sql .= "          , thumbnail          ";
+    $sql .= "          , content            ";
+    $sql .= "          , createby)          ";
+    $sql .= "  VALUES(                      ";
+    $sql .= "            $1                 ";
+    $sql .= "          , $2                 ";
+    $sql .= "          , $3                 ";
+    $sql .= "          , $4                 ";
+    $sql .= "          , $5                 ";
+    $sql .= "          , $6                 ";
+    $sql .= "  )                            ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+    echo "<script>alert('Insert Success')</script>";
+
+}
+
+/**
+ * Update News
+ * @param $con
+ * @param $func_id
+ * @param $param
+ * @param $idUser
+ */
+function updateNews($con, $func_id, $param, $idUser){
+    $pg_param = array();
+    $pg_param[] = $param['category'];
+    $pg_param[] = $param['title'];
+    $pg_param[] = $param['shortdescription'];
+    $pg_param[] = $param['urlImage'];
+    $pg_param[] = $param['content'];
+    $pg_param[] = $idUser;
+    $pg_param[] = $param['nid'];
+
+    $sql = "";
+    $sql .= "UPDATE news                     ";
+    $sql .= "SET    category = $1,           ";
+    $sql .= "       title = $2,              ";
+    $sql .= "       shortdescription = $3,   ";
+    $sql .= "       thumbnail = $4,          ";
+    $sql .= "       content = $5,            ";
+    $sql .= "       updateby = $6            ";
+    $sql .= "WHERE  id = $7                   ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+    echo "<script>alert('Update Success')</script>";
+}
 
 ?>
 
