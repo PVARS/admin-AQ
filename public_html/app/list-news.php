@@ -1,32 +1,164 @@
 <?php
 
 //Common setting
-require_once ('config.php');
-require_once ('lib.php');
+require_once('config.php');
+require_once('lib.php');
 
 //Initialization
 $func_id = 'list_student';
+$maxStr = 200;
+$message = '';
+$messageClass = '';
+$iconClass = '';
+$messageSwal = 0; // 0: invisible; 1: visible
 
 session_start();
 
 //Get param
 $param = getParam();
+$f_title = $param['title'] ?? '';
+$f_category = $param['category'] ?? '';
+$f_createby = $param['createby'] ?? '';
+$f_keyword = $param['keyword'] ?? '';
+$f_dateForm = $param['dateForm'] ?? '';
+$f_dateTo = $param['dateTo'] ?? '';
+$nid = $param['nid'] ?? '';
+$mode = $param['mode'] ?? '';
+$messageSwal = $param['messageSwal'] ?? 0;
 
 $role = $_SESSION['role'] ?? '';
 
 //Connect DB
 $con = openDB();
 
-if (!isset($_SESSION['loginId'])){
+if (!isset($_SESSION['loginId'])) {
     header('location: login.php');
     exit();
 }
+
+
+$htmlListNews = '';
+$htmlCategory = '';
+$htmlCreateby = '';
+$htmlListNews = getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f_keyword, $f_dateForm);
+$htmlCategory = getComboboxCategory($con, $func_id, $f_category);
+$htmlCreateby = getComboboxCreateby($con, $func_id, $f_createby);
+
+// Validate Data input
+$validate = validateDataSearch($f_title, $f_keyword, $f_dateForm, $f_dateTo, $maxStr);
+
+if ($param){
+    if ($mode == "delete"){
+        deleteNew($con, $func_id, $nid);
+    }
+
+    if (isset($param['registFlg']) && $param['registFlg'] == 1) {
+        $mes = $validate;
+
+        $message = join('<br>', $mes);
+        if (strlen($message)) {
+            $messageClass = 'alert-danger';
+            $iconClass = 'fas fa-ban';
+        }
+
+        if (empty($mes)){
+            getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode);
+        }
+    }
+}
+
+//Message HTML
+if (isset($_SESSION['message']) && strlen($_SESSION['message'])) {
+    $message .= $_SESSION['message'];
+    $messageClass .= $_SESSION['messageClass'];
+    $iconClass .= $_SESSION['iconClass'];
+    $_SESSION['message'] = '';
+    $_SESSION['messageClass'] = '';
+    $_SESSION['iconClass'] = '';
+}
+$messageHtml = '';
+if (strlen($message)) {
+    $messageHtml = <<< EOF
+    <div class="alert {$messageClass} alert-dismissible">
+        <div class="row">
+            <div class="icon">
+                <i class="{$iconClass}"></i>
+            </div>
+            <div class="col-10">
+                {$message}
+            </div>
+        </div>
+    </div>
+EOF;
+}
+
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
 $titleHTML = '';
 $cssHTML = '';
-$scriptHTML = '';
+$scriptHTML = <<<EOF
+<script>
+    $(function() {
+        //Button clear
+        $('#btn_clear').on('click', function(e) {
+            e.preventDefault();
+            var message = "Đặt màn hình tìm kiếm về trạng thái ban đầu?";
+            var that = $(this)[0];
+            sweetConfirm(1, message, function(result) {
+                if (result){
+                    window.location.href = that.href;
+                }
+            });
+        });
+        
+        // Button delete
+        $('.btn_delete').on('click', function(e) {
+            e.preventDefault();
+            var message = "Bạn đang yêu cầu xóa bản tin này. Bạn có chắc chắn?";
+            var form = $(this).closest("form");
+            sweetConfirm(4, message, function(result) {
+                if (result){
+                    form.submit();
+                }
+            });
+        });
+                  
+    })
+    
+    if ({$messageSwal} == 1){
+        Swal.fire({
+            position: 'top',
+            icon: 'success',
+            title: 'Bản tin đã được xóa thành công',
+            showConfirmButton: false,
+            timer: 1500
+        })
+     }
+    
+    function edit_new(nid) {
+        var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
+        var form = $(this).closest("form");
+        sweetConfirm(3, message, function(result) {
+            if (result){
+                window.location.href = 'detail-news.php?nid=' + nid;
+            }
+        });            
+    }
+    
+    //paginate
+        $(document).ready(function() {
+            $(".table").paginate({
+                rows: 5,           // Set number of rows per page. Default: 5
+                position: "top",   // Set position of pager. Default: "bottom"
+                jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
+                showIfLess: false, // Don't show pager if table has only one page. Default: true
+                numOfPages: 5
+            });
+        });
+</script>
+EOF;
+
 
 echo <<<EOF
 <!DOCTYPE html>
@@ -35,7 +167,7 @@ echo <<<EOF
 EOF;
 
 //Meta CSS
-include ($TEMP_APP_META_PATH);
+include($TEMP_APP_META_PATH);
 
 echo <<<EOF
 </head>
@@ -44,16 +176,16 @@ echo <<<EOF
 EOF;
 
 //Preloader
-include ($TEMP_APP_PRELOADER_PATH);
+include($TEMP_APP_PRELOADER_PATH);
 
 //Header
-include ($TEMP_APP_HEADER_PATH);
+include($TEMP_APP_HEADER_PATH);
 
 //Menu
-if ($role == '1'){
-    include ($TEMP_APP_MENUSYSTEM_PATH);
+if ($role == '1') {
+    include($TEMP_APP_MENUSYSTEM_PATH);
 } else {
-    include ($TEMP_APP_MENU_PATH);
+    include($TEMP_APP_MENU_PATH);
 }
 
 //Conntent
@@ -87,7 +219,8 @@ echo <<<EOF
                 <div class="container-fluid">
                     <div class="row">
                         <div class="card-body">
-                            <form action="" method="POST">
+                            {$messageHtml}
+                            <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
                                 <div class="card card-info">
                                     <div class="card-header">
                                         <h3 class="card-title">Tìm kiếm</h3>
@@ -95,34 +228,26 @@ echo <<<EOF
                                     <div class="card-body">
                                         <label>Tiêu đề</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Tiêu đề">
+                                            <input type="text" class="form-control" name="title" placeholder="Tiêu đề" value="{$f_title}">
                                         </div>
 
                                         <label>Danh mục</label>
                                         <div class="input-group mb-3">
-                                            <select class="custom-select">
-                                                <option>option 1</option>
-                                                <option>option 2</option>
-                                                <option>option 3</option>
-                                                <option>option 4</option>
-                                                <option>option 5</option>
+                                            <select class="custom-select" name="category">
+                                                {$htmlCategory}
                                               </select>
                                         </div>
 
                                         <label>Người đăng</label>
                                         <div class="input-group mb-3">
-                                            <select class="custom-select">
-                                                <option>option 1</option>
-                                                <option>option 2</option>
-                                                <option>option 3</option>
-                                                <option>option 4</option>
-                                                <option>option 5</option>
+                                            <select class="custom-select" name="createby">
+                                                {$htmlCreateby}
                                               </select>
                                         </div>
 
                                         <label>Từ khoá</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Nhập từ khoá">
+                                            <input type="text" class="form-control" name="keyword" placeholder="Nhập từ khoá" value="{$f_keyword}">
                                         </div>
 
                                         <label>Thời gian</label>
@@ -131,25 +256,26 @@ echo <<<EOF
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                                                 </div>
-                                                <input type="date" class="form-control">
+                                                <input type="date" name="dateForm" value="{$f_dateForm}" class="form-control">
                                             </div>
                                             <span><b>~</b></span>
                                             <div class="input-group mb-6 col-3">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                                                 </div>
-                                                <input type="date" class="form-control">
+                                                <input type="date" name="dateTo" value="{$f_dateTo}" class="form-control">
                                             </div>
                                         </div>
                                     </div>
                                     <!-- /.card-body -->
                                     <div class="card-footer">
+                                        <input type="hidden" name="registFlg" value="1">
                                         <button type="submit" class="btn btn-primary float-right" style="background-color: #17a2b8;">
                                           <i class="fa fa-search"></i>
                                           &nbspTìm kiếm
                                         </button>
-                                        <a href="#" id="btn_clear">
-                                            <button type="button" class="btn btn-default">
+                                        <a href="" id="btn_clear">
+                                            <button type="reset" class="btn btn-default">
                                             <i class="fas fa-eraser fa-fw"></i>
                                             Xoá
                                           </button>
@@ -174,30 +300,7 @@ echo <<<EOF
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td style="width: 5%;">1</td>
-                                        <td style="width: 35%;">Chỉ trích bủa vây, Arteta gặp nạn lớn ở Arsenal </td>
-                                        <td style="width: 20%;">Lê Văn Lư</td>
-                                        <td style="text-align: center; width: 20%;">07/04/2021</td>
-                                        <td style="text-align: center; width: 20%;">100</td>
-                                        <td style="text-align: center; width: 5%;">
-                                            <form action="" method="POST">
-                                                <a href="javascript:void(0)" class="btn btn-block btn-primary btn-sm"><i class="fas fa-edit"></i></a>
-                                            </form>
-                                        </td>
-                                        <td style="text-align: center; width: 10%;">
-                                            <form action="" method="POST">
-                                                <a href="javascript:void(0)" class="btn btn-block btn-success btn-sm">
-                                                    <i class="fas fa-plus"></i>
-                                                </a>
-                                            </form>
-                                        </td>
-                                        <td style="text-align: center; width: 5%;">
-                                            <form action="" method="POST">
-                                                <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm"><i class="fas fa-trash"></i></a>
-                                            </form>
-                                        </td>
-                                    </tr>
+                                    {$htmlListNews}
                                 </tbody>
                             </table>
                         </div>
@@ -211,14 +314,272 @@ echo <<<EOF
 EOF;
 
 //Footer
-include ($TEMP_APP_FOOTER_PATH);
+include($TEMP_APP_FOOTER_PATH);
 //Meta JS
-include ($TEMP_APP_METAJS_PATH);
+include($TEMP_APP_METAJS_PATH);
 echo <<<EOF
     </div>
 </body>
 </html>
 EOF;
+
+/**
+ * @param $con
+ * @param $func_id
+ * @param $f_title
+ * @param $f_category
+ * @param $f_createby
+ * @param $f_keyword
+ * @param $f_dateForm
+ * @return string
+ */
+function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f_keyword, $f_dateForm)
+{
+    $pg_param = array();
+    $pg_sql = array();
+    $recCnt = 0;
+    $count = 0;
+    $html = '';
+
+    if (!empty($f_title) && (mb_strlen($f_title) > 0)) {
+        $pg_param[] = '%' . $f_title . '%';
+        $count++;
+        $pg_sql[] = " AND news.title ILIKE $" . $count . "             ";
+    }
+
+    if (!empty($f_category) && (mb_strlen($f_category) > 0)) {
+        $pg_param[] = $f_category;
+        $count++;
+        $pg_sql[] = " AND news.category = $" . $count. "               ";
+    }
+
+    if (!empty($f_createby) && (mb_strlen($f_createby) > 0)) {
+        $pg_param[] = $f_createby;
+        $count++;
+        $pg_sql[] = " AND users.id = $" . $count. "                     ";
+    }
+
+    if (!empty($f_keyword) && (mb_strlen($f_keyword) > 0)) {
+        $pg_param[] = '%' . $f_keyword . '%';
+        $count++;
+        $pg_sql[] = " AND news.shortdescription ILIKE $" . $count . "   ";
+    }
+
+    if (!empty($f_dateForm) && (mb_strlen($f_dateForm) > 0)){
+        $pg_param[] = $f_dateForm;
+        $count++;
+        $pg_sql[] = " AND news.createdate >= $" . $count . "                 ";
+    }
+
+    $wheresql = join(' ', $pg_sql);
+
+    $sql = "";
+    $sql .= "SELECT news.id,                    ";
+    $sql .= "       news.title,                 ";
+    $sql .= "       news.createdate,            ";
+    $sql .= "       news.view,                  ";
+    $sql .= "       news.title,                 ";
+    $sql .= "       users.fullname              ";
+    $sql .= "FROM   news                        ";
+    $sql .= "INNER JOIN users                   ";
+    $sql .= "ON news.createby = users.id        ";
+    $sql .= "INNER JOIN category                ";
+    $sql .= "ON news.category = category.id     ";
+    $sql .= "WHERE news.deldate IS NULL         ";
+    $sql .= $wheresql;
+    $sql .= "ORDER BY news.id ASC               ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0) {
+        while ($row = pg_fetch_assoc($query)) {
+            $count++;
+            $html .= <<<EOF
+                <tr>
+                   <td style="width: 5%;">{$count}</td>
+                   <td style="width: 35%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 350px;">{$row['title']}</td>
+                   <td style="width: 20%;">{$row['fullname']}</td>
+                   <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
+                   <td style="text-align: center; width: 20%;">{$row['view']}</td>
+                   <td style="text-align: center; width: 5%;">
+                       <a href="javascript:void(0)" onclick="edit_new({$row['id']})" class="btn btn-block btn-primary btn-sm" title="Chỉnh sửa">
+                            <i class="fas fa-edit"></i>
+                       </a>
+                   </td>
+                   <td style="text-align: center; width: 5%;">
+                      <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                         <input type="hidden" name="nid" value="{$row['id']}">
+                         <input type="hidden" name="mode" value="delete">
+                         <input type="hidden" name="messageSwal" value="1">
+                         <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm btn_delete" title="Xóa bài">
+                            <i class="fas fa-trash"></i>
+                         </a>
+                      </form>
+                   </td>
+                </tr>                                    
+EOF;
+
+        }
+    }else {
+        $html .= <<< EOF
+            <tr>
+                <td colspan = 7>
+                    <h3 class="card-title">
+                        <i class="fas fa-bullseye fa-fw" style="color: red"></i>
+                        Không có dữ liệu
+                    </h3>
+                </td>
+            </tr>
+EOF;
+
+    }
+    return $html;
+}
+
+/**
+ * @param $con
+ * @param $func_id
+ * @param $f_category
+ * @return string
+ */
+function getComboboxCategory($con, $func_id, $f_category)
+{
+    $pg_param = array();
+    $recCnt = 0;
+
+    $sql = "";
+    $sql .= "SELECT DISTINCT     ";
+    $sql .= "       id,          ";
+    $sql .= "       category     ";
+    $sql .= "  FROM category     ";
+    $sql .= "  ORDER BY id ASC   ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    $html = '<option value="0">Chọn danh mục</option>';
+    if ($recCnt != 0) {
+        while ($row = pg_fetch_assoc($query)) {
+
+            $selected = '';
+            if ($f_category == $row['id']) {
+                $selected = 'selected="selected"';
+            }
+
+            $html .= <<<EOF
+            <option value="{$row['id']}" {$selected}>{$row['category']}</option>
+EOF;
+
+        }
+    }
+    return $html;
+}
+
+/**
+ * @param $con
+ * @param $func_id
+ * @param $f_createby
+ * @return string
+ */
+function getComboboxCreateby($con, $func_id, $f_createby)
+{
+    $pg_param = array();
+    $recCnt = 0;
+
+    $sql = "";
+    $sql .= "SELECT DISTINCT     ";
+    $sql .= "       id,          ";
+    $sql .= "       fullname     ";
+    $sql .= "  FROM users        ";
+    $sql .= "  ORDER BY id ASC   ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    $html = '<option value="0">Chọn người đăng</option>';
+    if ($recCnt != 0) {
+        while ($row = pg_fetch_assoc($query)) {
+
+            $selected = '';
+            if ($f_createby == $row['id']) {
+                $selected = 'selected="selected"';
+            }
+
+            $html .= <<<EOF
+            <option value="{$row['id']}" {$selected}>{$row['fullname']}</option>
+EOF;
+
+        }
+    }
+    return $html;
+}
+
+/**
+ * @param $con
+ * @param $func_id
+ * @param $nid
+ */
+function deleteNew($con, $func_id, $nid){
+    $pg_param = array();
+    $pg_param[] = $nid;
+
+    $sql = "";
+    $sql .= "DELETE FROM news       ";
+    $sql .= "      WHERE id=$1      ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+}
+
+/**
+ * @param $f_title
+ * @param $f_keyword
+ * @param $dateForm
+ * @param $dateTo
+ * @param $maxStr
+ * @return array
+ */
+function validateDataSearch($f_title, $f_keyword, $dateForm, $dateTo, $maxStr)
+{
+    $mes = [
+        'chk_format'     => [],
+        'chk_max_length' => []
+    ];
+
+    if (mb_strlen($f_title) > $maxStr) {
+        $mes['chk_max_length'][] = 'Tiêu đề không được nhập quá ' . $maxStr . ' ký tự.';
+    }
+
+    if (mb_strlen($f_keyword) > $maxStr) {
+        $mes['chk_max_length'][] = 'Từ khóa không được nhập quá ' . $maxStr . ' ký tự.';
+    }
+
+    if (strtotime($dateForm) > strtotime($dateTo)){
+        $mes['chk_format'][] = 'Không thể tìm kiếm với thông tin ' .$dateForm. ' lớn hơn '.$dateTo.'';
+    }
+
+    $msg = array_merge(
+        $mes['chk_format'],
+        $mes['chk_max_length']
+    );
+
+    return $msg;
+}
 
 ?>
 

@@ -9,6 +9,8 @@ $func_id        = 'list_student';
 $userLogin      = array();
 $imageAtt       = '';
 $valuecategory  = '';
+$titlePage      = '';
+$messageSwal = 0; // 0: invisible; 1: visible
 
 session_start();
 
@@ -28,6 +30,7 @@ $f_fullname   = $param['fullname'] ?? '';
 $f_thumbnail  = $param['thumbnail'] ?? '';
 $f_urlImamge  = $param['urlImage'] ?? '';
 $f_content    = $param['content'] ?? '';
+$messageSwal = $param['messageSwal'] ?? 0;
 
 //Connect DB
 $con = openDB();
@@ -52,6 +55,7 @@ if (isset($submit) && (mb_strlen($submit) > 0)) {
 
 //get data edits
 if(isset($nid) && (mb_strlen($nid) > 0)){
+    $titlePage = "Chỉnh sửa bài viết";
     $edit_new       = get_newsedit($con, $func_id,$nid);
     $valuetitle     = $edit_new['title'] ;
     $valuecategory  = $edit_new['category'];
@@ -60,13 +64,15 @@ if(isset($nid) && (mb_strlen($nid) > 0)){
     $valuethumbnail = $edit_new['thumbnail'];
     $f_urlImamge    = $edit_new['thumbnail']; // set url image
     $valuecontent   = $edit_new['content'];
+    $valuethumbnail = getNameFileToLink($valuethumbnail);
 } else {
+    $titlePage = "Thêm bài viết";
     $valuetitle     = $param['title'] ?? '' ;
     $valueRole      = $param['category'] ?? '';
     $valueshortdes  = $param['shortdescription'] ?? '';
 //    $valueusers     = $param['fullname'] ?? '';
     $valueusers     = $userLogin['fullname'];
-    $valuethumbnail = $param['thumbnail'] ?? '';
+    $valuethumbnail = "Chọn file";
     $valuecontent   = $param['content'] ?? '';
 }
 
@@ -150,7 +156,7 @@ https://firebase.google.com/docs/web/setup#available-libraries -->
         } else if (file_image.files.length == 0){ 
             document.getElementById("ismForm").submit(); /*Submit form*/
         } else{     
-            /*Setting gif loader*/
+            // Disable button save
             document.getElementById("submit_saveOrUpdate").style.display = "none";
             document.getElementById("submit_disable").style.display = "block";
             
@@ -174,6 +180,41 @@ https://firebase.google.com/docs/web/setup#available-libraries -->
                 });
         }
     }
+    
+    if ({$messageSwal} == 1){
+        document.getElementById("submit_saveOrUpdate").style.display = "none";
+        document.getElementById("submit_disable").style.display = "block";
+        Swal.fire({
+            position: 'top',
+            icon: 'success',
+            title: 'Bản tin đã được xóa thành công',
+            showConfirmButton: false,
+            timer: 1500
+        })
+     }
+    
+    $(function() {
+        
+        // Set name file
+        $('#thumbnail').change(function() {
+          // var i = $(this).prev('label').clone();
+          var file = $('#thumbnail')[0].files[0].name;
+          console.log(file);
+          $(this).next('.custom-file-label').html(file);
+        });
+        
+        // Button clear
+        $('#btn_clear').on('click', function(e) {
+            e.preventDefault();
+            var message = "Đặt màn hình tìm kiếm về trạng thái ban đầu?";
+            var that = $(this)[0];
+            sweetConfirm(1, message, function(result) {
+                if (result){
+                    window.location.href = location.protocol + '//' + location.host + location.pathname;
+                }
+            });
+        });
+    })
 </script>
 EOF;
 
@@ -214,7 +255,7 @@ echo <<<EOF
                     <div class="row mb-2">
                         <div class="col-sm-6">
                             <h1 class="m-0">
-                                <i class="fas fa-plus-square"></i>&nbspThêm bài viết</h1>
+                                <i class="fas fa-plus-square"></i>&nbsp{$titlePage}</h1>
                         </div>
                         <!-- /.col -->
                         <div class="col-sm-6">
@@ -240,7 +281,7 @@ echo <<<EOF
                                 <input type="hidden" name="nid" value="{$nid}">
                                 <div class="card card-info">
                                     <div class="card-header">
-                                        <h3 class="card-title">Thêm bài viết</h3>
+                                        <h3 class="card-title">{$titlePage}</h3>
                                     </div>
                                     <div class="card-body">
                                         <label>Danh mục</label>
@@ -274,7 +315,7 @@ echo <<<EOF
                                         <div class="input-group mb-3">
                                             <div class="custom-file">
                                                 <input type="file" class="custom-file-input" id="thumbnail" value="{$valuethumbnail}" accept=".jpg,.jpeg,.png" onchange="validateFileType()">
-                                                <label class="custom-file-label" for="customFile">Chọn file</label>
+                                                <label class="custom-file-label" for="customFile">{$valuethumbnail}</label>
                                             </div>
                                         </div>
 
@@ -283,6 +324,7 @@ echo <<<EOF
                                     </div>
                                     <!-- /.card-body -->
                                     <div class="card-footer">
+                                        <input type="hidden" name="messageSwal" value="1">
                                         <input type="hidden" name="btn_saveOrUpdate" id="btn_saveOrUpdate" value="saveOrUpdate">
                                         <span type="submit" class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
                                             <i class="fas fa-save"></i>&nbspLưu
@@ -291,7 +333,7 @@ echo <<<EOF
                                             <i class="fas fa-save"></i>&nbspLưu
                                         </button>
                                         <a href="#" id="btn_clear">
-                                            <button type="button" class="btn btn-danger">
+                                            <button type="reset" class="btn btn-danger">
                                             <i class="fas fa-trash fa-fw"></i>
                                             Xoá
                                           </button>
@@ -430,6 +472,7 @@ function insertNews($con, $func_id, $param, $idUser){
     $pg_param[]     = $param['shortdescription'];
     $pg_param[]    = $param['urlImage'];
     $pg_param[]      = $param['content'];
+    $pg_param[]      = getDateTime();
     $pg_param[]      = $idUser;
 
     $sql = "";
@@ -439,6 +482,7 @@ function insertNews($con, $func_id, $param, $idUser){
     $sql .= "          , shortdescription   ";
     $sql .= "          , thumbnail          ";
     $sql .= "          , content            ";
+    $sql .= "          , createdate         ";
     $sql .= "          , createby)          ";
     $sql .= "  VALUES(                      ";
     $sql .= "            $1                 ";
@@ -447,13 +491,13 @@ function insertNews($con, $func_id, $param, $idUser){
     $sql .= "          , $4                 ";
     $sql .= "          , $5                 ";
     $sql .= "          , $6                 ";
+    $sql .= "          , $7                 ";
     $sql .= "  )                            ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
-    echo "<script>alert('Insert Success')</script>";
 
 }
 
@@ -488,7 +532,15 @@ function updateNews($con, $func_id, $param, $idUser){
     if (!$query){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
-    echo "<script>alert('Update Success')</script>";
+
+}
+
+function getNameFileToLink($link){
+    $str = "";
+    $link = substr($link, 76);
+    $str = $link;
+    $str = explode("?alt", $link);
+    return $str[0];
 }
 
 ?>
