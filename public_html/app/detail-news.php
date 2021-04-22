@@ -10,7 +10,8 @@ $userLogin      = array();
 $imageAtt       = '';
 $valuecategory  = '';
 $titlePage      = '';
-$messageSwal = 0; // 0: invisible; 1: visible
+$titleButton    = '';
+$messageSwal    = 0; // 0: invisible; 1: visible
 
 session_start();
 
@@ -30,7 +31,6 @@ $f_fullname   = $param['fullname'] ?? '';
 $f_thumbnail  = $param['thumbnail'] ?? '';
 $f_urlImamge  = $param['urlImage'] ?? '';
 $f_content    = $param['content'] ?? '';
-$messageSwal = $param['messageSwal'] ?? 0;
 
 //Connect DB
 $con = openDB();
@@ -38,6 +38,11 @@ $con = openDB();
 if (!isset($_SESSION['loginId'])){
     header('location: login.php');
     exit();
+}
+
+$messageSwal = $_SESSION['messageSwal'] ?? 0;
+if ($messageSwal != 0){
+    unset($_SESSION['messageSwal']);
 }
 
 // Get id and fullname user
@@ -55,7 +60,8 @@ if (isset($submit) && (mb_strlen($submit) > 0)) {
 
 //get data edits
 if(isset($nid) && (mb_strlen($nid) > 0)){
-    $titlePage = "Chỉnh sửa bài viết";
+    $titlePage      = "Chỉnh sửa bài viết";
+    $titleButton    = "Cập nhật";
     $edit_new       = get_newsedit($con, $func_id,$nid);
     $valuetitle     = $edit_new['title'] ;
     $valuecategory  = $edit_new['category'];
@@ -66,7 +72,8 @@ if(isset($nid) && (mb_strlen($nid) > 0)){
     $valuecontent   = $edit_new['content'];
     $valuethumbnail = getNameFileToLink($valuethumbnail);
 } else {
-    $titlePage = "Thêm bài viết";
+    $titlePage      = "Thêm bài viết";
+    $titleButton    = "Lưu";
     $valuetitle     = $param['title'] ?? '' ;
     $valueRole      = $param['category'] ?? '';
     $valueshortdes  = $param['shortdescription'] ?? '';
@@ -182,15 +189,27 @@ https://firebase.google.com/docs/web/setup#available-libraries -->
     }
     
     if ({$messageSwal} == 1){
-        document.getElementById("submit_saveOrUpdate").style.display = "none";
-        document.getElementById("submit_disable").style.display = "block";
-        Swal.fire({
-            position: 'top',
-            icon: 'success',
-            title: 'Bản tin đã được xóa thành công',
-            showConfirmButton: false,
-            timer: 1500
-        })
+        setTimeout(function(){
+            Swal.fire({
+                position: 'top',
+                icon: 'success',
+                title: 'Bản tin đã thêm thành công',
+                showConfirmButton: false,
+                timer: 2000
+            })
+        }, 700);
+     }
+    
+    if ({$messageSwal} == 2){
+        setTimeout(function(){
+            Swal.fire({
+                position: 'top',
+                icon: 'success',
+                title: 'Bản tin đã cập nhật thành công',
+                showConfirmButton: false,
+                timer: 2000
+            })
+        }, 700);
      }
     
     $(function() {
@@ -327,7 +346,7 @@ echo <<<EOF
                                         <input type="hidden" name="messageSwal" value="1">
                                         <input type="hidden" name="btn_saveOrUpdate" id="btn_saveOrUpdate" value="saveOrUpdate">
                                         <span type="submit" class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
-                                            <i class="fas fa-save"></i>&nbspLưu
+                                            <i class="fas fa-save"></i>&nbsp{$titleButton}
                                         </span>
                                         <button class="btn btn-primary float-right" id="submit_disable" disabled style="display: none;">
                                             <i class="fas fa-save"></i>&nbspLưu
@@ -437,8 +456,8 @@ EOF;
  * @return array
  */
 function getUserByLoginId($con, $func_id, $uid){
-    $user = array();
-    $pg_param = array();
+    $user       = array();
+    $pg_param   = array();
     $pg_param[] = $uid;
 
     $sql = "";
@@ -466,14 +485,14 @@ function getUserByLoginId($con, $func_id, $uid){
  * @param $idUser
  */
 function insertNews($con, $func_id, $param, $idUser){
-    $pg_param = array();
-    $pg_param[]    = $param['category'];
-    $pg_param[]        = $param['title'];
-    $pg_param[]     = $param['shortdescription'];
-    $pg_param[]    = $param['urlImage'];
-    $pg_param[]      = $param['content'];
-    $pg_param[]      = getDateTime();
-    $pg_param[]      = $idUser;
+    $pg_param   = array();
+    $pg_param[] = $param['category'];
+    $pg_param[] = $param['title'];
+    $pg_param[] = $param['shortdescription'];
+    $pg_param[] = $param['urlImage'];
+    $pg_param[] = $param['content'];
+    $pg_param[] = getDateTime();
+    $pg_param[] = $idUser;
 
     $sql = "";
     $sql .= "INSERT INTO news(              ";
@@ -499,6 +518,14 @@ function insertNews($con, $func_id, $param, $idUser){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
+    $id = 0;
+    $id = getIdNewsMax($con, $func_id);
+    if ($id != 0){
+        $_SESSION['messageSwal'] = 1;
+        header("location: detail-news.php?nid=$id");
+        exit();
+    }
+
 }
 
 /**
@@ -509,7 +536,7 @@ function insertNews($con, $func_id, $param, $idUser){
  * @param $idUser
  */
 function updateNews($con, $func_id, $param, $idUser){
-    $pg_param = array();
+    $pg_param   = array();
     $pg_param[] = $param['category'];
     $pg_param[] = $param['title'];
     $pg_param[] = $param['shortdescription'];
@@ -533,13 +560,51 @@ function updateNews($con, $func_id, $param, $idUser){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
+    $id = $param['nid'];
+    $_SESSION['messageSwal'] = 2;
+    header("location: detail-news.php?nid=$id");
+    exit();
+
 }
 
+/**
+ * @param $con
+ * @param $func_id
+ * @return int|mixed
+ */
+function getIdNewsMax($con, $func_id){
+    $pg_param = array();
+    $new      = array();
+    $id       = 0;
+    $recCnt   = 0;
+
+    $sql  = "";
+    $sql .= "SELECT MAX(id) id FROM news";
+
+    $query = pg_query($con, $sql);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }else{
+        $recCnt = pg_num_rows($query);
+        $new = pg_fetch_assoc($query);
+    }
+
+    if ($recCnt != 0){
+        $id = $new["id"];
+    }
+
+    return $id;
+}
+
+/**
+ * @param $link
+ * @return string
+ */
 function getNameFileToLink($link){
-    $str = "";
+    $str  = "";
     $link = substr($link, 76);
-    $str = $link;
-    $str = explode("?alt", $link);
+    $str  = $link;
+    $str  = explode("?alt", $link);
     return $str[0];
 }
 
