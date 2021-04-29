@@ -21,6 +21,11 @@ function sweetConfirm(type,message,callback) {
             title = 'MỞ KHOÁ';
             break;
         }
+
+        case 5 : {
+            title = 'THÊM MỚI';
+            break;
+        }
         default : {
             break;
         }

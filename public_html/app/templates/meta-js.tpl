@@ -39,6 +39,11 @@ print <<< EOF
 <script src="plugins/PaginateMyTable/PaginateMyTable.js"></script>
 <!-- Base script -->
 <script src="dist/js/baseScript.js"></script>
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-storage.js"></script>
+<!-- TODO: Add SDKs for Firebase products that you want to use https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-analytics.js"></script>
 <script>
     $(function() {
         // Summernote

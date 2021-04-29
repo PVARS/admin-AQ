@@ -16,7 +16,7 @@ print <<<EOF
             <i class="nav-icon fas fa-user-circle"></i>
         </div>
         <div class="info">
-            <a href="javascript:void(0)" class="d-block">Quản trị hệ thống</a>
+            <a href="javascript:void(0)" class="d-block">{$_SESSION['fullname']}</a>
         </div>
     </div>
 
