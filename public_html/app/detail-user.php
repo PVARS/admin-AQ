@@ -393,7 +393,6 @@ function getComboxRole($con, $func_id, $valueRole){
 function insertUser($con, $func_id, $param){
     $pg_param = array();
     $pg_param[] = $param['fullname'];
-    $pg_param[] = $param['getDay'];
     $pg_param[] = $param['role'];
     $pg_param[] = $param['email'];
     $pg_param[] = $param['loginId'];
@@ -401,23 +400,22 @@ function insertUser($con, $func_id, $param){
     $pg_param[] = $param['password'];
 
     $sql = "";
-    $sql .= "INSERT INTO users(             ";
-    $sql .= "            fullname           ";
-    $sql .= "          , createdate         ";
-    $sql .= "          , role               ";
-    $sql .= "          , email              ";
-    $sql .= "          , loginid            ";
-    $sql .= "          , createby           ";
-    $sql .= "          , password)          ";
-    $sql .= "  VALUES(                      ";
-    $sql .= "            $1                 ";
-    $sql .= "          , $2                 ";
-    $sql .= "          , $3                 ";
-    $sql .= "          , $4                 ";
-    $sql .= "          , $5                 ";
-    $sql .= "          , $6                 ";
-    $sql .= "          , $7                 ";
-    $sql .= "  )                            ";
+    $sql .= "INSERT INTO users(                          ";
+    $sql .= "            fullname                           ";
+    $sql .= "          , createdate                         ";
+    $sql .= "          , role                               ";
+    $sql .= "          , email                              ";
+    $sql .= "          , loginid                            ";
+    $sql .= "          , createby                           ";
+    $sql .= "          , password)                          ";
+    $sql .= "  VALUES(                                      ";
+    $sql .= "            $1                                 ";
+    $sql .= "          , '".date('Y/m/d')."'         ";
+    $sql .= "          , $2                                 ";
+    $sql .= "          , $3                                 ";
+    $sql .= "          , $4                                 ";
+    $sql .= "          , $5                                 ";
+    $sql .= "          , $6)                                ";
     
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -442,7 +440,6 @@ function insertUser($con, $func_id, $param){
 function updatetUser($con, $func_id, $param, $uid){
     $pg_param = array();
     $pg_param[] = $param['fullname'];
-    $pg_param[] = $param['getDay'];
     $pg_param[] = $param['role'];
     $pg_param[] = $param['email'];
     $pg_param[] = $param['loginId'];
@@ -451,15 +448,15 @@ function updatetUser($con, $func_id, $param, $uid){
     $pg_param[] = $uid;
     
     $sql = "";
-    $sql .= "UPDATE users SET                    ";
-    $sql .= "            fullname = $1           ";
-    $sql .= "          , updatedate = $2         ";
-    $sql .= "          , role = $3               ";
-    $sql .= "          , email = $4              ";
-    $sql .= "          , loginid = $5            ";
-    $sql .= "          , password = $6           ";
-    $sql .= "          , updateby = $7           ";
-    $sql .= "          WHERE id = $8             ";
+    $sql .= "UPDATE users SET                                      ";
+    $sql .= "       fullname = $1                                  ";
+    $sql .= "     , updatedate = '".date('Y/m/d H:i:s')."'  ";
+    $sql .= "     , role = $2                                      ";
+    $sql .= "     , email = $3                                     ";
+    $sql .= "     , loginid = $4                                   ";
+    $sql .= "     , password = $5                                  ";
+    $sql .= "     , updateby = $6                                  ";
+    $sql .= " WHERE id = $7                                        ";
     
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -478,22 +475,19 @@ function updatetUser($con, $func_id, $param, $uid){
  * Delete user function
  * @param $con
  * @param $func_id
- * @param $dateTime
  * @param $uid
  */
-function deletetUser($con, $func_id, $dateTime, $uid){
+function deletetUser($con, $func_id, $uid){
     $pg_param = array();
-    $pg_param[] = $dateTime;
     $pg_param[] = $_SESSION['loginId'];
-    $pg_param[] = $dateTime;
     $pg_param[] = $uid;
     
     $sql = "";
-    $sql .= "UPDATE users SET                 ";
-    $sql .= "             deldate = $1        ";
-    $sql .= "           , updateby = $2       ";
-    $sql .= "           , updatedate = $3     ";
-    $sql .= "       WHERE id = $4             ";
+    $sql .= "UPDATE users SET                                         ";
+    $sql .= "       deldate = '".date('Y/m/d H:i:s')."'        ";
+    $sql .= "     , updateby = $1                                     ";
+    $sql .= "     , updatedate = '".date('Y/m/d H:i:s')."'     ";
+    $sql .= " WHERE id = $2                                           ";
    
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){

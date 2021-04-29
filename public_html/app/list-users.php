@@ -6,7 +6,6 @@ require_once('lib.php');
 
 //Initialization
 $func_id = 'list_users';
-$maxStr = 200;
 $message = '';
 $messageClass = '';
 $iconClass = '';
@@ -20,14 +19,14 @@ $param = getParam();
 //Connect DB
 $con = openDB();
 
-$role = $_SESSION['role'] ?? '';
-$roleParam = $param['role'] ?? '';
-$fullName = $param['fullname'] ?? '';
-$loginId = $param['loginId'] ?? '';
-$dateForm = $param['dateForm'] ?? '';
-$dateTo = $param['dateTo'] ?? '';
-$uid = $param['uid'] ?? '';
-$mode = $param['mode'] ?? '';
+$role       = $_SESSION['role'] ?? '';
+$roleParam  = $param['role'] ?? '';
+$fullName   = $param['fullname'] ?? '';
+$loginId    = $param['loginId'] ?? '';
+$dateForm   = $param['dateForm'] ?? '';
+$dateTo     = $param['dateTo'] ?? '';
+$uid        = $param['uid'] ?? '';
+$mode       = $param['mode'] ?? '';
 
 //Set data to combox role
 $htmlRole = '';
@@ -35,7 +34,7 @@ $htmlRole = getAllRole($con, $func_id, $roleParam);
 
 //Get data user
 $htmlUser = '';
-$htmlUser = getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode);
+$htmlUser = getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam);
 
 if (!isset($_SESSION['loginId'])) {
     header('location: login.php');
@@ -47,12 +46,9 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     exit();
 }
 
-//Validation data
-$validateData = validateDataSearch($fullName, $loginId, $dateForm, $dateTo, $maxStr);
-
 if ($param) {
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
-        $mes = $validateData;
+        $mes = validateDataSearch($fullName, $loginId, $dateForm, $dateTo);
         
         $message = join('<br>', $mes);
         if (strlen($message)) {
@@ -61,7 +57,7 @@ if ($param) {
         }
         
         if (empty($mes)){
-            getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode);
+            getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam);
         }
     }
     if ($mode == 'ban'){
@@ -376,8 +372,10 @@ EOF;
  * @param $maxStr
  * @return array
  */
-function validateDataSearch($fullName, $loginId, $dateForm, $dateTo, $maxStr)
+function validateDataSearch($fullName, $loginId, $dateForm, $dateTo)
 {
+    $maxStr = 200;
+
     $mes = [
         'chk_format'     => [],
         'chk_max_length' => []
@@ -390,8 +388,8 @@ function validateDataSearch($fullName, $loginId, $dateForm, $dateTo, $maxStr)
     if (mb_strlen($loginId) > $maxStr) {
         $mes['chk_max_length'][] = 'Tên đăng nhập không được nhập quá ' . $maxStr . ' ký tự.';
     }
-    
-    if (strtotime($dateForm) > strtotime($dateTo)){
+
+    if (!empty($dateForm) && !empty($dateTo) && (strtotime($dateForm) > strtotime($dateTo))){
         $mes['chk_format'][] = 'Không thể tìm kiếm với thông tin ' .$dateForm. ' lớn hơn '.$dateTo.'';
     }
     
@@ -414,7 +412,7 @@ function validateDataSearch($fullName, $loginId, $dateForm, $dateTo, $maxStr)
  * @param $roleParam
  * @return string
  */
-function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode){
+function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam){
     $pg_param = array();
     $pg_sql = array();
     $recCnt = 0;
