@@ -1,17 +1,18 @@
 <?php
 
 //Common setting
-require_once ('config.php');
-require_once ('lib.php');
+require_once('config.php');
+require_once('lib.php');
 
 //Initialization
-$func_id        = 'list_student';
-$userLogin      = array();
-$imageAtt       = '';
-$valuecategory  = '';
-$titlePage      = '';
-$titleButton    = '';
-$messageSwal    = 0; // 0: invisible; 1: visible
+$func_id       = 'list_student';
+$userLogin     = array();
+$imageAtt      = '';
+$valuecategory = '';
+$titlePage     = 'Thêm bài viết';
+$titleButton   = 'Lưu';
+$htmlDeleteNew = '';
+$messageSwal   = 0; // 0: invisible; 1: visible
 
 session_start();
 
@@ -23,47 +24,46 @@ $nid   = $param['nid'] ?? '';
 $role  = $_SESSION['role'] ?? '';
 
 /*data in form*/
-$submit       = $param['btn_saveOrUpdate'] ?? '';
-$f_category   = $param['category'] ?? '';
-$f_title      = $param['title'] ?? '' ;
-$f_shortdes   = $param['shortdescription'] ?? '';
-$f_fullname   = $param['fullname'] ?? '';
-$f_thumbnail  = $param['thumbnail'] ?? '';
-$f_urlImamge  = $param['urlImage'] ?? '';
-$f_content    = $param['content'] ?? '';
+$f_category  = $param['category'] ?? '';
+$f_title     = $param['title'] ?? '';
+$f_shortdes  = $param['shortdescription'] ?? '';
+$f_fullname  = $param['fullname'] ?? '';
+$f_thumbnail = $param['thumbnail'] ?? '';
+$f_urlImamge = $param['urlImage'] ?? '';
+$f_content   = $param['content'] ?? '';
 
 //Connect DB
 $con = openDB();
 
-if (!isset($_SESSION['loginId'])){
+if (!isset($_SESSION['loginId'])) {
     header('location: login.php');
     exit();
-}
-
-$messageSwal = $_SESSION['messageSwal'] ?? 0;
-if ($messageSwal != 0){
-    unset($_SESSION['messageSwal']);
 }
 
 // Get id and fullname user
 $userLogin = getUserByLoginId($con, $func_id, $_SESSION['loginId']);
 
-if (isset($submit) && (mb_strlen($submit) > 0)) {
-
-    if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
-        updateNews($con, $func_id, $param, $userLogin['id']);
-    } else { /*Insert News*/
-        insertNews($con, $func_id, $param, $userLogin['id']);
+if ($param) {
+    if (isset($param['registFlg']) && $param['registFlg'] == 1) {
+        /*Delete New*/
+        if ($mode == 'delete'){
+            deleteNews($con, $func_id, $nid);
+        }
+        if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
+            updateNews($con, $func_id, $param, $userLogin['id']);
+        } else {/*Insert News*/
+            insertNews($con, $func_id, $param, $userLogin['id']);
+        }
     }
-
 }
 
 //get data edits
-if(isset($nid) && (mb_strlen($nid) > 0)){
+if (isset($nid) && (mb_strlen($nid) > 0)) {
     $titlePage      = "Chỉnh sửa bài viết";
     $titleButton    = "Cập nhật";
-    $edit_new       = get_newsedit($con, $func_id,$nid);
-    $valuetitle     = $edit_new['title'] ;
+
+    $edit_new       = get_newsedit($con, $func_id, $nid);
+    $valuetitle     = $edit_new['title'];
     $valuecategory  = $edit_new['category'];
     $valueshortdes  = $edit_new['shortdescription'];
     $valueusers     = $edit_new['fullname'];
@@ -71,16 +71,26 @@ if(isset($nid) && (mb_strlen($nid) > 0)){
     $f_urlImamge    = $edit_new['thumbnail']; // set url image
     $valuecontent   = $edit_new['content'];
     $valuethumbnail = getNameFileToLink($valuethumbnail);
+
+    $htmlDeleteNew  = <<<EOF
+    <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+        <input type="hidden" name="nid" value="{$nid}">
+        <input type="hidden" name="mode" value="delete">
+        <input type="hidden" name="messageSwal" value="3">
+        <input type="hidden" name="registFlg" value="1">
+        <a href="javascript:void(0)" class="btn btn-danger btn_delete" title="Xóa bài">
+            <i class="fas fa-trash"></i> Xóa
+        </a>
+    </form>
+EOF;
+
 } else {
-    $titlePage      = "Thêm bài viết";
-    $titleButton    = "Lưu";
-    $valuetitle     = $param['title'] ?? '' ;
+    $valuetitle     = $param['title'] ?? '';
     $valueRole      = $param['category'] ?? '';
     $valueshortdes  = $param['shortdescription'] ?? '';
-//    $valueusers     = $param['fullname'] ?? '';
     $valueusers     = $userLogin['fullname'];
-    $valuethumbnail = "Chọn file";
     $valuecontent   = $param['content'] ?? '';
+    $valuethumbnail = "Chọn file";
 }
 
 // Set param url image
@@ -94,17 +104,9 @@ $showcategoryhtml = show_category($con, $func_id, $valuecategory);
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
-$titleHTML = '';
-$cssHTML = '';
+$titleHTML  = '';
+$cssHTML    = '';
 $scriptHTML = <<<EOF
-<!-- The core Firebase JS SDK is always required and must be listed first -->
-<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-storage.js"></script>
-    
-<!-- TODO: Add SDKs for Firebase products that you want to use 
-https://firebase.google.com/docs/web/setup#available-libraries -->
-<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-analytics.js"></script>
-
 <script>
     // Your web app's Firebase configuration
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -121,7 +123,7 @@ https://firebase.google.com/docs/web/setup#available-libraries -->
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.analytics();
-
+    
     /*Check file user input*/
     function validateFileType(){
         let file = document.getElementById("thumbnail");
@@ -142,98 +144,101 @@ https://firebase.google.com/docs/web/setup#available-libraries -->
                 imgtag.src = event.target.result;
             };
             reader.readAsDataURL(selectedFile);
-        }else{ /*return false*/
-            alert("Only jpg/jpeg and png files are allowed!");
+            // Set name file
+            $('#thumbnail').change(function() {
+              // var i = $(this).prev('label').clone();
+              var file = $('#thumbnail')[0].files[0].name;
+              console.log(file);
+              $(this).next('.custom-file-label').html(file);
+            });
+        } else { /*return false*/
+            Swal.fire({
+                position: 'top',
+                icon: 'warning',
+                title: 'Chỉ cho phép các tệp jpg/jpeg và png!',
+                showConfirmButton: false,
+                timer: 2000
+            });
             file.value = "";  // Reset the input so no files are uploaded
             document.getElementById("urlImage").value = '';
             document.getElementById("image").style.display = "none";
             document.getElementById("image").src = '';
         }
     }
-
+    
     /*Submit form and upload file image*/
     function uploadImage() {
         var file_image = document.getElementById("thumbnail");
         var url_image = document.getElementById("urlImage");
-        document.getElementById("btn_saveOrUpdate").value = 'save';
+        
+        /* SET Message */
+        if ('{$mode}' == 'update'){
+            var message = "Bạn có muốn chỉnh sửa bài viết này?";
+            var numberMessage = 3;
+        }else{
+            var message = "Bạn có muốn thêm mới bài viết này?";
+            var numberMessage = 5;
+        }
         
         /*Check file exist*/
         if (url_image.value == "" && file_image.files.length == 0){
-            alert("Image Upload no file selected");
-        } else if (file_image.files.length == 0){ 
-            document.getElementById("ismForm").submit(); /*Submit form*/
-        } else{     
-            // Disable button save
-            document.getElementById("submit_saveOrUpdate").style.display = "none";
-            document.getElementById("submit_disable").style.display = "block";
-            
-            /*Upload file to Firebase*/
-            const ref = firebase.storage().ref();
-            const file = document.querySelector("#thumbnail").files[0];
-            const name = file.name;
-            const metadata = {
-                contentType: file.type
-            };
-            const task = ref.child(name).put(file, metadata);
-    
-            task
-                .then(snapshot => snapshot.ref.getDownloadURL())
-                .then(url =>{
-                    document.getElementById('image').style.display = "block";
-                    document.getElementById("urlImage").value = url;
-                    const image = document.querySelector('#image');
-                    image.src = url;
-                    document.getElementById("ismForm").submit(); /*Submit form*/
-                });
-        }
-    }
-    
-    if ({$messageSwal} == 1){
-        setTimeout(function(){
             Swal.fire({
                 position: 'top',
-                icon: 'success',
-                title: 'Bản tin đã thêm thành công',
+                icon: 'warning',
+                title: 'Vui lòng chọn hình ảnh tải lên!',
                 showConfirmButton: false,
-                timer: 2000
-            })
-        }, 700);
-     }
-    
-    if ({$messageSwal} == 2){
-        setTimeout(function(){
-            Swal.fire({
-                position: 'top',
-                icon: 'success',
-                title: 'Bản tin đã cập nhật thành công',
-                showConfirmButton: false,
-                timer: 2000
-            })
-        }, 700);
-     }
-    
-    $(function() {
-        
-        // Set name file
-        $('#thumbnail').change(function() {
-          // var i = $(this).prev('label').clone();
-          var file = $('#thumbnail')[0].files[0].name;
-          console.log(file);
-          $(this).next('.custom-file-label').html(file);
-        });
-        
-        // Button clear
-        $('#btn_clear').on('click', function(e) {
-            e.preventDefault();
-            var message = "Đặt màn hình tìm kiếm về trạng thái ban đầu?";
+                timer: 1500
+            });
+        } else if (file_image.files.length == 0){ /* return true */
             var that = $(this)[0];
-            sweetConfirm(1, message, function(result) {
+            sweetConfirm(numberMessage, message, function(result) {
                 if (result){
-                    window.location.href = location.protocol + '//' + location.host + location.pathname;
+                    document.getElementById("ismForm").submit(); /*Submit form*/
                 }
             });
+        } else { /* return true */
+            var that = $(this)[0];
+            sweetConfirm(numberMessage, message, function(result) {
+                if (result){
+                   /* Disable button save */
+                    document.getElementById("submit_saveOrUpdate").style.display = "none";
+                    document.getElementById("submit_disable").style.display = "block";
+                    
+                    /* Upload file to Firebase */
+                    const ref = firebase.storage().ref();
+                    const file = document.querySelector("#thumbnail").files[0];
+                    const name = file.name;
+                    const metadata = {
+                        contentType: file.type
+                    };
+                    const task = ref.child(name).put(file, metadata);
+            
+                    task
+                    .then(snapshot => snapshot.ref.getDownloadURL())
+                    .then(url =>{
+                        document.getElementById('image').style.display = "block";
+                        document.getElementById("urlImage").value = url;
+                        const image = document.querySelector('#image');
+                        image.src = url;
+                        /*Submit form*/
+                        document.getElementById("ismForm").submit(); 
+                    });
+                }
+            });
+        }
+    }
+        
+    // Button delete
+    $('.btn_delete').on('click', function(e) {
+        e.preventDefault();
+        var message = "Bạn đang yêu cầu xóa bản tin này. Bạn có chắc chắn?";
+        var form = $(this).closest("form");
+        sweetConfirm(1, message, function(result) {
+            if (result){
+                form.submit();
+            }
         });
-    })
+    });
 </script>
 EOF;
 
@@ -244,7 +249,7 @@ echo <<<EOF
 EOF;
 
 //Meta CSS
-include ($TEMP_APP_META_PATH);
+include($TEMP_APP_META_PATH);
 
 echo <<<EOF
 </head>
@@ -252,17 +257,14 @@ echo <<<EOF
     <div class="wrapper">
 EOF;
 
-//Preloader
-include ($TEMP_APP_PRELOADER_PATH);
-
 //Header
-include ($TEMP_APP_HEADER_PATH);
+include($TEMP_APP_HEADER_PATH);
 
 //Menu
-if ($role == '1'){
-    include ($TEMP_APP_MENUSYSTEM_PATH);
+if ($role == '1') {
+    include($TEMP_APP_MENUSYSTEM_PATH);
 } else {
-    include ($TEMP_APP_MENU_PATH);
+    include($TEMP_APP_MENU_PATH);
 }
 
 //Conntent
@@ -343,20 +345,18 @@ echo <<<EOF
                                     </div>
                                     <!-- /.card-body -->
                                     <div class="card-footer">
-                                        <input type="hidden" name="messageSwal" value="1">
-                                        <input type="hidden" name="btn_saveOrUpdate" id="btn_saveOrUpdate" value="saveOrUpdate">
-                                        <span type="submit" class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
-                                            <i class="fas fa-save"></i>&nbsp{$titleButton}
-                                        </span>
-                                        <button class="btn btn-primary float-right" id="submit_disable" disabled style="display: none;">
-                                            <i class="fas fa-save"></i>&nbspLưu
-                                        </button>
-                                        <a href="#" id="btn_clear">
-                                            <button type="reset" class="btn btn-danger">
-                                            <i class="fas fa-trash fa-fw"></i>
-                                            Xoá
-                                          </button>
-                                        </a>
+                                        <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                                            <input type="hidden" name="messageSwal" value="1">
+                                            <input type="hidden" name="mode" value="{$mode}">
+                                            <input type="hidden" name="registFlg" value="1">
+                                            <span class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
+                                                <i class="fas fa-save"></i>&nbsp{$titleButton}
+                                            </span>
+                                            <button class="btn btn-primary float-right" id="submit_disable" disabled style="display: none;">
+                                                <i class="fas fa-save"></i>&nbspLưu
+                                            </button>
+                                        </form>
+                                        {$htmlDeleteNew}
                                     </div>
                                 </div>
                             </form>
@@ -370,22 +370,28 @@ echo <<<EOF
             <!-- /.content -->
         </div>
 EOF;
-/*
- * function get data edit with nid;
- */
-function get_newsedit($con, $func_id, $nid){
 
-    $editArray = array();
-    $pg_param = array();
+/**
+ * function get data edit with nid;
+ * @param $con
+ * @param $func_id
+ * @param $nid
+ * @return array
+ */
+function get_newsedit($con, $func_id, $nid)
+{
+
+    $editArray  = array();
+    $pg_param   = array();
     $pg_param[] = $nid;
-    $recCnt = 0;
+    $recCnt     = 0;
     $sql = "";
     $sql .= "SELECT news.title                               ";
     $sql .= " ,news.shortdescription                         ";
     $sql .= " ,users.fullname                                ";
-    $sql .=" ,news.thumbnail                                 ";
-    $sql .=" ,news.category                                  ";
-    $sql .=" ,news.content                                   ";
+    $sql .= " ,news.thumbnail                                 ";
+    $sql .= " ,news.category                                  ";
+    $sql .= " ,news.content                                   ";
     $sql .= " FROM news                                      ";
     $sql .= " INNER JOIN users                               ";
     $sql .= " ON news.createby = users.id                    ";
@@ -394,43 +400,48 @@ function get_newsedit($con, $func_id, $nid){
     $sql .= " WHERE news.id = $1                             ";
 
     $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query){
+    if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     } else {
         $recCnt = pg_num_rows($query);
     }
 
-    if ($recCnt != 0){
+    if ($recCnt != 0) {
         $editArray = pg_fetch_assoc($query);
     }
     return $editArray;
 }
 
-/*
+/**
  * get category in form edit
  * Function works with combobox
-*/
-function show_category($con, $func_id, $valuecategory){
+ * @param $con
+ * @param $func_id
+ * @param $valuecategory
+ * @return string
+ */
+function show_category($con, $func_id, $valuecategory)
+{
     $pg_param = array();
-    $recCnt = 0;
-    $sql = '';
-    $sql .= 'SELECT *FROM category ';
+    $recCnt   = 0;
 
+    $sql  = '';
+    $sql .= "SELECT id, category FROM category ";
     $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query){
+    if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
-    }else {
+    } else {
         $recCnt = pg_num_rows($query);
     }
 
     $html = '<select class="custom-select" name="category">';
-    if ($recCnt != 0){
-        while ($row = pg_fetch_assoc($query)){
+    if ($recCnt != 0) {
+        while ($row = pg_fetch_assoc($query)) {
             $selected = '';
-            if ($valuecategory == $row['id']){
+            if ($valuecategory == $row['id']) {
                 $selected = 'selected="selected"';
             }
-            $html .= '<option value="'.$row['id'].'" '.$selected.'>'.$row['category'].'</option>';
+            $html .= '<option value="' . $row['id'] . '" ' . $selected . '>' . $row['category'] . '</option>';
         }
     }
     $html .= '</select>';
@@ -439,9 +450,9 @@ function show_category($con, $func_id, $valuecategory){
 }
 
 //Footer
-include ($TEMP_APP_FOOTER_PATH);
+include($TEMP_APP_FOOTER_PATH);
 //Meta JS
-include ($TEMP_APP_METAJS_PATH);
+include($TEMP_APP_METAJS_PATH);
 echo <<<EOF
     </div>
 </body>
@@ -455,22 +466,23 @@ EOF;
  * @param $uid
  * @return array
  */
-function getUserByLoginId($con, $func_id, $uid){
+function getUserByLoginId($con, $func_id, $uid)
+{
     $user       = array();
     $pg_param   = array();
     $pg_param[] = $uid;
 
-    $sql = "";
+    $sql  = "";
     $sql .= "SELECT id, fullname        ";
     $sql .= "FROM users                 ";
     $sql .= "WHERE loginid = $1         ";
     $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query){
+    if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
-    }else {
+    } else {
         $recCnt = pg_num_rows($query);
     }
-    if ($recCnt != 0){
+    if ($recCnt != 0) {
         $user = pg_fetch_assoc($query);
     }
 
@@ -484,7 +496,8 @@ function getUserByLoginId($con, $func_id, $uid){
  * @param $param
  * @param $idUser
  */
-function insertNews($con, $func_id, $param, $idUser){
+function insertNews($con, $func_id, $param, $idUser)
+{
     $pg_param   = array();
     $pg_param[] = $param['category'];
     $pg_param[] = $param['title'];
@@ -494,7 +507,7 @@ function insertNews($con, $func_id, $param, $idUser){
     $pg_param[] = getDateTime();
     $pg_param[] = $idUser;
 
-    $sql = "";
+    $sql  = "";
     $sql .= "INSERT INTO news(              ";
     $sql .= "            category           ";
     $sql .= "          , title              ";
@@ -514,17 +527,13 @@ function insertNews($con, $func_id, $param, $idUser){
     $sql .= "  )                            ";
 
     $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query){
+    if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $id = 0;
-    $id = getIdNewsMax($con, $func_id);
-    if ($id != 0){
-        $_SESSION['messageSwal'] = 1;
-        header("location: detail-news.php?nid=$id");
-        exit();
-    }
+    $_SESSION['messageSwal'] = 1;
+    header("location: list-news.php");
+    exit();
 
 }
 
@@ -535,7 +544,8 @@ function insertNews($con, $func_id, $param, $idUser){
  * @param $param
  * @param $idUser
  */
-function updateNews($con, $func_id, $param, $idUser){
+function updateNews($con, $func_id, $param, $idUser)
+{
     $pg_param   = array();
     $pg_param[] = $param['category'];
     $pg_param[] = $param['title'];
@@ -543,26 +553,27 @@ function updateNews($con, $func_id, $param, $idUser){
     $pg_param[] = $param['urlImage'];
     $pg_param[] = $param['content'];
     $pg_param[] = $idUser;
+    $pg_param[] = getDateTime();
     $pg_param[] = $param['nid'];
 
-    $sql = "";
+    $sql  = "";
     $sql .= "UPDATE news                     ";
-    $sql .= "SET    category = $1,           ";
+    $sql .= "   SET category = $1,           ";
     $sql .= "       title = $2,              ";
     $sql .= "       shortdescription = $3,   ";
     $sql .= "       thumbnail = $4,          ";
     $sql .= "       content = $5,            ";
-    $sql .= "       updateby = $6            ";
-    $sql .= "WHERE  id = $7                   ";
+    $sql .= "       updateby = $6,           ";
+    $sql .= "       updatedate = $7          ";
+    $sql .= " WHERE id = $8                  ";
 
     $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query){
+    if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $id = $param['nid'];
     $_SESSION['messageSwal'] = 2;
-    header("location: detail-news.php?nid=$id");
+    header("location: list-news.php");
     exit();
 
 }
@@ -570,37 +581,36 @@ function updateNews($con, $func_id, $param, $idUser){
 /**
  * @param $con
  * @param $func_id
- * @return int|mixed
+ * @param $nid
  */
-function getIdNewsMax($con, $func_id){
-    $pg_param = array();
-    $new      = array();
-    $id       = 0;
-    $recCnt   = 0;
+function deleteNews($con, $func_id, $nid)
+{
+    $pg_param   = array();
+    $pg_param[] = getDateTime();
+    $pg_param[] = $nid;
 
     $sql  = "";
-    $sql .= "SELECT MAX(id) id FROM news";
+    $sql .= "UPDATE news                     ";
+    $sql .= "SET    deldate = $1             ";
+    $sql .= "WHERE  id = $2                  ";
 
-    $query = pg_query($con, $sql);
-    if (!$query){
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
-    }else{
-        $recCnt = pg_num_rows($query);
-        $new = pg_fetch_assoc($query);
     }
 
-    if ($recCnt != 0){
-        $id = $new["id"];
-    }
+    $_SESSION['messageSwal'] = 3;
+    header("location: list-news.php");
+    exit();
 
-    return $id;
 }
 
 /**
  * @param $link
  * @return string
  */
-function getNameFileToLink($link){
+function getNameFileToLink($link)
+{
     $str  = "";
     $link = substr($link, 76);
     $str  = $link;

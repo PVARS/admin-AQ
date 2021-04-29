@@ -5,17 +5,17 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'login';
-$message = '';
+$func_id      = 'login';
+$message      = '';
 $messageClass = '';
-$iconClass = '';
-$maxLoginId = 254;
-$minStr = 6;
-$maxPassword = 16;
+$iconClass    = '';
+$maxLoginId   = 254;
+$minStr       = 6;
+$maxPassword  = 16;
 
 // Set Variable Cookie
 $cookie_name = 'siteAuth';
-$cookie_time = (3600 * 24 ); // 1 day
+$cookie_time = (3600 * 24 * 30); // 30 days
 
 session_start();
 
@@ -31,10 +31,11 @@ $check_rm = $param['remember'] ?? '';
 
 if(isset($cookie_name)){
     if(isset($_COOKIE[$cookie_name])){
-        $loginId = getUsernameInCookie($cookie_name);
-        $role = getRoleUserByLoginId($con, $func_id, $loginId);
-        $_SESSION['loginId'] = $loginId;
-        $_SESSION['role'] = $role;
+        $loginId              = getUsernameInCookie($cookie_name);
+        $user                 = getRoleUserByLoginId($con, $func_id, $loginId);
+        $_SESSION['loginId']  = $loginId;
+        $_SESSION['role']     = $user['role'];
+        $_SESSION['fullname'] = $user['fullname'];
         header('location: dashboard.php');
         exit();
     }
@@ -305,7 +306,8 @@ function getRoleUserByLoginId($con, $func_id, $uid){
     $pg_param[] = $uid;
 
     $sql = "";
-    $sql .= "SELECT role                ";
+    $sql .= "SELECT role,               ";
+    $sql .= "       fullname            ";
     $sql .= "FROM users                 ";
     $sql .= "WHERE loginid = $1         ";
     $query = pg_query_params($con, $sql, $pg_param);
@@ -318,7 +320,7 @@ function getRoleUserByLoginId($con, $func_id, $uid){
         $user = pg_fetch_assoc($query);
     }
 
-    return $user['role'];
+    return $user;
 }
 
 ?>

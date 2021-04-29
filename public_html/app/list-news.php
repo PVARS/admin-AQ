@@ -5,28 +5,31 @@ require_once('config.php');
 require_once('lib.php');
 
 //Initialization
-$func_id = 'list_student';
-$maxStr = 200;
-$message = '';
+$func_id      = 'list_news';
+$maxStr       = 200;
+$message      = '';
 $messageClass = '';
-$iconClass = '';
-$messageSwal = 0; // 0: invisible; 1: visible
+$iconClass    = '';
+$htmlListNews = '';
+$htmlCategory = '';
+$htmlCreateby = '';
+$messageSwal  = 0; // 0: invisible; 1: visible
 
 session_start();
 
 //Get param
-$param = getParam();
-$f_title = $param['title'] ?? '';
-$f_category = $param['category'] ?? '';
-$f_createby = $param['createby'] ?? '';
-$f_keyword = $param['keyword'] ?? '';
-$f_dateForm = $param['dateForm'] ?? '';
-$f_dateTo = $param['dateTo'] ?? '';
-$nid = $param['nid'] ?? '';
-$mode = $param['mode'] ?? '';
+$param       = getParam();
+$f_title     = $param['title'] ?? '';
+$f_category  = $param['category'] ?? '';
+$f_createby  = $param['createby'] ?? '';
+$f_keyword   = $param['keyword'] ?? '';
+$f_dateForm  = $param['dateForm'] ?? '';
+$f_dateTo    = $param['dateTo'] ?? '';
+$nid         = $param['nid'] ?? '';
+$mode        = $param['mode'] ?? '';
 $messageSwal = $param['messageSwal'] ?? 0;
 
-$role = $_SESSION['role'] ?? '';
+$role        = $_SESSION['role'] ?? '';
 
 //Connect DB
 $con = openDB();
@@ -36,10 +39,11 @@ if (!isset($_SESSION['loginId'])) {
     exit();
 }
 
+$messageSwal = $_SESSION['messageSwal'] ?? 0;
+if ($messageSwal != 0){
+    unset($_SESSION['messageSwal']);
+}
 
-$htmlListNews = '';
-$htmlCategory = '';
-$htmlCreateby = '';
 $htmlListNews = getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f_keyword, $f_dateForm);
 $htmlCategory = getComboboxCategory($con, $func_id, $f_category);
 $htmlCreateby = getComboboxCreateby($con, $func_id, $f_createby);
@@ -48,11 +52,11 @@ $htmlCreateby = getComboboxCreateby($con, $func_id, $f_createby);
 $validate = validateDataSearch($f_title, $f_keyword, $f_dateForm, $f_dateTo, $maxStr);
 
 if ($param){
-    if ($mode == "delete"){
-        deleteNew($con, $func_id, $nid);
-    }
-
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
+        if ($mode == "delete"){
+            deleteNew($con, $func_id, $nid);
+        }
+
         $mes = $validate;
 
         $message = join('<br>', $mes);
@@ -62,19 +66,19 @@ if ($param){
         }
 
         if (empty($mes)){
-            getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateTo, $roleParam, $mode);
+            getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f_keyword, $f_dateForm);
         }
     }
 }
 
 //Message HTML
 if (isset($_SESSION['message']) && strlen($_SESSION['message'])) {
-    $message .= $_SESSION['message'];
+    $message      .= $_SESSION['message'];
     $messageClass .= $_SESSION['messageClass'];
-    $iconClass .= $_SESSION['iconClass'];
-    $_SESSION['message'] = '';
-    $_SESSION['messageClass'] = '';
-    $_SESSION['iconClass'] = '';
+    $iconClass    .= $_SESSION['iconClass'];
+    $_SESSION['message']        = '';
+    $_SESSION['messageClass']   = '';
+    $_SESSION['iconClass']      = '';
 }
 $messageHtml = '';
 if (strlen($message)) {
@@ -95,12 +99,13 @@ EOF;
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
-$titleHTML = '';
-$cssHTML = '';
+$titleHTML  = '';
+$cssHTML    = '';
 $scriptHTML = <<<EOF
 <script>
     $(function() {
-        //Button clear
+        
+        // Button clear
         $('#btn_clear').on('click', function(e) {
             e.preventDefault();
             var message = "Đặt màn hình tìm kiếm về trạng thái ban đầu?";
@@ -117,11 +122,32 @@ $scriptHTML = <<<EOF
             e.preventDefault();
             var message = "Bạn đang yêu cầu xóa bản tin này. Bạn có chắc chắn?";
             var form = $(this).closest("form");
-            sweetConfirm(4, message, function(result) {
+            sweetConfirm(1, message, function(result) {
                 if (result){
                     form.submit();
                 }
             });
+        });
+        
+        // Button edit
+        $('.edit_new').on('click', function(e) {
+            e.preventDefault();
+            var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
+            var form = $(this).closest("form");
+            sweetConfirm(3, message, function(result) {
+                if (result){
+                    form.submit();
+                }
+            });
+        });
+        
+        // Paginate
+        $(".table").paginate({
+            rows: 5,           // Set number of rows per page. Default: 5
+            position: "top",   // Set position of pager. Default: "bottom"
+            jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
+            showIfLess: false, // Don't show pager if table has only one page. Default: true
+            numOfPages: 5
         });
                   
     })
@@ -130,32 +156,32 @@ $scriptHTML = <<<EOF
         Swal.fire({
             position: 'top',
             icon: 'success',
-            title: 'Bản tin đã được xóa thành công',
+            title: 'Bản tin đã thêm thành công',
             showConfirmButton: false,
-            timer: 1500
+            timer: 2000
+        })
+     }
+     
+     if ({$messageSwal} == 2){
+        Swal.fire({
+                position: 'top',
+                icon: 'success',
+                title: 'Bản tin đã cập nhật thành công',
+                showConfirmButton: false,
+                timer: 2000
         })
      }
     
-    function edit_new(nid) {
-        var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
-        var form = $(this).closest("form");
-        sweetConfirm(3, message, function(result) {
-            if (result){
-                window.location.href = 'detail-news.php?nid=' + nid;
-            }
-        });            
-    }
+    if ({$messageSwal} == 3){
+        Swal.fire({
+            position: 'top',
+            icon: 'success',
+            title: 'Bản tin đã được xóa thành công',
+            showConfirmButton: false,
+            timer: 2000
+        })
+     }
     
-    //paginate
-        $(document).ready(function() {
-            $(".table").paginate({
-                rows: 5,           // Set number of rows per page. Default: 5
-                position: "top",   // Set position of pager. Default: "bottom"
-                jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
-                showIfLess: false, // Don't show pager if table has only one page. Default: true
-                numOfPages: 5
-            });
-        });
 </script>
 EOF;
 
@@ -174,9 +200,6 @@ echo <<<EOF
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
 EOF;
-
-//Preloader
-include($TEMP_APP_PRELOADER_PATH);
 
 //Header
 include($TEMP_APP_HEADER_PATH);
@@ -336,10 +359,10 @@ EOF;
 function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f_keyword, $f_dateForm)
 {
     $pg_param = array();
-    $pg_sql = array();
-    $recCnt = 0;
-    $count = 0;
-    $html = '';
+    $pg_sql   = array();
+    $recCnt   = 0;
+    $count    = 0;
+    $html     = '';
 
     if (!empty($f_title) && (mb_strlen($f_title) > 0)) {
         $pg_param[] = '%' . $f_title . '%';
@@ -373,7 +396,7 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
 
     $wheresql = join(' ', $pg_sql);
 
-    $sql = "";
+    $sql  = "";
     $sql .= "SELECT news.id,                    ";
     $sql .= "       news.title,                 ";
     $sql .= "       news.createdate,            ";
@@ -407,15 +430,18 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
                    <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
                    <td style="text-align: center; width: 20%;">{$row['view']}</td>
                    <td style="text-align: center; width: 5%;">
-                       <a href="javascript:void(0)" onclick="edit_new({$row['id']})" class="btn btn-block btn-primary btn-sm" title="Chỉnh sửa">
-                            <i class="fas fa-edit"></i>
-                       </a>
+                       <form action="detail-news.php" method="POST">
+                            <input type="hidden" name="mode" value="update">
+                            <input type="hidden" name="nid" value="{$row['id']}">
+                            <button href="javascript:void(0)" class="btn btn-block btn-primary btn-sm edit_new" title="Chỉnh sửa"><i class="fas fa-edit"></i></button>
+                        </form>
                    </td>
                    <td style="text-align: center; width: 5%;">
                       <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
                          <input type="hidden" name="nid" value="{$row['id']}">
                          <input type="hidden" name="mode" value="delete">
-                         <input type="hidden" name="messageSwal" value="1">
+                         <input type="hidden" name="messageSwal" value="3">
+                         <input type="hidden" name="registFlg" value="1">
                          <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm btn_delete" title="Xóa bài">
                             <i class="fas fa-trash"></i>
                          </a>
@@ -450,9 +476,9 @@ EOF;
 function getComboboxCategory($con, $func_id, $f_category)
 {
     $pg_param = array();
-    $recCnt = 0;
+    $recCnt   = 0;
 
-    $sql = "";
+    $sql  = "";
     $sql .= "SELECT DISTINCT     ";
     $sql .= "       id,          ";
     $sql .= "       category     ";
@@ -493,9 +519,9 @@ EOF;
 function getComboboxCreateby($con, $func_id, $f_createby)
 {
     $pg_param = array();
-    $recCnt = 0;
+    $recCnt   = 0;
 
-    $sql = "";
+    $sql  = "";
     $sql .= "SELECT DISTINCT     ";
     $sql .= "       id,          ";
     $sql .= "       fullname     ";
@@ -533,17 +559,23 @@ EOF;
  * @param $nid
  */
 function deleteNew($con, $func_id, $nid){
-    $pg_param = array();
+    $pg_param   = array();
+    $pg_param[] = getDateTime();
     $pg_param[] = $nid;
 
-    $sql = "";
-    $sql .= "DELETE FROM news       ";
-    $sql .= "      WHERE id=$1      ";
+    $sql  = "";
+    $sql .= "UPDATE news                     ";
+    $sql .= "SET    deldate = $1             ";
+    $sql .= "WHERE  id = $2                  ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
+
+    $_SESSION['messageSwal'] = 3;
+    header("location: list-news.php");
+    exit();
 }
 
 /**
