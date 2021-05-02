@@ -5,21 +5,13 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'dashboard';
+$funcId = 'dashboard';
 
 session_start();
-
-// current datetime
-$current_day = getDateVn();
 
 //Connect DB
 $con = openDB();
 
-//get staticts current day
-$htmlcategory = getcategory($con, $current_day, $func_id);
-
-//get news with max views
-$htmlviews    = get_news($con,$func_id);
 //Get param
 $param = getParam();
 
@@ -30,16 +22,44 @@ if (!isset($_SESSION['loginId'])){
     exit();
 }
 
-$totalarticle = total_article($con);
-$totalpost    = total_post($con, $current_day);
-$totalaccount = total_account($con);
+//Get total news
+$totalNews    = totalNews($con, $funcId);
+
+//Get post of day
+$totalPost    = totalPostDay($con, $funcId);
+
+//Get total account
+$totalAccount = totalAccount($con, $funcId);
+
+//Get staticts current day
+$htmlCategoryPostDay = '';
+$htmlCategoryPostDay = getCategoryPostDay($con, $funcId);
+
+//Get news with max views
+$htmlNewsTopView = '';
+$htmlNewsTopView = getNewsTopView($con,$funcId);
 
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
 $titleHTML = '';
 $cssHTML = '';
-$scriptHTML = '';
+$scriptHTML = <<< EOF
+<script>
+$(function() {
+  $('.editNews').on('click', function(e) {
+        e.preventDefault();
+        var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
+        var form = $(this).closest("form");
+        sweetConfirm(3, message, function(result) {
+            if (result){
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+EOF;
 
 echo <<<EOF
 <!DOCTYPE html>
@@ -52,12 +72,12 @@ include ($TEMP_APP_META_PATH);
 
 echo <<<EOF
 </head>
-<body class="hold-transition sidebar-mini layout-fixed" id="{$func_id}">
+<body class="hold-transition sidebar-mini layout-fixed" id="{$funcId}">
     <div class="wrapper">
 EOF;
 
 //Preloader
-include ($TEMP_APP_PRELOADER_PATH);
+//include ($TEMP_APP_PRELOADER_PATH);
 
 //Header
 include ($TEMP_APP_HEADER_PATH);
@@ -71,362 +91,285 @@ if ($role == '1'){
 
 echo <<<EOF
 <div class="content-wrapper">
-            <!-- Content Header (Page header) -->
-            <div class="content-header">
-                <div class="container-fluid">
-                    <div class="row mb-2">
-                        <div class="col-sm-6">
-                            <h1 class="m-0">Thống kê</h1>
-                        </div>
-                        <!-- /.col -->
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="javascript:void(0)">Trang chủ</a></li>
-                                <li class="breadcrumb-item active">Thống kê</li>
-                            </ol>
-                        </div>
-                        <!-- /.col -->
-                    </div>
-                    <!-- /.row -->
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Thống kê</h1>
                 </div>
-                <!-- /.container-fluid -->
+                <!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="javascript:void(0)">Trang chủ</a></li>
+                        <li class="breadcrumb-item active">Thống kê</li>
+                    </ol>
+                </div>
+                <!-- /.col -->
             </div>
-            <!-- /.content-header -->
-
-            <!-- Main content -->
-            <section class="content">
-                <div class="container-fluid">
-                    <!-- Small boxes (Stat box) -->
-                    <div class="row">
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info">
-                                <div class="inner">
-                                    <h3>{$totalarticle}</h3>
-
-                                    <p>Tổng bài viết</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="ion ion-bag"></i>
-                                </div>
-                                <a href="list-news.php" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
-                            </div>
-                        </div>
-                        <!-- ./col -->
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-success">
-                                <div class="inner">
-                                    <h3>{$totalpost}</h3>
-
-                                    <p>Bài đăng trong ngày</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="ion ion-stats-bars"></i>
-                                </div>
-                                <a href="#" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
-                            </div>
-                        </div>
-                        <!-- ./col -->
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-warning">
-                                <div class="inner">
-                                    <h3>{$totalaccount}</h3>
-
-                                    <p>Số lượng tài khoản</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="ion ion-person-add"></i>
-                                </div>
-                                <a href="list-users.php" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
-                            </div>
-                        </div>
-                        <!-- ./col -->
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-danger">
-                                <div class="inner">
-                                    <h3>%</h3>
-
-                                    <p>Bài viết theo danh mục</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="ion ion-pie-graph"></i>
-                                </div>
-                                <a href="#" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
-                            </div>
-                        </div>
-                        <!-- ./col -->
-                    </div>
-                    <!-- /.row -->
-                    <!-- Main row -->
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h1 class="m-0" style="font-size: 1.8rem">Danh mục có bài đăng hôm nay</h1>
-                        </div>
-                        <div class="col-sm-12" style="margin-top: 20px;">
-                            <div id="accordion">
-                                <div class="card">
-                                   {$htmlcategory}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-12">
-                            <h1 class="m-0" style="font-size: 1.8rem">Bài viết có nhiều lượt xem nhất</h1>
-                        </div>
-                        <div class="col-sm-12" style="margin-top: 20px;">
-                            <div class="card-body table-responsive p-0">
-                                <table class="table table-hover text-nowrap table-bordered" style="background-color: #FFFFFF;">
-                                    <thead style="background-color: #17A2B8;">
-                                        <tr>
-                                            <th style="width: 5%;" class="text-th">STT</th>
-                                            <th style="width: 35%;" class="text-th">Tiêu đề</th>
-                                            <th style="width: 20%;" class="text-th">Người đăng</th>
-                                            <th style="text-align: center; width: 20%;" class="text-th">Ngày đăng</th>
-                                            <th style="text-align: center; width: 20%;" class="text-th">Lượt xem</th>
-                                            <th colspan="2"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                         {$htmlviews}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- /.row (main row) -->
-                </div>
-                <!-- /.container-fluid -->
-            </section>
-            <!-- /.content -->
+            <!-- /.row -->
         </div>
-EOF;
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
 
-$titleHTML = '';
-$cssHTML = '';
-$scriptHTML = <<< EOF
-<script>
-    $(function() {
-        //Button delete
-        $('.sc_user').on('click', function(e) {
-            e.preventDefault();
-            var message = "Bài viết này sẽ bị xoá. Bạn có chắc chắn";
-            var that = $(this)[0];
-            sweetConfirm(1, message, function(result) {
-                if (result){
-                    window.location.href = that.href;
-                }
-            });
-        });
-      $('.sc_edit').on('click', function(e) {
-            e.preventDefault();
-            var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
-            var form = $(this).closest("form");
-            sweetConfirm(3, message, function(result) {
-                if (result){
-                    form.submit();
-                }
-            });
-        });
-        //paginate
-        $(document).ready(function() {
-            $(".date_post").paginate({
-                rows: 1,           // Set number of rows per page. Default: 5
-                position: "bottom",   // Set position of pager. Default: "bottom"
-                jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
-                showIfLess: false, // Don't show pager if table has only one page. Default: true
-                numOfPages: 2
-            });
-        });
-    });
-</script>
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3>{$totalNews['count_news']}</h3>
+
+                            <p>Tổng bài viết</p>
+                        </div>
+                        <div class="icon">
+                            <i class="ion ion-bag"></i>
+                        </div>
+                        <a href="list-news.php" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3>{$totalPost['post_new_day']}</h3>
+
+                            <p>Bài đăng trong ngày</p>
+                        </div>
+                        <div class="icon">
+                            <i class="ion ion-stats-bars"></i>
+                        </div>
+                        <a href="list-news.php" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3>{$totalAccount['count_users']}</h3>
+
+                            <p>Số lượng tài khoản</p>
+                        </div>
+                        <div class="icon">
+                            <i class="ion ion-person-add"></i>
+                        </div>
+                        <a href="list-users.php" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3>%</h3>
+
+                            <p>Bài viết theo danh mục</p>
+                        </div>
+                        <div class="icon">
+                            <i class="ion ion-pie-graph"></i>
+                        </div>
+                        <a href="#" class="small-box-footer">Xem thêm <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                </div>
+                <!-- ./col -->
+            </div>
+            <!-- /.row -->
+            <!-- Main row -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <h1 class="m-0" style="font-size: 1.8rem">Danh mục có bài đăng hôm nay</h1>
+                </div>
+                <div class="col-sm-12" style="margin-top: 20px;">
+                    <div id="accordion">
+                        {$htmlCategoryPostDay}
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <h1 class="m-0" style="font-size: 1.8rem">Bài viết có nhiều lượt xem nhất</h1>
+                </div>
+                <div class="col-sm-12" style="margin-top: 20px;">
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap table-bordered tableNews" style="background-color: #FFFFFF;">
+                            <thead style="background-color: #17A2B8;">
+                                <tr>
+                                    <th style="width: 10%;" class="text-th text-center">STT</th>
+                                    <th style="width: 20%;" class="text-th text-center">Tiêu đề</th>
+                                    <th style="width: 20%;" class="text-th text-center">Người đăng</th>
+                                    <th style="width: 20%;" class="text-th text-center">Ngày đăng</th>
+                                    <th style="width: 20%;" class="text-th text-center">Lượt xem</th>
+                                    <th style="width: 10%;" class="text-center"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {$htmlNewsTopView}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row (main row) -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
 EOF;
 
 /**
  * function get databae tabel
  * @param $con
- * @param $current_day
- * @param $func_id
+ * @param $funcId
  * @return string
  */
-function getcategory($con, $current_day, $func_id){
+function getCategoryPostDay($con, $funcId){
     $pg_param = array();
-    $index = 0;
     $recCnt = 0;
+    $cnt = 0;
+
     $sql = "";
-    $sql .= "SELECT news.id, news.title                      ";
-    $sql .= " ,users.fullname , users.role                   ";
-    $sql .= " ,news.createdate                               ";
-    $sql .= " FROM news                                      ";
-    $sql .= " INNER JOIN users                               ";
-    $sql .= " ON news.createby = users.id                    ";
-    $sql .= " WHERE news.createdate = '".$current_day."'     ";
+    $sql .= "SELECT DISTINCT                                     ";
+    $sql .= "       category.id                                  ";
+    $sql .= "     , category.category                            ";
+    $sql .= "  FROM category                                     ";
+    $sql .= "  INNER JOIN news                                   ";
+    $sql .= "    ON category.id = news.category                  ";
+    $sql .= " WHERE category.deldate IS NULL                     ";
+    $sql .= "   AND news.deldate IS NULL                         ";
+    $sql .= "   AND news.createdate = '".date('Y/m/d')."' ";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
-        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+        systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
     } else {
         $recCnt = pg_num_rows($query);
     }
+
     $html = '';
-    if ($recCnt != 0) {
-        while ($row = pg_fetch_assoc($query)) {
-            $index++;
+    if ($recCnt != 0){
+        $categoryArray = pg_fetch_all($query);
 
-            // check role for button delete
-            $htmlButtondelete = '';
-            if ($_SESSION['role'] == $row['role']) {
-                $htmlButtondelete .= <<< EOF
-                <form action="" method="POST">
-                        <a href="" class="btn btn-block btn-danger btn-sm sc_user"><i class="fas fa-trash"></i></a>
-                </form>
-EOF;
-            } else {
-                $htmlButtondelete .= <<< EOF
-                     <a class="btn btn-block btn-danger btn-sm" disabled><i class="fas fa-ban"></i></a>
-EOF;
-            }
+        foreach ($categoryArray as $k => $v){
+            $cnt++;
+            $htmlPostOfDay = postOfDayByCategory($con, $funcId, $categoryArray[$k]['id']);
+            $cntNews       = countPostOfDayByCategory($con, $funcId, $categoryArray[$k]['id']);
 
-            // check role for button edit
-            $htmlButtonedit = '';
-            if ($_SESSION['role'] == $row['role']) {
-                $htmlButtonedit .= <<< EOF
-                <form action="detail-news.php" method="POST">
-                   <input type="hidden" name="mode" value="update">
-                   <input type="hidden" name="nid" value="{$row['id']}">
-                   <a href="" class="btn btn-block btn-primary btn-sm sc_edit" ><i class="fas fa-edit"></i></a>
-                </form>
-                   
-EOF;
-            } else {
-                $htmlButtonedit .= <<<EOF
-                     <button class="btn btn-block btn-primary btn-sm " disabled><i class="fas fa-edit"></i></button>
-EOF;
-            }
+            $html .= <<< EOF
+            <div class="card">
+                <div class="card-header title-collapse" id="headingOne">
+                    <h5 class="mb-0 col-6">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapse_{$cnt}" aria-expanded="true" aria-controls="collapseOne">
+                            {$categoryArray[$k]['category']}
+                        </button>
+                    </h5>
+                    <h5 class="count-news">
+                        Số lượng - {$cntNews['coutnews']}
+                    </h5>
+                </div>
 
-            $html .= <<<EOF
-                       <tr>
-                            <td style="width: 20%;">{$index}</td>
-                            <td style="width: 30%;">{$row['title']}</td>
-                            <td style="width: 20%;">{$row['fullname']}</td>
-                            <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
-                            <td style="text-align: center; width: 5%;">
-                                   {$htmlButtonedit}
-                            </td>
-                            <td style="text-align: center; width: 5%;">
-                                   {$htmlButtondelete}
-                            </td>
-                        </tr>
-                        
-                
-
-EOF;
-        }
-
-    }else {
-        $html .= <<< EOF
-            <tr>
-			<td colspan = 7>
-				<h3 class="card-title">
-					<i class="fas fa-bullseye fa-fw" style="color: red"></i>
-					Không có dữ liệu
-				</h3>
-			</td>
-		</tr>
-EOF;
-    }
-        $htmlfulltable = '';
-        $htmlfulltable .= <<<EOF
-            <div class="card-header title-collapse" id="headingOne">
-                 <h5 class="mb-0 col-6">
-                      <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                           tin chuyển nhượng
-                       </button>
-                 </h5>
-                 <h5 class="count-news">
-                     Số lượng - $index
-                 </h5>
-             </div>
-
-            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-                <div class="card-body table-responsive p-0">
-                    <table class="table date_post table-hover text-nowrap table-bordered">
-                        <thead>
-                            <tr>
-                               <th style="width: 10%;">STT</th>
-                               <th style="width: 30%;">Tiêu đề</th>
-                               <th style="width: 20%;">Người đăng</th>
-                               <th style="text-align: center; width: 20%;">Thời gian</th>
-                               <th colspan="2"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                           {$html}
-                        </tbody>
-                    </table>
+                <div id="collapse_{$cnt}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion" style="">
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 10%;">STT</th>
+                                    <th class="text-center" style="width: 40%;">Tiêu đề</th>
+                                    <th class="text-center" style="width: 20%;">Người đăng</th>
+                                    <th class="text-center" style="width: 20%;">Thời gian</th>
+                                    <th class="text-center" style="width: 10%;">&nbsp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {$htmlPostOfDay}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 EOF;
-
-    return $htmlfulltable;
-}
-
-/**
- * get data news with max views
- * @param $con
- * @param $func_id
- * @return string
- */
-
-function get_news($con, $func_id){
-    $pg_param = array();
-    $index = 0;
-    $recCnt = 0;
-    $sql = "";
-    $sql .= "SELECT news.id, news.title                      ";
-    $sql .= " ,users.fullname , users.role                   ";
-    $sql .= " ,news.createdate, news.view                    ";
-    $sql .= " FROM news                                      ";
-    $sql .= " INNER JOIN users                               ";
-    $sql .= " ON news.createby = users.id                    ";
-    $sql .= " WHERE view = (                                 ";
-    $sql .= " SELECT MAX(view)                              ";
-    $sql .= " FROM news )                                    ";
-    $query = pg_query_params($con, $sql, $pg_param);
-
-    if (!$query){
-        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+        }
     } else {
-        $recCnt = pg_num_rows($query);
-    }
-    $html = '';
-    if ($recCnt != 0) {
-        while ($row = pg_fetch_assoc($query)) {
-            $index++;
-
-            $html .= <<<EOF
-                 <tr>
-                     <td style="width: 5%;">{$index}</td>
-                     <td style="width: 35%;">{$row['title']}</td>
-                     <td style="width: 20%;">{$row['fullname']}</td>
-                     <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
-                     <td style="text-align: center; width: 20%;">{$row['view']}</td>
-                     <td style="text-align: center; width: 5%;">
-                         <form action="" method="POST">
-                             <button class="btn btn-block btn-primary btn-sm " disabled><i class="fas fa-edit"></i></button>
-                         </form>
-                     </td>
-                     <td style="text-align: center; width: 5%;">
-                         <form action="" method="POST">
-                             <button class="btn btn-block btn-danger btn-sm" disabled><i class="fas fa-ban"></i></button>
-                         </form>
-                     </td>
-                  </tr>
+        $html .=<<< EOF
+            <div class="card card-primary">
+                <div class="card-body">
+                    <i class="fas fa-bullseye fa-fw" style="color: red"></i>
+					Không có dữ liệu
+                </div>
+            </div>
 EOF;
 
     }
     return $html;
 }
+
+/**
+ * get data news with max views
+ * @param $con
+ * @param $funcId
+ * @return string
+ */
+
+function getNewsTopView($con, $funcId){
+    $pg_param = array();
+    $cnt = 0;
+    $recCnt = 0;
+    $sql = "";
+    $sql .= "SELECT id               ";
+    $sql .= "     , title            ";
+    $sql .= "     , createby         ";
+    $sql .= "     , createdate       ";
+    $sql .= "     , view             ";
+    $sql .= "  FROM news             ";
+    $sql .= " WHERE deldate IS NULL  ";
+    $sql .= " ORDER BY view DESC     ";
+    $sql .= " LIMIT 20               ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+    $html = '';
+    if ($recCnt != 0) {
+        while ($row = pg_fetch_assoc($query)) {
+            $cnt++;
+
+            $html .= <<<EOF
+                 <tr>
+                     <td class="text-center" style="width: 10%;">{$cnt}</td>
+                     <td style="width: 20%;">{$row['title']}</td>
+                     <td class="text-center" style="width: 20%;">{$row['createby']}</td>
+                     <td class="text-center" style="width: 20%;">{$row['createdate']}</td>
+                     <td class="text-center" style="width: 20%;">{$row['view']}</td>
+                     <td class="text-center" style="width: 10%;">
+                         <form action="detail-news.php" method="POST">
+                             <input type="hidden" name="nid" value="{$row['id']}">
+                             <input type="hidden" class="mode" name="mode" value="update">
+                             <a class="btn btn-primary btn-sm editNews"><i class="fas fa-edit"></i></a>
+                         </form>
+                     </td>
+                  </tr>
+EOF;
+
+        }
+    } else {
+        $html .= <<< EOF
+            <tr>
+                <td colspan = 7>
+                    <h3 class="card-title">
+                        <i class="fas fa-bullseye fa-fw" style="color: red"></i>
+                        Không có dữ liệu
+                    </h3>
+                </td>
+            </tr>
+EOF;
+    }
+    return $html;
 }
 
 /**
@@ -434,44 +377,58 @@ EOF;
  * @param $con
  * @return mixed
  */
-function total_article($con){
+function totalNews($con, $funcId){
+    $pg_param = array();
+    $recCnt = 0;
+    $newsArray = array();
+    
     $sql = "";
-    $sql .= "SELECT COUNT(id)      ";
-    $sql .= " AS count_news        ";
-    $sql .= "FROM news             ";
-    $query = pg_query($con, $sql);
+    $sql .= "SELECT COUNT(id)         ";
+    $sql .= "    AS count_news        ";
+    $sql .= "  FROM news              ";
+    $sql .= "  WHERE deldate IS NULL  ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
     if(!$query){
-        echo pg_last_error($con);
-        exit();
+        systemError('systemError('.$funcId.') SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
     }
-    while ($number_news = pg_fetch_row($query)){
-        $count_news = $number_news[0];
+    
+    if ($recCnt != 0){
+        $newsArray = pg_fetch_assoc($query);
     }
-    return $count_news;
+    return $newsArray;
 }
 
 /**
  * total post of new day
  * @param $con
- * @param $current_day
  * @return mixed
  */
-function total_post($con, $current_day){
+function totalPostDay($con, $funcId){
+    $pg_param = array();
+    $newsDay = array();
+    $recCnt = 0;
+    
     $sql = "";
-    $sql .= "SELECT COUNT(id)                           ";
-    $sql .= " AS post_new_day                           ";
-    $sql .= " FROM news                                 ";
-    $sql .= " WHERE createdate = '".$current_day."'       ";
+    $sql .= "SELECT COUNT(id)                                   ";
+    $sql .= "    AS post_new_day                                ";
+    $sql .= "  FROM news                                        ";
+    $sql .= " WHERE createdate = '".date('Y/m/d')."'     ";
+    $sql .= "   AND deldate IS NULL                             ";
 
-    $res = pg_query($con, $sql);
-    if(!$res){
-        echo pg_last_error($con);
-        exit();
+    $query = pg_query_params($con, $sql, $pg_param);
+    if(!$query){
+        systemError('systemError('.$funcId.') SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
     }
-    while ($number_day = pg_fetch_row($res)){
-        $count_news_day = $number_day[0];
+    
+    if ($recCnt != 0){
+        $newsDay = pg_fetch_assoc($query);
     }
-    return $count_news_day;
+    return $newsDay;
 }
 
 /**
@@ -479,20 +436,133 @@ function total_post($con, $current_day){
  * @param $con
  * @return mixed
  */
-function total_account($con) {
+function totalAccount($con, $funcId) {
+    $pg_param = array();
+    $recCnt = 0;
+    $userArray = array();
+    
     $sql = "";
-    $sql .= "SELECT COUNT(id)      ";
-    $sql .= " AS count_users        ";
-    $sql .= "FROM users             ";
-    $resu = pg_query($con, $sql);
-    if(!$resu){
-        echo pg_last_error($con);
-        exit();
+    $sql .= "SELECT COUNT(id)          ";
+    $sql .= "    AS count_users        ";
+    $sql .= "  FROM users              ";
+    $sql .= "  WHERE deldate IS NULL   ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if(!$query){
+        systemError('systemError('.$funcId.') SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
     }
-    while ($number_users = pg_fetch_row($resu)){
-        $count_users = $number_users[0];
+    
+    if ($recCnt != 0){
+        $userArray = pg_fetch_assoc($query);
     }
-    return $count_users;
+    return $userArray;
+}
+
+/**
+ * Get post of day by category
+ * @param $con
+ * @param $funcId
+ * @return array
+ */
+function postOfDayByCategory($con, $funcId, $idCate){
+    $cnt = 0;
+    $recCnt = 0;
+    $pg_param = array();
+    $pg_param[] = $idCate;
+
+    $sql = "";
+    $sql .= "SELECT news.id                                        ";
+    $sql .= "     , news.title                                     ";
+    $sql .= "     , news.createby                                  ";
+    $sql .= "     , news.createdate                                ";
+    $sql .= "  FROM news                                           ";
+    $sql .= "  INNER JOIN category                                 ";
+    $sql .= "    ON news.category = category.id                    ";
+    $sql .= " WHERE news.deldate IS NULL                           ";
+    $sql .= "   AND news.createdate = '".date('Y/m/d')."'   ";
+    $sql .= "   AND category.deldate IS NULL                       ";
+    $sql .= "   AND category.id = $1                               ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError('.$funcId.') SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    $html = '';
+    if ($recCnt != 0){
+        while ($row = pg_fetch_assoc($query)){
+            $cnt++;
+            $html .= <<< EOF
+                <tr>
+                    <td class="text-center" style="width: 10%;">{$cnt}</td>
+                    <td style="width: 40%;">{$row['title']}</td>
+                    <td class="text-center" style="width: 20%;">{$row['createby']}</td>
+                    <td class="text-center" style="text-align: center; width: 20%;">{$row['createdate']}</td>
+                    <td class="text-center" style="width: 10%;">
+                        <form action="detail-news.php" method="POST">
+                            <input type="hidden" name="nid" value="{$row['id']}">
+                            <input type="hidden" class="mode" name="mode" value="update">
+                            <a href="" class="btn btn-primary btn-sm editNews"><i class="fas fa-edit"></i></a>
+                        </form>
+                    </td>
+                </tr>
+EOF;
+
+        }
+    } else {
+        $html .= <<< EOF
+            <tr>
+                <td colspan = 6>
+                    <h3 class="card-title">
+                        <i class="fas fa-bullseye fa-fw" style="color: red"></i>
+                        Không có dữ liệu
+                    </h3>
+                </td>
+            </tr>
+EOF;
+
+    }
+    return $html;
+}
+
+/**
+ * Count post of day by category
+ * @param $con
+ * @param $funcId
+ * @param $idCate
+ * @return array
+ */
+function countPostOfDayByCategory($con, $funcId, $idCate){
+    $recCnt = 0;
+    $cntNews = array();
+    $pg_param = array();
+    $pg_param[] = $idCate;
+
+    $sql = "";
+    $sql .= "SELECT COUNT(news.id) AS COUTNEWS                     ";
+    $sql .= "  FROM news                                           ";
+    $sql .= " INNER JOIN category                                  ";
+    $sql .= "    ON news.category = category.id                    ";
+    $sql .= " WHERE news.deldate IS NULL                           ";
+    $sql .= "   AND category.deldate IS NULL                       ";
+    $sql .= "   AND news.category = $1                             ";
+    $sql .= "   AND news.createdate = '".date('Y/m/d')."'   ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError('.$funcId.') SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $cntNews = pg_fetch_assoc($query);
+    }
+    return $cntNews;
 }
 
 //Footer
