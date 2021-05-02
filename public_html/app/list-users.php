@@ -540,13 +540,13 @@ EOF;
     } else {
         $html .= <<< EOF
             <tr>
-			<td colspan = 7>
-				<h3 class="card-title">
-					<i class="fas fa-bullseye fa-fw" style="color: red"></i>
-					Không có dữ liệu
-				</h3>
-			</td>
-		</tr>
+                <td colspan = 7>
+                    <h3 class="card-title">
+                        <i class="fas fa-bullseye fa-fw" style="color: red"></i>
+                        Không có dữ liệu
+                    </h3>
+                </td>
+            </tr>
 EOF;
 
     }

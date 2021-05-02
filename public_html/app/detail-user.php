@@ -54,7 +54,7 @@ if ($param){
         }
 
         if ($mode == 'delete'){
-            deletetUser($con, $func_id, $dateTime, $uid);
+            deletetUser($con, $func_id, $uid);
         } else{
             if (empty($mes)){
                 if ($_SESSION['fullname'] != $param['createBy']){
@@ -274,7 +274,6 @@ echo <<<EOF
                                 <input type="hidden" name="registFlg" value="1">
                                 <input type="hidden" name="getDay" value="{$date}">
                                 <input type="hidden" name="uid" value="{$uid}">
-                                <input type="hidden" name="dateTime" value="{$dateTime}">
                                 {$htmlBtnDelete}
                                 <button type="submit" class="btn btn-primary float-right" id="saveUser" style="background-color: #17a2b8;">
                                     <i class="fas fa-save"></i>
