@@ -96,8 +96,6 @@ function getParam(){
                 $v = stripslashes($v);
             }
             $v = htmlspecialchars($v,ENT_QUOTES);
-            //        $v = mb_convert_encoding($v, 'UTF-8', 'sjis-win');
-            //        $v = mb_convert_encoding($v, 'UTF-8');
             $v = trimBlank($v);
             $param[$k] = $v;
         }
@@ -106,22 +104,32 @@ function getParam(){
 }
 
 /**
- * Get date time current
- * @return false|string
+ * Get deldate
+ * @param $db
+ * @param $loginId
+ * @param $tableName
+ * @return array
  */
-function getDateTime(){
-    date_default_timezone_set("Asia/Ho_Chi_Minh");
-    $dateTime = date("Y-m-d h:i:s");
-    return $dateTime;
-}
+function getDelDate($db, $loginId){
+    $recCnt = 0;
+    $deldate = [];
+    $pg_param = array();
 
-/**
- * Get date
- * @return false|string
- */
-function getDateVn(){
-    date_default_timezone_set("Asia/Ho_Chi_Minh");
-    $date = date("Y-m-d");
-    return $date;
+    $sql = "";
+    $sql .= "SELECT deldate                  ";
+    $sql .= "FROM users                    ";
+    $sql .= "WHERE loginid = '".$loginId."'  ";
+
+    $query = pg_query_params($db, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(getDelDate) SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $deldate = pg_fetch_assoc($query);
+    }
+    return $deldate['deldate'];
 }
 ?>
