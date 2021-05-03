@@ -16,6 +16,10 @@ if (!isset($_SESSION['loginId']) || !strlen($_SESSION['loginId'])){
     systemErrorPrint();
     exit();
 } else {
+    if (isset($_COOKIE['siteAuth'])){
+        unset($_COOKIE['siteAuth']);
+        setcookie('siteAuth', '', time() - 3600, '/');
+    }
     session_unset();
 }
 
