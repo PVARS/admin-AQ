@@ -42,9 +42,9 @@ if(isset($cookie_name)){
 }
 
 //Check login inf
-$checkLogin = checkLoginId($con, $param, $func_id, $loginId, $password);
+$checkLogin = checkLoginId($con, $func_id, $loginId, $password);
 //Validation data
-$validate = validateData($param, $loginId, $password, $minStr, $maxLoginId, $maxPassword, $checkLogin);
+$validate = validateData($loginId, $password, $minStr, $maxLoginId, $maxPassword, $checkLogin);
 
 if ($param){
     if (isset($param['registFlg']) && $param['registFlg'] == 1){
@@ -171,7 +171,7 @@ EOF;
  * @param $func_id
  * @return bool
  */
-function checkLoginId($con, $param, $func_id, $loginId, $password){
+function checkLoginId($con, $func_id, $loginId, $password){
     $recCnt = 0;
     $pg_param = array();
     $userInf = array();
@@ -216,7 +216,7 @@ function checkLoginId($con, $param, $func_id, $loginId, $password){
  * @param $checkLogin
  * @return array
  */
-function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $maxPassword, $checkLogin){
+function validateData($loginId, $password, $minStr, $maxLoginId, $maxPassword, $checkLogin){
     
     // Call local variable
     global $cookie_name, $cookie_time, $check_rm;
@@ -229,24 +229,18 @@ function validateData($param, $loginId, $password, $minLoginId, $maxLoginId, $ma
     
     if (empty($loginId)){
         $mes['chk_required'][] = 'Vui lòng nhập tên đăng nhập.';
-    } else {
-        if (!preg_match('/^[0-9A-Za-z]/', $loginId) || preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $loginId)){
-            $mes['chk_format'][] = 'Tên đăng nhập không được chứa kí tự đặc biệt.';
-        }
-        if (mb_strlen($loginId) > $maxLoginId || mb_strlen($loginId) < $minLoginId){
-            $mes['chk_max_length'][] = 'Tên đăng nhập phải hơn '.$minLoginId.' ký tự và bé hơn '.$maxLoginId.' ký tự.';
-        }
+    } elseif (!preg_match('/^[0-9A-Za-z]/', $loginId) || preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $loginId)){
+        $mes['chk_format'][] = 'Tên đăng nhập không được chứa kí tự đặc biệt.';
+    } elseif (mb_strlen($loginId) > $maxLoginId || mb_strlen($loginId) < $minStr){
+        $mes['chk_max_length'][] = 'Tên đăng nhập phải hơn '.$minStr.' ký tự và bé hơn '.$maxLoginId.' ký tự.';
     }
     
     if (empty($password)){
         $mes['chk_required'][] = 'Vui lòng nhập mật khẩu.';
-    } else {
-        if (!preg_match('/^(?=.*[0-9A-Za-z])/', $password) || !preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $password)){
-            $mes['chk_format'][] = 'Mật khẩu không đúng định dạng, phải có ít nhất 1 chữ hoặc số và ký tự đặc biệt.';
-        }
-        if (mb_strlen($password) > $maxPassword || mb_strlen($password) < $minLoginId){
-            $mes['chk_max_length'][] = 'Mật khẩu phải lớn hơn '.$minLoginId.' ký tự và bé hơn '.$maxPassword.' ký tự.';
-        }
+    } elseif (!preg_match('/^(?=.*[0-9A-Za-z])/', $password) || !preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $password)){
+        $mes['chk_format'][] = 'Mật khẩu không đúng định dạng, phải có ít nhất 1 chữ hoặc số và ký tự đặc biệt.';
+    } elseif (mb_strlen($password) > $maxPassword || mb_strlen($password) < $minStr){
+        $mes['chk_max_length'][] = 'Mật khẩu phải lớn hơn '.$minStr.' ký tự và bé hơn '.$maxPassword.' ký tự.';
     }
     
     $msg = array_merge(
@@ -306,10 +300,11 @@ function getRoleUserByLoginId($con, $func_id, $uid){
     $pg_param[] = $uid;
 
     $sql = "";
-    $sql .= "SELECT role,               ";
-    $sql .= "       fullname            ";
+    $sql .= "SELECT role                ";
+    $sql .= "     , fullname            ";
     $sql .= "FROM users                 ";
     $sql .= "WHERE loginid = $1         ";
+
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
