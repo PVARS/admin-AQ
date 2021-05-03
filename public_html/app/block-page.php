@@ -54,7 +54,7 @@ echo <<<EOF
                 <div class="row">
                     <div class="col-12">
                         <div class="icheck-primary">
-                            Tài khoản của bạn đã bị khoá. Trở lại <a href="login.php">đăng nhập?</a>
+                            Tài khoản của bạn đã bị khoá hoặc bị xoá. Trở lại <a href="login.php">đăng nhập?</a>
                         </div>
                     </div>
                 <!-- /.col -->
