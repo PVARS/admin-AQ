@@ -116,9 +116,9 @@ function getDelDate($db, $loginId){
     $pg_param = array();
 
     $sql = "";
-    $sql .= "SELECT deldate                  ";
-    $sql .= "FROM users                    ";
-    $sql .= "WHERE loginid = '".$loginId."'  ";
+    $sql .= "SELECT deldate                     ";
+    $sql .= "  FROM users                       ";
+    $sql .= " WHERE loginid = '".$loginId."'    ";
 
     $query = pg_query_params($db, $sql, $pg_param);
     if (!$query){
