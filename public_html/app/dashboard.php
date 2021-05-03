@@ -22,6 +22,13 @@ if (!isset($_SESSION['loginId'])){
     exit();
 }
 
+//Check deldate exist
+$existDeldate = getDelDate($con, $_SESSION['loginId']);
+if (!empty($existDeldate)){
+    header('location: block-page.php');
+    exit();
+}
+
 //Get total news
 $totalNews    = totalNews($con, $funcId);
 
