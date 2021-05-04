@@ -29,23 +29,14 @@ $param = getParam();
 
 $f_loginid = $param['username'] ?? '';
 $f_email = $param['email'] ?? '';
-$submit = $param['btn_send'] ?? '';
-
-$validate = validateForm($con, $func_id, $f_loginid, $f_email);
-
-// Check btn_submit
-if (!empty($_POST)) {
-    // Check message error
-    if (empty($validate)) {
-        $user = getUser($con, $func_id, $f_loginid, $f_email);
-        createTokenAndSendMail($con, $user, $f_email, $func_id);
-    }
-
-}
 
 if ($param) {
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
-        $mes = $validate;
+        $mes = validateForm($con, $func_id, $f_loginid, $f_email);
+
+        if (empty($mes)){
+            createTokenAndSendMail($con, $f_loginid, $f_email, $func_id);
+        }
 
         $message = join('<br>', $mes);
         if (strlen($message)) {
@@ -54,6 +45,7 @@ if ($param) {
         }
     }
 }
+
 //Message HTML
 if (isset($_SESSION['message']) && strlen($_SESSION['message'])) {
     $message .= $_SESSION['message'];
@@ -86,13 +78,7 @@ $titleHTML = '';
 $cssHTML = '';
 $scriptHTML = '';
 $scriptHTML = <<< EOF
-  <script >
-    $(function() {
-        $('#btn_send').click(function() {
-            $("#loader-gif").show();
-            $("#span_send").hide();
-        });
-    }); 
+<script>
 </script>
 EOF;
 
@@ -118,50 +104,47 @@ EOF;
 //Conntent
 echo <<<EOF
 <div class="card card-outline card-primary">
-            <div class="card-header text-center">
-                <a href="send-mail.php" class="h1"><b>Arsenal</b>Quán</a>
+    <div class="card-header text-center">
+        <a href="send-mail.php" class="h1"><b>Arsenal</b>Quán</a>
+    </div>
+    <div class="card-body">
+        <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+            <div class="input-group mb-3">
+                <input type="text" name="username" class="form-control" placeholder="Tên đăng nhập" value="{$f_loginid}" autocomplete="off">
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
-                    <div class="input-group mb-3">
-                        <input type="text" name="username" class="form-control" placeholder="Tên đăng nhập" value="" autocomplete="off">
-                        <div class="input-group-append">
-                            <div class="input-group-text">
-                                <i class="fas fa-user"></i>
-                            </div>
-                        </div>
+            <div class="input-group mb-3">
+                <input type="text" name="email" class="form-control" placeholder="Email đã đăng ký" value="{$f_email}" autocomplete="off">
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <i class="fas fa-envelope-square"></i>
                     </div>
-                    <div class="input-group mb-3">
-                        <input type="text" name="email" class="form-control" placeholder="Email đã đăng ký" value="" autocomplete="off">
-                        <div class="input-group-append">
-                            <div class="input-group-text">
-                                <i class="fas fa-envelope-square"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-7">
-                            <div class="icheck-primary">
-                                <a href="login.php">
-                                    <i class="fas fa-long-arrow-alt-left"></i>
-                                    &nbspMàn hình đăng nhập
-                                </a>
-                            </div>
-                        </div>
-                        <!-- /.col -->
-                        <div class="col-5">
-                            <input type="hidden" name="registFlg" value="1">
-                            <button type="submit" name="btn_send" id="btn_send" class="btn btn-primary btn-block">
-                                <span id="span_send">Gửi email</span>
-                                <img id="loader-gif" src="dist/img/btn-loading.gif" alt="loading" height="25" style="display:none">
-                            </button>
-                        </div>
-                        <!-- /.col -->
-                    </div>
-                </form>
+                </div>
             </div>
-            <!-- /.card-body -->
-        </div>
+            <div class="row">
+                <div class="col-7">
+                    <div class="icheck-primary">
+                        <a href="login.php">
+                            <i class="fas fa-long-arrow-alt-left"></i>
+                            &nbspMàn hình đăng nhập
+                        </a>
+                    </div>
+                </div>
+                <!-- /.col -->
+                <div class="col-5">
+                    <input type="hidden" name="registFlg" value="1">
+                    <button type="submit" name="btn_send" id="btn_send" class="btn btn-primary btn-block">Gửi email</button>
+                </div>
+                <!-- /.col -->
+            </div>
+        </form>
+    </div>
+    <!-- /.card-body -->
+    </div>
 EOF;
 
 //Meta JS
@@ -182,52 +165,40 @@ function validateForm($con, $func_id, $f_loginid, $f_email)
 {
     global $minInput, $maxInput;
 
-    $msg = '';
     $mes = [
         'chk_required' => [],
         'chk_format' => [],
-        'chk_max_length' => [],
-        'chk_match' => [],
+        'chk_max_length' => []
     ];
 
     if (empty($f_loginid)) {
         $mes['chk_required'][] = 'Vui lòng nhập tên đăng nhập';
-    } else {
-        if (!preg_match('/^[0-9A-Za-z]/', $f_loginid) || preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $f_loginid)) {
-            $mes['chk_format'][] = 'Tên đăng nhập không được chứa kí tự đặc biệt';
-        } else if (mb_strlen($f_loginid) < $minInput || mb_strlen($f_loginid) > $maxInput) {
-            $mes['chk_max_length'][] = "Tên đăng nhập nhập vào phải lớn hơn $minInput ký tự và bé hơn $maxInput ký tự";
-        }
+    } elseif (!preg_match('/^[0-9A-Za-z]/', $f_loginid) || preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $f_loginid)) {
+        $mes['chk_format'][] = 'Tên đăng nhập không được chứa kí tự đặc biệt';
+    } else if (mb_strlen($f_loginid) < $minInput || mb_strlen($f_loginid) > $maxInput) {
+        $mes['chk_max_length'][] = "Tên đăng nhập nhập vào phải lớn hơn ".$minInput." ký tự và bé hơn ".$maxInput." ký tự";
     }
 
     if (empty($f_email)) {
         $mes['chk_required'][] = 'Vui lòng nhập địa chỉ email';
-    } else {
-        if (!filter_var($f_email, FILTER_VALIDATE_EMAIL)) {
-            $mes['chk_format'][] = 'Email không đúng định dạng. Ví dụ: abc@gmail.com';
-        } else if (mb_strlen($f_email) < $minInput || mb_strlen($f_email) > $maxInput) {
-            $mes['chk_max_length'][] = "Email đã đăng ký nhập vào phải lớn hơn $minInput ký tự và bé hơn $maxInput ký tự";
-        }
-    }
-
-    if (empty($mes['chk_required']) && empty($mes['chk_format']) && empty($mes['chk_max_length'])) {
-        // Check loginId and mail is exist
-        if (!$user = getUser($con, $func_id, $f_loginid, $f_email)) {
-            $mes = [
-                'chk_required' => [],
-                'chk_format' => [],
-                'chk_max_length' => [],
-                'chk_match' => ['Tên đăng nhập và địa chỉ Email không đúng hoặc không tồn tại'],
-            ];
-        }
+    } elseif (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $f_email)) {
+        $mes['chk_format'][] = 'Email không đúng định dạng. Ví dụ: abc@gmail.com';
+    } else if (mb_strlen($f_email) < $minInput || mb_strlen($f_email) > $maxInput) {
+        $mes['chk_max_length'][] = "Email đã đăng ký nhập vào phải lớn hơn ".$minInput." ký tự và bé hơn ".$maxInput." ký tự";
     }
 
     $msg = array_merge(
         $mes['chk_required'],
         $mes['chk_format'],
-        $mes['chk_max_length'],
-        $mes['chk_match'],
+        $mes['chk_max_length']
     );
+
+    if (empty($msg)) {
+        // Check loginId and mail is exist
+        if (empty(getUser($con, $func_id, $f_loginid, $f_email))){
+            $msg[] = 'Tên đăng nhập và địa chỉ email không đúng hoặc không tồn tại';
+        }
+    }
 
     return $msg;
 }
@@ -244,21 +215,27 @@ function getUser($con, $func_id, $loginid, $email)
 {
     $user = array();
     $pg_param = array();
-    $pg_param[0] = $loginid;
-    $pg_param[1] = $email;
+    $pg_param[] = $loginid;
+    $pg_param[] = $email;
+    $recCnt = 0;
 
-    // Check email and token exist
     $sql = "";
-    $sql .= "SELECT * FROM users    ";
-    $sql .= "WHERE loginid = $1     ";
-    $sql .= "AND email  = $2        ";
+    $sql .= "SELECT loginid              ";
+    $sql .= "     , email                ";
+    $sql .= "  FROM users                ";
+    $sql .= " WHERE loginid = $1         ";
+    $sql .= "   AND email  = $2          ";
+    $sql .= "   AND deldate IS NULL      ";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, TRUE));
     } else {
+        $recCnt = pg_num_rows($query);
+    }
+    
+    if ($recCnt != 0){
         $user = pg_fetch_assoc($query);
     }
-
     return $user;
 }
 
@@ -270,32 +247,32 @@ function getUser($con, $func_id, $loginid, $email)
  * @param $func_id
  * @throws \PHPMailer\PHPMailer\Exception
  */
-function createTokenAndSendMail($con, $user, $f_email, $func_id)
+function createTokenAndSendMail($con, $f_loginid, $f_email, $func_id)
 {
+    $user = getUser($con, $func_id, $f_loginid, $f_email);
     $loginId = $user['loginid'];
+    $fullname = $user['fullname'];
+    $recCnt = 0;
+
     // Set Token to email
     $token = md5($loginId) . rand(10, 9999);
     // Set link in mail
-    $link = $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/' .
-        'change-password.php' . "?uid=" . $loginId . "&token=" . $token;
+    $link = $_SERVER['SERVER_NAME'].dirname($_SERVER['PHP_SELF'])."/"."change-password.php"."?uid=".$loginId."&token=".$token;
 
-    $fullname = $user['fullname'];
     $pg_param = array();
-    $pg_param[0] = $token; // token
-    $pg_param[1] = getDateTime(); // datetime now
-    $pg_param[2] = $f_email; // form email
+    $pg_param[] = $token;
+    $pg_param[] = $f_email;
 
-    // SQL Update token
     $sql = "";
-    $sql .= "UPDATE users                   ";
-    $sql .= "SET reset_link_token = $1,     ";
-    $sql .= "date_token = $2                ";
-    $sql .= "WHERE email = $3               ";
+    $sql .= "UPDATE users                                       ";
+    $sql .= "   SET reset_link_token = $1                       ";
+    $sql .= "     , date_token = '".date('Y/m/d')."'     ";
+    $sql .= " WHERE email = $2                                  ";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, TRUE));
     } else {
-        $row = pg_num_rows($query);
+        $recCnt = pg_num_rows($query);
     }
 
     /* --------------------
@@ -313,26 +290,25 @@ function createTokenAndSendMail($con, $user, $f_email, $func_id)
  */
 function sendMail($f_email, $fullName, $link)
 {
-    global $messageFlg;
     $mail_user = 'hotro.arsenalquan@gmail.com';
     $mail_psw = 'arsenalquan123456';
 
     $mail = new PHPMailer();
 
-    $mail->CharSet = "utf-8";
-    $mail->IsSMTP();  // enable SMTP authentication
-    $mail->Host = "ssl://smtp.gmail.com";  // sets GMAIL as the SMTP server
-    $mail->SMTPAuth = true;
-    $mail->Username = $mail_user; // GMAIL username
-    $mail->Password = $mail_psw;  // GMAIL password
-    $mail->Port = "465";  // set the SMTP port for the GMAIL server
+    $mail->CharSet    = "utf-8";
+    $mail->IsSMTP();                                                                   // enable SMTP authentication
+    $mail->Host       = "ssl://smtp.gmail.com";                                       // sets GMAIL as the SMTP server
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $mail_user;                                                 // GMAIL username
+    $mail->Password   = $mail_psw;                                                 // GMAIL password
+    $mail->Port       = "465";                                                    // set the SMTP port for the GMAIL server
     $mail->SMTPSecure = "ssl";
 
     $mail->IsHTML(true);
-    $mail->From = 'arsenalquan@gmail.com'; // Mail me
-    $mail->FromName = 'Arsenal Quán'; // Name me
-    $mail->addAddress($f_email); // Mail send
-    $mail->Subject = 'Chúng tôi gửi bạn đường link Đổi mật khẩu'; // Title
+    $mail->From       = 'arsenalquan@gmail.com';                              // Mail me
+    $mail->FromName   = 'Arsenal Quán';                                      // Name me
+    $mail->addAddress($f_email);                                            // Mail send
+    $mail->Subject    = 'Chúng tôi gửi bạn đường link Đổi mật khẩu';       // Title
 
     $mail->Body = formatBodyMail($fullName, $link);
 

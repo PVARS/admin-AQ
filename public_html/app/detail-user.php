@@ -28,15 +28,15 @@ if (!isset($_SESSION['loginId']) || !isset($_SESSION['fullname'])){
     exit();
 }
 
+if (!empty(getDelDate($con, $_SESSION['loginId']))){
+    header('location: block-page.php');
+    exit();
+}
+
 if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     header('location: error404.php');
     exit();
 }
-
-//Get date
-$date = getDateVn();
-//Get date time
-$dateTime = getDateTime();
 
 //Validate
 $validate = validateData($param);
@@ -143,7 +143,6 @@ $(function() {
                 var message = "Thông tin tài khoản sẽ được cập nhật. Bạn chắc chứ?";
                 type = 3;
             }
-            var form = $(this).closest("form");
             sweetConfirm(type, message, function(result) {
                 if (result){
                     $('<input>').attr({
@@ -272,7 +271,6 @@ echo <<<EOF
                             <div class="card-footer">
                                 <input type="hidden" class="mode" name="mode" value="{$mode}">
                                 <input type="hidden" name="registFlg" value="1">
-                                <input type="hidden" name="getDay" value="{$date}">
                                 <input type="hidden" name="uid" value="{$uid}">
                                 {$htmlBtnDelete}
                                 <button type="submit" class="btn btn-primary float-right" id="saveUser" style="background-color: #17a2b8;">

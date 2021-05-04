@@ -146,7 +146,7 @@ echo <<<EOF
                             <button type="submit" name="login" class="btn btn-primary btn-block">Đăng nhập</button>
                         </div>
                         <div class="col-12 text-center mt-3">
-                            <a href="send-mail.php" target="__blank">Quên mật khẩu?</a>
+                            <a href="send-mail.php">Quên mật khẩu?</a>
                         </div>
                         <!-- /.col -->
                     </div>

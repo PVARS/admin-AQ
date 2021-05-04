@@ -22,9 +22,7 @@ if (!isset($_SESSION['loginId'])){
     exit();
 }
 
-//Check deldate exist
-$existDeldate = getDelDate($con, $_SESSION['loginId']);
-if (!empty($existDeldate)){
+if (!empty(getDelDate($con, $_SESSION['loginId']))){
     header('location: block-page.php');
     exit();
 }
