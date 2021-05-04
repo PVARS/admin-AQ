@@ -27,6 +27,11 @@ if (!empty(getDelDate($con, $_SESSION['loginId']))){
     exit();
 }
 
+if (checkStatusUser($con, $_SESSION['loginId']) == 'f'){
+    header('location: block-page.php');
+    exit();
+}
+
 //Get total news
 $totalNews    = totalNews($con, $funcId);
 

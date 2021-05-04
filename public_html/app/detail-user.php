@@ -33,6 +33,11 @@ if (!empty(getDelDate($con, $_SESSION['loginId']))){
     exit();
 }
 
+if (checkStatusUser($con, $_SESSION['loginId']) == 'f'){
+    header('location: block-page.php');
+    exit();
+}
+
 if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     header('location: error404.php');
     exit();
