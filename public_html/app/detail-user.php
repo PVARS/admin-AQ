@@ -577,11 +577,9 @@ function deletetUser($con, $func_id, $uid){
 
 /**
  * Validation data
- * @param $valueFullname
- * @param $valueRole
- * @param $valueEmail
- * @param $valueLoginId
- * @param $valuePassword
+ * @param $con
+ * @param $func_id
+ * @param $param
  * @return array
  */
 function validateData($con, $func_id, $param){
@@ -632,13 +630,15 @@ function validateData($con, $func_id, $param){
         $mes['chk_max_length']
     );
 
-    if (empty($msg)){
-        if (!empty($dupEmail)){
-            $msg[] = 'Email đã được sử dụng';
-        }
+    if ($param['mode'] == 'new'){
+        if (empty($msg)){
+            if (!empty($dupEmail)){
+                $msg[] = 'Email đã được sử dụng';
+            }
 
-        if (!empty($dupLoginId)){
-            $msg[] = 'Tên đăng nhập đã được sử dụng';
+            if (!empty($dupLoginId)){
+                $msg[] = 'Tên đăng nhập đã được sử dụng';
+            }
         }
     }
     return $msg;
