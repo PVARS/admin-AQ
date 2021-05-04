@@ -132,4 +132,33 @@ function getDelDate($db, $loginId){
     }
     return $deldate['deldate'];
 }
+
+/**
+ * check status account user
+ * @param $db
+ * @param $loginId
+ * @return mixed
+ */
+function checkStatusUser($db, $loginId){
+    $recCnt = 0;
+    $status = [];
+    $pg_param = array();
+
+    $sql = "";
+    $sql .= "SELECT status                      ";
+    $sql .= "  FROM users                       ";
+    $sql .= " WHERE loginid = '".$loginId."'    ";
+
+    $query = pg_query_params($db, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(getDelDate) SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $status = pg_fetch_assoc($query);
+    }
+    return $status['status'];
+}
 ?>
