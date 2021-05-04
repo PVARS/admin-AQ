@@ -43,12 +43,9 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     exit();
 }
 
-//Validate
-$validate = validateData($param);
-
 if ($param){
     if (isset($param['registFlg']) && $param['registFlg'] == 1){
-        $mes = $validate;
+        $mes = validateData($con, $func_id, $param);
 
         $message = join('<br>', $mes);
         if (strlen($message)) {
@@ -358,6 +355,70 @@ function getUserInf($con, $func_id, $uid){
 }
 
 /**
+ * Get loginid for check dup
+ * @param $con
+ * @param $func_id
+ * @param $param
+ * @return array
+ */
+function getCheckDupLogId($con, $func_id, $param){
+    $recCnt = 0;
+    $dataLoginId = array();
+    $pg_param = array();
+    $pg_param[] = $param['loginId'];
+
+    $sql = "";
+    $sql .= "SELECT loginid          ";
+    $sql .= "  FROM users            ";
+    $sql .= " WHERE loginid = $1     ";
+    $sql .= "   AND deldate IS NULL  ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $dataLoginId = pg_fetch_assoc($query);
+    }
+    return $dataLoginId;
+}
+
+/**
+ * Get email for check dup
+ * @param $con
+ * @param $func_id
+ * @param $param
+ * @return array
+ */
+function getCheckDupEmail($con, $func_id, $param){
+    $recCnt = 0;
+    $dataEmail = array();
+    $pg_param = array();
+    $pg_param[] = $param['email'];
+
+    $sql = "";
+    $sql .= "SELECT email            ";
+    $sql .= "  FROM users            ";
+    $sql .= " WHERE email = $1       ";
+    $sql .= "   AND deldate IS NULL  ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $dataEmail = pg_fetch_assoc($query);
+    }
+    return $dataEmail;
+}
+
+/**
  * Get role combox
  * @param $con
  * @param $func_id
@@ -523,7 +584,10 @@ function deletetUser($con, $func_id, $uid){
  * @param $valuePassword
  * @return array
  */
-function validateData($param){
+function validateData($con, $func_id, $param){
+    $dupLoginId = getCheckDupLogId($con, $func_id, $param);
+    $dupEmail   = getCheckDupEmail($con, $func_id, $param);
+
     $mes = [
         'chk_required'   => [],
         'chk_format'     => [],
@@ -567,6 +631,16 @@ function validateData($param){
         $mes['chk_format'],
         $mes['chk_max_length']
     );
+
+    if (empty($msg)){
+        if (!empty($dupEmail)){
+            $msg[] = 'Email đã được sử dụng';
+        }
+
+        if (!empty($dupLoginId)){
+            $msg[] = 'Tên đăng nhập đã được sử dụng';
+        }
+    }
     return $msg;
 }
 ?>
