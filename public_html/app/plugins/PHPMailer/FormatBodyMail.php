@@ -66,7 +66,7 @@ function formatBodyMail($name, $link)
                                                           padding: 0;
                                                           margin: 0;
                                                           ">
-                                                          Xin chào ' . $name . '!
+                                                          Xin chào <b>'.$name.'</b>
                                                        </p>
                                                        <p style="
                                                           color: #4e4e4e;
@@ -76,7 +76,7 @@ function formatBodyMail($name, $link)
                                                           padding: 0;
                                                           margin: 0;
                                                           ">
-                                                          Để Đổi mật khẩu, hãy đảm bảo rằng bạn không tiếc lộ đường link với bất kì ai và địa chỉ email này là của bạn bằng cách CLICK vào ô màu đỏ dưới đây để xác nhận.
+                                                          Để đổi mật khẩu, hãy đảm bảo rằng bạn không tiếc lộ đường link với bất kì ai và địa chỉ email này là của bạn. Hãy click vào nút "Đổi mật khẩu" dưới đây để tiến hành cập nhật lại mật khẩu của bạn.
                                                        </p>
                                                        <br />
                                                        <p style="
@@ -122,7 +122,7 @@ function formatBodyMail($name, $link)
                                                                          padding: 14px 40px;
                                                                          display: block;
                                                                          letter-spacing: 1.2px;
-                                                                         " target="_blank">Đổi mật khẩu!</a>
+                                                                         " target="_blank">Đổi mật khẩu</a>
                                                                    </td>
                                                                 </tr>
                                                              </tbody>
@@ -157,7 +157,7 @@ function formatBodyMail($name, $link)
                                                           padding: 0;
                                                           margin: 0;
                                                           ">
-                                                          &copy; 2021 Arsenal Quan. All rights reserved.
+                                                          &copy; '.date("Y").' Arsenal Quan.
                                                        </div>
                                                        <div style="
                                                           line-height: 5px;
@@ -178,12 +178,12 @@ function formatBodyMail($name, $link)
                                                     </td>
                                                     <td align="right" valign="top">
                                                        <span style="line-height: 20px; font-size: 10px"><a
-                                                          href="#"
+                                                          href="https://www.facebook.com/groups/ArsenalQuan"
                                                           target="_blank"><img
                                                           src="https://i.imgbox.com/BggPYqAh.png"
                                                           alt="fb" /></a>&nbsp;</span>
                                                        <span style="line-height: 20px; font-size: 10px"><a
-                                                          href="#"
+                                                          href="https://twitter.com/arsquanofficial"
                                                           target="_blank"><img
                                                           src="https://i.imgbox.com/j3NsGLak.png"
                                                           alt="twit" /></a>&nbsp;</span>

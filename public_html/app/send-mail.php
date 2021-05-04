@@ -222,6 +222,7 @@ function getUser($con, $func_id, $loginid, $email)
     $sql = "";
     $sql .= "SELECT loginid              ";
     $sql .= "     , email                ";
+    $sql .= "     , fullname             ";
     $sql .= "  FROM users                ";
     $sql .= " WHERE loginid = $1         ";
     $sql .= "   AND email  = $2          ";
@@ -288,7 +289,7 @@ function createTokenAndSendMail($con, $f_loginid, $f_email, $func_id)
  * @param $link
  * @throws \PHPMailer\PHPMailer\Exception
  */
-function sendMail($f_email, $fullName, $link)
+function sendMail($f_email, $fullname, $link)
 {
     $mail_user = 'hotro.arsenalquan@gmail.com';
     $mail_psw = 'arsenalquan123456';
@@ -308,9 +309,9 @@ function sendMail($f_email, $fullName, $link)
     $mail->From       = 'arsenalquan@gmail.com';                              // Mail me
     $mail->FromName   = 'Arsenal Quán';                                      // Name me
     $mail->addAddress($f_email);                                            // Mail send
-    $mail->Subject    = 'Chúng tôi gửi bạn đường link Đổi mật khẩu';       // Title
+    $mail->Subject    = 'Xác nhận đổi mật khẩu';                           // Title
 
-    $mail->Body = formatBodyMail($fullName, $link);
+    $mail->Body = formatBodyMail($fullname, $link);
 
     // Is mail send?
     if ($mail->Send()) {
