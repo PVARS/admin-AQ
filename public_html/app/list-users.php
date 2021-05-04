@@ -472,8 +472,8 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
     $sql .= "    ON users.role = role.id      ";
     $sql .= " WHERE deldate IS NULL           ";
     $sql .= $wheresql;
-    $sql .= " ORDER BY role ASC               ";
-    
+    $sql .= " ORDER BY id ASC                 ";
+
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
@@ -484,24 +484,25 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
     $html = '';
     if ($recCnt != 0){
         while ($row = pg_fetch_assoc($query)){
+            $cnt++;
             if ($row['status'] == 't'){
                 $strStatus = "Đang hoạt động";
                 $iconBg = "btn-danger";
-                $iconStatus = "fa-ban";
+                $iconStatus = "fa-lock";
                 $btnStatus = "ban_user";
                 $mode = "ban";
             } else {
                 $strStatus = "Vô hiệu hoá";
                 $iconBg = "btn-success";
-                $iconStatus = "fa-check";
+                $iconStatus = "fa-lock-open";
                 $btnStatus = "un_ban_user";
                 $mode = "unban";
             }
 
             $htmlButtonBan = '';
-            if ($_SESSION['role'] == $row['role']){
+            if ($_SESSION['loginId'] == $row['loginid']){
                 $htmlButtonBan .= <<< EOF
-                    <button class="btn btn-block {$iconBg} btn-sm" disabled><i class="fas fa-ban"></i></button>
+                    <button class="btn btn-block {$iconBg} btn-sm" disabled><i class="fas fa-lock"></i></button>
 
 EOF;
             } else {
@@ -509,27 +510,11 @@ EOF;
                     <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
                         <input type="hidden" name="uid" value="{$row['id']}">
                         <input type="hidden" name="mode" value="{$mode}">
-                        <a href="#" class="btn btn-block {$iconBg} btn-sm {$btnStatus}"><i class="fas {$iconStatus}"></i></a>
+                        <button class="btn btn-block {$iconBg} btn-sm {$btnStatus}"><i class="fas {$iconStatus}"></i></button>
                     </form>
 EOF;
             }
             
-            $htmlEditButton = '';
-            if ($_SESSION['role'] != 1){
-                $htmlEditButton .= <<< EOF
-                    <button class="btn btn-block btn-primary btn-sm edit_user" disabled><i class="fas fa-edit"></i></button>
-EOF;
-            } else {
-                $htmlEditButton .=<<< EOF
-                    <form action="detail-user.php" method="POST">
-                        <input type="hidden" name="mode" value="update">
-                        <input type="hidden" name="uid" value="{$row['id']}">
-                        <a href="" class="btn btn-block btn-primary btn-sm edit_user"><i class="fas fa-edit"></i></a>
-                    </form>
-EOF;
-            }
-            
-            $cnt++;
             $html .= <<< EOF
                 <tr>
                     <td style="text-align: center; width: 5%;">{$cnt}</td>
@@ -538,7 +523,11 @@ EOF;
                     <td style="text-align: center; width: 20%;">{$row['rolename']}</td>
                     <td style="text-align: center; width: 20%;">{$strStatus}</td>
                     <td style="text-align: center; width: 5%;">
-                        {$htmlEditButton}
+                        <form action="detail-user.php" method="POST">
+                            <input type="hidden" name="mode" value="update">
+                            <input type="hidden" name="uid" value="{$row['id']}">
+                            <button class="btn btn-block btn-primary btn-sm edit_user"><i class="fas fa-edit"></i></button>
+                        </form>
                     </td>
                     <td style="text-align: center; width: 5%;">
                         {$htmlButtonBan}

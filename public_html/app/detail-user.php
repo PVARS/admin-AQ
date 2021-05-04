@@ -90,12 +90,14 @@ if (isset($uid) && (mb_strlen($uid) > 0)){
     $valueLoginId = $param['loginId'] ?? $userInf['loginid'];
     $valuePassword = $param['password'] ?? $userInf['password'];
     
-    $htmlBtnDelete .= <<< EOF
-        <a href="" id="deleteUser" class="btn btn-danger">
-            <i class="fas fa-trash"></i>
-            &nbspXoá tài khoản
-        </a>
+    if ($_SESSION['loginId'] != $userInf['loginid']){
+        $htmlBtnDelete .= <<< EOF
+            <a href="" id="deleteUser" class="btn btn-danger">
+                <i class="fas fa-trash"></i>
+                &nbspXoá tài khoản
+            </a>
 EOF;
+    }
 } else {
     $valueFullname = $param['fullname'] ?? '';
     $valueRole = $param['role'] ?? '';
@@ -233,6 +235,14 @@ echo <<<EOF
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <a href="list-users.php" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;">
+                        <i class="fas fa-backward"></i>
+                        &nbspTrở lại
+                    </a>
+                </div>
+            </div>
             <div class="row">
                 <div class="card-body">
                     {$messageHtml}
