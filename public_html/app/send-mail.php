@@ -318,7 +318,7 @@ function sendMail($f_email, $fullname, $link)
         header('location: notification-send-mail.php');
         exit();
     } else {
-        exit();
+        systemError('systemError(Send Email) System Error：sendMail');
     }
 }
 
