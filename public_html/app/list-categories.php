@@ -5,7 +5,7 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'list_category';
+$func_id = 'list_categories';
 $maxStr = 200;
 $message = '';
 $messageClass = '';
