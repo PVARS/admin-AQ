@@ -52,8 +52,13 @@ include ($TEMP_APP_HEADER_PATH);
 //Menu
 if ($role == '1'){
     include ($TEMP_APP_MENUSYSTEM_PATH);
-} else {
+}
+if ($role == '2') {
     include ($TEMP_APP_MENU_PATH);
+}
+
+if ($role == '3'){
+    include ($TEMP_APP_MENU_MOD_PATH);
 }
 
 //Conntent
