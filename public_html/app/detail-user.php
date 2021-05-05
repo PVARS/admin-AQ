@@ -449,6 +449,7 @@ function getComboxRole($con, $func_id, $valueRole){
     }
     
     $html = '<select class="custom-select" name="role">';
+    $html .= '<option value="0">Chọn vai trò</option>';
     if ($recCnt != 0){
         while ($row = pg_fetch_assoc($query)){
             $selected = '';
@@ -601,6 +602,10 @@ function validateData($con, $func_id, $param){
         $mes['chk_required'][] = 'Vui lòng nhập họ tên.';
     } elseif (mb_strlen($param['fullname']) > 254){
         $mes['chk_max_length'][] = 'Họ tên phải bé hơn 254 ký tự.';
+    }
+
+    if ($param['role'] == 0){
+        $mes['chk_required'][] = 'Vui lòng chọn vai trò cho tài khoản.';
     }
     
     if (empty($param['email'])){

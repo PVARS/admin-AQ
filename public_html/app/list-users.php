@@ -322,11 +322,11 @@ echo <<<EOF
                             <table class="table table-hover text-nowrap table-bordered" style="background-color: #FFFFFF;">
                                 <thead style="background-color: #17A2B8;">
                                     <tr>
-                                        <th style="text-align: center; width: 5%;" class="text-th">STT</th>
-                                        <th style="width: 20%;" class="text-th">Họ tên</th>
-                                        <th style="width: 20%;" class="text-th">Tên đăng nhập</th>
-                                        <th style="text-align: center; width: 20%;" class="text-th">Vai trò</th>
-                                        <th style="text-align: center; width: 20%;" class="text-th">Trạng thái</th>
+                                        <th style="width: 5%;" class="text-th text-center">STT</th>
+                                        <th style="width: 20%;" class="text-th text-center">Họ tên</th>
+                                        <th style="width: 20%;" class="text-th text-center">Tên đăng nhập</th>
+                                        <th style="width: 20%;" class="text-th text-center">Vai trò</th>
+                                        <th style="width: 20%;" class="text-th text-center">Trạng thái</th>
                                         <th colspan="3" style="text-align: center; width: 20%;"></th>
                                     </tr>
                                 </thead>
@@ -496,7 +496,7 @@ function getUserAndSearch($con, $func_id, $fullName, $loginId, $dateForm, $dateT
     $sql .= "    ON users.role = role.id      ";
     $sql .= " WHERE deldate IS NULL           ";
     $sql .= $wheresql;
-    $sql .= " ORDER BY id ASC                 ";
+    $sql .= " ORDER BY role ASC               ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
