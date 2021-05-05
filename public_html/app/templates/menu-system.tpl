@@ -98,6 +98,14 @@ print <<<EOF
                     </li>
                 </ul>
             </li>
+            <li class="nav-item">
+                <a href="setting-system.php" class="nav-link">
+                    <i class="fas fa-cog nav-icon"></i>
+                    <p>
+                        Cài đặt hệ thống
+                    </p>
+                </a>
+            </li>
         </ul>
         <a href="logout.php" style="position: absolute; bottom: 0; margin-bottom: 20px">
             <i class="fas fa-sign-out-alt nav-icon" style="font-size: 20px"></i>&nbsp
