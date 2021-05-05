@@ -31,29 +31,6 @@ print <<<EOF
             </li>
             <li class="nav-item">
                 <a href="javascript:void(0)" class="nav-link">
-                    <i class="nav-icon fas fa-briefcase"></i>
-                    <p>
-                        Quản lí danh mục
-                        <i class="fas fa-angle-left right"></i>
-                    </p>
-                </a>
-                <ul class="nav nav-treeview">
-                    <li class="nav-item">
-                        <a href="detail-category.php" class="nav-link">
-                            <i class="fas fa-folder-plus nav-icon"></i>
-                            <p>Thêm danh mục</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="list-categories.php" class="nav-link">
-                            <i class="fas fa-list nav-icon"></i>
-                            <p>Danh sách danh mục</p>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            <li class="nav-item">
-                <a href="javascript:void(0)" class="nav-link">
                     <i class="nav-icon fas fa-newspaper"></i>
                     <p>
                         Quản lí bài viết
