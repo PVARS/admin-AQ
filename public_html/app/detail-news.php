@@ -40,6 +40,21 @@ if (!isset($_SESSION['loginId'])) {
     exit();
 }
 
+if (!empty(getDelDate($con, $_SESSION['loginId']))){
+    header('location: block-page.php');
+    exit();
+}
+
+if (checkStatusUser($con, $_SESSION['loginId']) == 'f'){
+    header('location: block-page.php');
+    exit();
+}
+
+if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
+    header('location: error404.php');
+    exit();
+}
+
 // Get id and fullname user
 $userLogin = getUserByLoginId($con, $func_id, $_SESSION['loginId']);
 
@@ -50,9 +65,9 @@ if ($param) {
             deleteNews($con, $func_id, $nid);
         }
         if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
-            updateNews($con, $func_id, $param, $userLogin['id']);
+            updateNews($con, $func_id, $param, $userLogin['loginid']);
         } else {/*Insert News*/
-            insertNews($con, $func_id, $param, $userLogin['id']);
+            insertNews($con, $func_id, $param, $userLogin['loginid']);
         }
     }
 }
@@ -389,12 +404,12 @@ function get_newsedit($con, $func_id, $nid)
     $sql .= "SELECT news.title                               ";
     $sql .= " ,news.shortdescription                         ";
     $sql .= " ,users.fullname                                ";
-    $sql .= " ,news.thumbnail                                 ";
-    $sql .= " ,news.category                                  ";
-    $sql .= " ,news.content                                   ";
+    $sql .= " ,news.thumbnail                                ";
+    $sql .= " ,news.category                                 ";
+    $sql .= " ,news.content                                  ";
     $sql .= " FROM news                                      ";
     $sql .= " INNER JOIN users                               ";
-    $sql .= " ON news.createby = users.id                    ";
+    $sql .= " ON news.createby = users.loginid               ";
 //    $sql .= " INNER JOIN category                            ";
 //    $sql .= " ON category.id = news.category                 ";
     $sql .= " WHERE news.id = $1                             ";
@@ -408,6 +423,9 @@ function get_newsedit($con, $func_id, $nid)
 
     if ($recCnt != 0) {
         $editArray = pg_fetch_assoc($query);
+    }else{
+        header('location: dashboard.php');
+        exit();
     }
     return $editArray;
 }
@@ -473,7 +491,7 @@ function getUserByLoginId($con, $func_id, $uid)
     $pg_param[] = $uid;
 
     $sql  = "";
-    $sql .= "SELECT id, fullname        ";
+    $sql .= "SELECT loginid, fullname   ";
     $sql .= "FROM users                 ";
     $sql .= "WHERE loginid = $1         ";
     $query = pg_query_params($con, $sql, $pg_param);
@@ -504,7 +522,7 @@ function insertNews($con, $func_id, $param, $idUser)
     $pg_param[] = $param['shortdescription'];
     $pg_param[] = $param['urlImage'];
     $pg_param[] = $param['content'];
-    $pg_param[] = getDateTime();
+    $pg_param[] = getDatetimeNow();
     $pg_param[] = $idUser;
 
     $sql  = "";
@@ -553,7 +571,7 @@ function updateNews($con, $func_id, $param, $idUser)
     $pg_param[] = $param['urlImage'];
     $pg_param[] = $param['content'];
     $pg_param[] = $idUser;
-    $pg_param[] = getDateTime();
+    $pg_param[] = getDatetimeNow();
     $pg_param[] = $param['nid'];
 
     $sql  = "";
@@ -585,8 +603,9 @@ function updateNews($con, $func_id, $param, $idUser)
  */
 function deleteNews($con, $func_id, $nid)
 {
+
     $pg_param   = array();
-    $pg_param[] = getDateTime();
+    $pg_param[] = getDatetimeNow();
     $pg_param[] = $nid;
 
     $sql  = "";
@@ -616,6 +635,17 @@ function getNameFileToLink($link)
     $str  = $link;
     $str  = explode("?alt", $link);
     return $str[0];
+}
+
+/**
+ * Get date time now
+ * @return string
+ */
+function getDatetimeNow(){
+    $datenow = '';
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+    $datenow = date("Y-m-d H:i:s");
+    return $datenow;
 }
 
 ?>

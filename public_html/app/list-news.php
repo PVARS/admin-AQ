@@ -39,6 +39,21 @@ if (!isset($_SESSION['loginId'])) {
     exit();
 }
 
+if (!empty(getDelDate($con, $_SESSION['loginId']))){
+    header('location: block-page.php');
+    exit();
+}
+
+if (checkStatusUser($con, $_SESSION['loginId']) == 'f'){
+    header('location: block-page.php');
+    exit();
+}
+
+if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
+    header('location: error404.php');
+    exit();
+}
+
 $messageSwal = $_SESSION['messageSwal'] ?? 0;
 if ($messageSwal != 0){
     unset($_SESSION['messageSwal']);
@@ -405,7 +420,7 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
     $sql .= "       users.fullname              ";
     $sql .= "FROM   news                        ";
     $sql .= "INNER JOIN users                   ";
-    $sql .= "ON news.createby = users.id        ";
+    $sql .= "ON news.createby = users.loginid   ";
     $sql .= "INNER JOIN category                ";
     $sql .= "ON news.category = category.id     ";
     $sql .= "WHERE news.deldate IS NULL         ";
@@ -559,8 +574,12 @@ EOF;
  * @param $nid
  */
 function deleteNew($con, $func_id, $nid){
+    $datenow = '';
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+    $datenow = date("Y-m-d H:i:s");
+
     $pg_param   = array();
-    $pg_param[] = getDateTime();
+    $pg_param[] = $datenow;
     $pg_param[] = $nid;
 
     $sql  = "";

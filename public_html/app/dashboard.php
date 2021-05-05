@@ -248,15 +248,16 @@ function getCategoryPostDay($con, $funcId){
     $cnt = 0;
 
     $sql = "";
-    $sql .= "SELECT DISTINCT                                     ";
-    $sql .= "       category.id                                  ";
-    $sql .= "     , category.category                            ";
-    $sql .= "  FROM category                                     ";
-    $sql .= "  INNER JOIN news                                   ";
-    $sql .= "    ON category.id = news.category                  ";
-    $sql .= " WHERE category.deldate IS NULL                     ";
-    $sql .= "   AND news.deldate IS NULL                         ";
-    $sql .= "   AND news.createdate = '".date('Y/m/d')."' ";
+    $sql .= "SELECT DISTINCT                                                                                ";
+    $sql .= "       category.id                                                                             ";
+    $sql .= "     , category.category                                                                       ";
+    $sql .= "  FROM category                                                                                ";
+    $sql .= "  INNER JOIN news                                                                              ";
+    $sql .= "    ON category.id = news.category                                                             ";
+    $sql .= " WHERE category.deldate IS NULL                                                                ";
+    $sql .= "   AND news.deldate IS NULL                                                                    ";
+    $sql .= "   AND news.createdate BETWEEN '" . date('Y/m/d') . "' AND '" . date('Y/m/d') . " 23:59:59'    ";
+
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
         systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
@@ -427,12 +428,11 @@ function totalPostDay($con, $funcId){
     $recCnt = 0;
     
     $sql = "";
-    $sql .= "SELECT COUNT(id)                                   ";
-    $sql .= "    AS post_new_day                                ";
-    $sql .= "  FROM news                                        ";
-    $sql .= " WHERE createdate = '".date('Y/m/d')."'     ";
-    $sql .= "   AND deldate IS NULL                             ";
-
+    $sql .= "SELECT COUNT(id)                                                                           ";
+    $sql .= "    AS post_new_day                                                                        ";
+    $sql .= "  FROM news                                                                                ";
+    $sql .= " WHERE createdate BETWEEN '" . date('Y/m/d') . "' AND '" . date('Y/m/d') . " 23:59:59'     ";
+    $sql .= "   AND deldate IS NULL                                                                     ";
     $query = pg_query_params($con, $sql, $pg_param);
     if(!$query){
         systemError('systemError('.$funcId.') SQL Error：',$sql.print_r($pg_param, TRUE));
@@ -488,17 +488,17 @@ function postOfDayByCategory($con, $funcId, $idCate){
     $pg_param[] = $idCate;
 
     $sql = "";
-    $sql .= "SELECT news.id                                        ";
-    $sql .= "     , news.title                                     ";
-    $sql .= "     , news.createby                                  ";
-    $sql .= "     , news.createdate                                ";
-    $sql .= "  FROM news                                           ";
-    $sql .= "  INNER JOIN category                                 ";
-    $sql .= "    ON news.category = category.id                    ";
-    $sql .= " WHERE news.deldate IS NULL                           ";
-    $sql .= "   AND news.createdate = '".date('Y/m/d')."'   ";
-    $sql .= "   AND category.deldate IS NULL                       ";
-    $sql .= "   AND category.id = $1                               ";
+    $sql .= "SELECT news.id                                                                                 ";
+    $sql .= "     , news.title                                                                              ";
+    $sql .= "     , news.createby                                                                           ";
+    $sql .= "     , news.createdate                                                                         ";
+    $sql .= "  FROM news                                                                                    ";
+    $sql .= "  INNER JOIN category                                                                          ";
+    $sql .= "    ON news.category = category.id                                                             ";
+    $sql .= " WHERE news.deldate IS NULL                                                                    ";
+    $sql .= "   AND news.createdate BETWEEN '" . date('Y/m/d') . "' AND '" . date('Y/m/d') . " 23:59:59'    ";
+    $sql .= "   AND category.deldate IS NULL                                                                ";
+    $sql .= "   AND category.id = $1                                                                        ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -558,14 +558,14 @@ function countPostOfDayByCategory($con, $funcId, $idCate){
     $pg_param[] = $idCate;
 
     $sql = "";
-    $sql .= "SELECT COUNT(news.id) AS COUTNEWS                     ";
-    $sql .= "  FROM news                                           ";
-    $sql .= " INNER JOIN category                                  ";
-    $sql .= "    ON news.category = category.id                    ";
-    $sql .= " WHERE news.deldate IS NULL                           ";
-    $sql .= "   AND category.deldate IS NULL                       ";
-    $sql .= "   AND news.category = $1                             ";
-    $sql .= "   AND news.createdate = '".date('Y/m/d')."'   ";
+    $sql .= "SELECT COUNT(news.id) AS COUTNEWS                                                              ";
+    $sql .= "  FROM news                                                                                    ";
+    $sql .= " INNER JOIN category                                                                           ";
+    $sql .= "    ON news.category = category.id                                                             ";
+    $sql .= " WHERE news.deldate IS NULL                                                                    ";
+    $sql .= "   AND category.deldate IS NULL                                                                ";
+    $sql .= "   AND news.category = $1                                                                      ";
+    $sql .= "   AND news.createdate BETWEEN '" . date('Y/m/d') . "' AND '" . date('Y/m/d') . " 23:59:59'    ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
