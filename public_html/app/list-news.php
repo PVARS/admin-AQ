@@ -440,7 +440,7 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
             $html .= <<<EOF
                 <tr>
                    <td style="width: 5%;">{$count}</td>
-                   <td style="width: 35%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 350px;">{$row['title']}</td>
+                   <td style="width: 35%;">{$row['title']}</td>
                    <td style="width: 20%;">{$row['fullname']}</td>
                    <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
                    <td style="text-align: center; width: 20%;">{$row['view']}</td>
