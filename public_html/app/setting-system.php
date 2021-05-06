@@ -6,6 +6,7 @@ require_once ('lib.php');
 
 //Initialization
 $funcId = 'setting-system';
+$arr_apps = array();
 $message = '';
 $messageClass = '';
 $iconClass = '';
@@ -17,6 +18,15 @@ $con = openDB();
 
 //Get param
 $param = getParam();
+$f_fromname     = $param['fromname'] ?? '';
+$f_username     = $param['username'] ?? '';
+$f_password     = $param['password'] ?? '';
+$f_charset      = $param['charset'] ?? '';
+$f_host         = $param['host'] ?? '';
+$f_smtpauth     = $param['smtpauth'] ?? '';
+$f_smtpsecure   = $param['smtpsecure'] ?? '';
+$f_port         = $param['port'] ?? '';
+$f_body         = $param['body'] ?? '';
 
 $role = $_SESSION['role'] ?? '';
 
@@ -40,10 +50,42 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     exit();
 }
 
-if ($param){
-    if (isset($param['registFlg']) && $param['registFlg'] == 1){}
+$arr_apps = getApps($con, $funcId);
+if (!empty($arr_apps)) {
+    $fromName     = $arr_apps['mailname'];
+    $username     = $arr_apps['mailusername'];
+    $password     = $arr_apps['mailpassword'];
+    $charset      = $arr_apps['mailcharset'];
+    $host         = $arr_apps['mailhost'];
+    $smtpAuth     = $arr_apps['mailsmtpauth'];
+    $smtpSecure   = $arr_apps['mailsmtpsecure'];
+    $port         = $arr_apps['mailport'];
+    $body         = $arr_apps['mailbody'];
+
+    $selected0 = '';
+    $selected1 = '';
+    if ($smtpAuth == 'f'){
+        $selected0 = 'selected="selected"';
+    } else {
+        $selected1 = 'selected="selected"';
+    }
+} else {
+    $fromName     = '';
+    $username     = '';
+    $password     = '';
+    $charset      = '';
+    $host         = '';
+    $smtpAuth     = '';
+    $smtpSecure   = '';
+    $port         = '';
+    $body         = '';
 }
 
+if ($param) {
+    if (isset($param['registFlg']) && $param['registFlg'] == 1) {
+        updateApps($con, $funcId, $param);
+    }
+}
 
 //Message HTML
 if (isset($_SESSION['message']) && strlen($_SESSION['message'])) {
@@ -76,7 +118,16 @@ $titleHTML = 'Cài đặt hệ thống';
 $cssHTML = '';
 $scriptHTML = <<< EOF
 <script>
-$(function() {});
+    const ipnElement = document.querySelector('#ipnPassword');
+    const btnElement = document.querySelector('#btnPassword');
+    
+    btnElement.addEventListener('click', function() {
+      const currentType = ipnElement.getAttribute('type')
+      ipnElement.setAttribute(
+        'type',
+        currentType === 'password' ? 'text' : 'password'
+      )
+    });
 </script>
 EOF;
 
@@ -94,9 +145,6 @@ echo <<<EOF
 <body class="hold-transition sidebar-mini layout-fixed" id="{$funcId}">
     <div class="wrapper">
 EOF;
-
-//Preloader
-//include ($TEMP_APP_PRELOADER_PATH);
 
 //Header
 include ($TEMP_APP_HEADER_PATH);
@@ -152,50 +200,58 @@ echo <<<EOF
                             <div class="card-body">
                                 <label>Tên email</label>
                                 <div class="input-group mb-3">
-                                    <input type="password" class="form-control" placeholder="Tên email" name="nameEmail" value="">
+                                    <input type="text" class="form-control" placeholder="Tên email" name="fromname" value="{$fromName}">
                                 </div>
                             
                                 <label>Email</label>
                                 <div class="input-group mb-3">
-                                    <input type="text" class="form-control" placeholder="Email" name="email" value="">
+                                    <input type="text" class="form-control" placeholder="Email" name="username" value="{$username}">
                                 </div>
 
                                 <label>Mật khẩu</label>
                                 <div class="input-group mb-3">
-                                    <input type="password" class="form-control" placeholder="Mật khẩu" name="password" value="">
+                                    <input type="password" class="form-control" id="ipnPassword" placeholder="Mật khẩu" name="password" value="{$password}">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnPassword" title="Hiển thị mật khẩu">
+                                            <span class="fas fa-eye"></span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <label>Charset</label>
                                 <div class="input-group mb-3">
-                                    <input type="password" class="form-control" placeholder="Charset" name="charset" value="">
+                                    <input type="text" class="form-control" placeholder="Charset" name="charset" value="{$charset}">
                                 </div>
                                 
                                 <label>Host</label>
                                 <div class="input-group mb-3">
-                                    <input type="password" class="form-control" placeholder="Host" name="host" value="">
+                                    <input type="text" class="form-control" placeholder="Host" name="host" value="{$host}">
                                 </div>
                                 
-                                <label>SMTP</label>
+                                <label>SMTP Auth</label>
                                 <div class="input-group mb-3">
-                                    <select class="custom-select" name="smtp">
-                                        <option value="0">Vui lòng chọn</option>
-                                        <option value="1">true</option>
-                                        <option value="2">false</option>
+                                    <select class="custom-select" name="smtpauth">
+                                        <option value="1" {$selected1}>Có</option>
+                                        <option value="0" {$selected0}>Không</option>
                                     </select>
+                                </div>
+                                
+                                <label>SMTP Secure</label>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="SMTP Secure" name="smtpsecure" value="{$smtpSecure}">
                                 </div>
                                 
                                 <label>Port</label>
                                 <div class="input-group mb-3">
-                                    <input type="password" class="form-control" placeholder="Port" name="port" value="">
-                                </div>
-                                
-                                <label>SMTPSecure</label>
-                                <div class="input-group mb-3">
-                                    <input type="password" class="form-control" placeholder="SMTPSecure" name="smtpSecure" value="">
+                                    <input type="text" class="form-control" placeholder="Port" name="port" value="{$port}">
                                 </div>
                                 
                                 <label>Nội dung email</label>
-                                <textarea id="summernote" name="content"></textarea>
+                                <textarea id="summernote" name="body">{$body}</textarea>
+                                <ul class="text-muted font-italic">
+                                    <li>Tên của người nhận phải để mặc định là <b>\$fullname</b>.</li>
+                                    <li>Đường dẫn của người nhận phải để mặc định là <b>\$emailLink</b>.</li>
+                                </ul>
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
@@ -226,6 +282,85 @@ echo <<<EOF
 </body>
 </html>
 EOF;
+
+/**
+ * @param $con
+ * @param $funcId
+ * @param $param
+ */
+function updateApps($con, $funcId, $param){
+    $pg_param   = array();
+    $pg_param[] = $param['fromname'];
+    $pg_param[] = $param['username'];
+    $pg_param[] = $param['password'];
+    $pg_param[] = $param['charset'];
+    $pg_param[] = $param['host'];
+    $pg_param[] = $param['smtpauth'];
+    $pg_param[] = $param['smtpsecure'];
+    $pg_param[] = $param['port'];
+    $pg_param[] = $param['body'];
+
+    $sql = '';
+    $sql .= "UPDATE APPS                         ";
+    $sql .= "	SET                              ";
+    $sql .= "		MAILNAME = $1,               ";
+    $sql .= "		MAILUSERNAME = $2,           ";
+    $sql .= "		MAILPASSWORD = $3,           ";
+    $sql .= "		MAILCHARSET = $4,            ";
+    $sql .= "		MAILHOST = $5,               ";
+    $sql .= "		MAILSMTPAUTH = $6,           ";
+    $sql .= "		MAILSMTPSECURE = $7,         ";
+    $sql .= "		MAILPORT = $8,               ";
+    $sql .= "		MAILBODY = $9                ";
+    $sql .= " WHERE ID = 3;                      ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+
+    $_SESSION['message'] = 'Cài đặt thành công!';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
+    header('location: setting-system.php');
+    exit();
+}
+
+/**
+ * @param $con
+ * @param $funcId
+ * @return array
+ */
+function getApps($con, $funcId){
+    $pg_param = array();
+    $apps = array();
+    $recCnt = 0;
+
+    $sql = "";
+    $sql .= "SELECT MAILNAME,                   ";
+    $sql .= "		MAILUSERNAME,               ";
+    $sql .= "		MAILPASSWORD,               ";
+    $sql .= "		MAILCHARSET,                ";
+    $sql .= "		MAILHOST,                   ";
+    $sql .= "		MAILSMTPAUTH,               ";
+    $sql .= "		MAILSMTPSECURE,             ";
+    $sql .= "		MAILPORT,                   ";
+    $sql .= "		MAILBODY                    ";
+    $sql .= " FROM 	APPS                        ";
+    $sql .= "WHERE 	ID = 3                      ";
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $apps = pg_fetch_assoc($query);
+    }
+    return $apps;
+}
 
 ?>
 

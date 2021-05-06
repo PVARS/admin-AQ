@@ -30,10 +30,10 @@ $f_password    = $param['password'] ?? '';
 $f_cpassword   = $param['passwordConfirm'] ?? '';
 $updateFlag    = $param['updateFlag'] ?? '';
 
-$arr_qs = getString($_SERVER['QUERY_STRING']);
+$arr_queryString = getString($_SERVER['QUERY_STRING']);
 if (empty($url_loginId) && empty($url_token)) {
-    $url_loginId = $arr_qs[0];  // Set loginId
-    $url_token = $arr_qs[1];    // Set token
+    $url_loginId = $arr_queryString[0];  // Set loginId
+    $url_token = $arr_queryString[1];    // Set token
 }
 
 $validate = checkValidate($con, $func_id, $url_loginId, $url_token, $f_password, $f_cpassword);
@@ -51,7 +51,7 @@ if ($param) {
         }
 
         if ($updateFlag == 1){
-            updatePassword($con, $func_id, $url_loginId, $url_token, $f_password);
+            updatePassword($con, $func_id, $url_loginId, $f_password);
 
             $_SESSION['message'] = 'Mật khẩu của bạn đã cập nhật';
             $_SESSION['messageClass'] = 'alert-success';
@@ -248,22 +248,17 @@ function checkValidate($con, $func_id, $url_loginId, $url_token, $f_password, $f
  * @param comfirm password
  * @return boolean
  */
-function updatePassword($con, $func_id, $uid, $token, $password)
+function updatePassword($con, $func_id, $uid, $password)
 {
     $pg_param = array();
-    $pg_param[0] = $uid;
-    $pg_param[1] = $token;
-
-    // update password
-    $pg_param[1] = null; // set token is empty in params
-    $pg_param[2] = null; // set date_token is empty in params
-    $pg_param[3] = $password;
+    $pg_param[] = $uid;
+    $pg_param[] = null; // set token is empty in params
+    $pg_param[] = $password;
 
     $sql = "";
     $sql .= "UPDATE users                          ";
     $sql .= "   SET reset_link_token = $2,         ";
-    $sql .= "       date_token = $3,               ";
-    $sql .= "       password = $4                  ";
+    $sql .= "       password = $3                  ";
     $sql .= " WHERE loginid = $1                   ";
 
     $query = pg_query_params($con, $sql, $pg_param);

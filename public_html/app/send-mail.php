@@ -8,10 +8,10 @@ require_once('lib.php');
 require_once('../app/plugins/PHPMailer/PHPMailer.php');
 require_once('../app/plugins/PHPMailer/SMTP.php');
 require_once('../app/plugins/PHPMailer/Exception.php');
-require_once('../app/plugins/PHPMailer/FormatBodyMail.php');
 
 //Initialization
 $func_id = 'send-password';
+$apps = array();
 $message = '';
 $messageHtml = '';
 $minInput = 6;
@@ -30,12 +30,14 @@ $param = getParam();
 $f_loginid = $param['username'] ?? '';
 $f_email = $param['email'] ?? '';
 
+$apps = getApps($con, $func_id);
+
 if ($param) {
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
         $mes = validateForm($con, $func_id, $f_loginid, $f_email);
 
         if (empty($mes)){
-            createTokenAndSendMail($con, $f_loginid, $f_email, $func_id);
+            createTokenAndSendMail($con, $f_loginid, $f_email, $func_id, $apps);
         }
 
         $message = join('<br>', $mes);
@@ -196,7 +198,7 @@ function validateForm($con, $func_id, $f_loginid, $f_email)
     if (empty($msg)) {
         // Check loginId and mail is exist
         if (empty(getUser($con, $func_id, $f_loginid, $f_email))){
-            $msg[] = 'Tên đăng nhập và địa chỉ email không đúng hoặc không tồn tại';
+            $msg[] = 'Tên đăng nhập hoặc địa chỉ email không đúng';
         }
     }
 
@@ -248,7 +250,7 @@ function getUser($con, $func_id, $loginid, $email)
  * @param $func_id
  * @throws \PHPMailer\PHPMailer\Exception
  */
-function createTokenAndSendMail($con, $f_loginid, $f_email, $func_id)
+function createTokenAndSendMail($con, $f_loginid, $f_email, $func_id, $apps)
 {
     $user = getUser($con, $func_id, $f_loginid, $f_email);
     $loginId = $user['loginid'];
@@ -267,7 +269,6 @@ function createTokenAndSendMail($con, $f_loginid, $f_email, $func_id)
     $sql = "";
     $sql .= "UPDATE users                                       ";
     $sql .= "   SET reset_link_token = $1                       ";
-    $sql .= "     , date_token = '".date('Y/m/d')."'     ";
     $sql .= " WHERE email = $2                                  ";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
@@ -276,10 +277,10 @@ function createTokenAndSendMail($con, $f_loginid, $f_email, $func_id)
         $recCnt = pg_num_rows($query);
     }
 
-    /* --------------------
-        REQUEST SEND MAIL
-       -------------------- */
-    sendMail($f_email, $fullname, $link);
+/* -------------- REQUEST SEND MAIL -------------- */
+    sendMail($f_email, $fullname, $link, $apps);
+/* ----------------------------------------------- */
+
 }
 
 /**
@@ -289,29 +290,40 @@ function createTokenAndSendMail($con, $f_loginid, $f_email, $func_id)
  * @param $link
  * @throws \PHPMailer\PHPMailer\Exception
  */
-function sendMail($f_email, $fullname, $link)
+function sendMail($f_email, $fullname, $link, $arr_apps)
 {
-    $mail_user = 'hotro.arsenalquan@gmail.com';
-    $mail_psw = 'arsenalquan123456';
 
+    // Convert SMTP Auth
+    $smtpAuth = '';
+    if ($arr_apps['mailsmtpauth'] == 't'){
+        $smtpAuth = true;
+    } else {
+        $smtpAuth = false;
+    }
+
+    // Convert Body
+    $body = '';
+    $str_search = ['$fullname', '$emailLink'];
+    $str_replace = [$fullname, $link];
+    $body = str_replace($str_search, $str_replace, $arr_apps['mailbody']);
+
+    // SETTING PHPMAIL
     $mail = new PHPMailer();
-
-    $mail->CharSet    = "utf-8";
-    $mail->IsSMTP();                                                                   // enable SMTP authentication
-    $mail->Host       = "ssl://smtp.gmail.com";                                       // sets GMAIL as the SMTP server
-    $mail->SMTPAuth   = true;
-    $mail->Username   = $mail_user;                                                 // GMAIL username
-    $mail->Password   = $mail_psw;                                                 // GMAIL password
-    $mail->Port       = "465";                                                    // set the SMTP port for the GMAIL server
-    $mail->SMTPSecure = "ssl";
-
     $mail->IsHTML(true);
-    $mail->From       = 'arsenalquan@gmail.com';                              // Mail me
-    $mail->FromName   = 'Arsenal Quán';                                      // Name me
-    $mail->addAddress($f_email);                                            // Mail send
-    $mail->Subject    = 'Xác nhận đổi mật khẩu';                           // Title
+    $mail->IsSMTP();
+    $mail->addAddress($f_email);                                              // Mail send
+    $mail->Subject    = 'Xác nhận đổi mật khẩu';                             // Title
 
-    $mail->Body = formatBodyMail($fullname, $link);
+    $mail->FromName   = $arr_apps['mailname'];                                       // Name me
+    $mail->From       = $arr_apps['mailusername'];                                  // Mail me
+    $mail->Username   = $arr_apps['mailusername'];                                 // GMAIL username
+    $mail->Password   = $arr_apps['mailpassword'];                                // GMAIL password
+    $mail->CharSet    = $arr_apps['mailcharset'];                                // Set the CharSet as the SMTP server
+    $mail->Host       = $arr_apps['mailhost'];                                  // Set the Host as the SMTP server
+    $mail->SMTPAuth   = $smtpAuth;                                             // Enable SMTP authentication
+    $mail->SMTPSecure = $arr_apps['mailsmtpsecure'];                          // Set the SMTP Secure as the SMTP server
+    $mail->Port       = $arr_apps['mailport'];                               // Set the SMTP Port for the GMAIL server
+    $mail->Body       = html_entity_decode($body, ENT_QUOTES, 'UTF-8');     // Set the Body of mail
 
     // Is mail send?
     if ($mail->Send()) {
@@ -320,6 +332,42 @@ function sendMail($f_email, $fullname, $link)
     } else {
         systemError('systemError(Send Email) System Error：sendMail');
     }
+}
+
+/**
+ * get setting mail
+ * @param $con
+ * @param $funcId
+ * @return array
+ */
+function getApps($con, $funcId){
+    $pg_param = array();
+    $apps = array();
+    $recCnt = 0;
+
+    $sql = "";
+    $sql .= "SELECT MAILNAME,                   ";
+    $sql .= "		MAILUSERNAME,               ";
+    $sql .= "		MAILPASSWORD,               ";
+    $sql .= "		MAILCHARSET,                ";
+    $sql .= "		MAILHOST,                   ";
+    $sql .= "		MAILSMTPAUTH,               ";
+    $sql .= "		MAILSMTPSECURE,             ";
+    $sql .= "		MAILPORT,                   ";
+    $sql .= "		MAILBODY                    ";
+    $sql .= " FROM 	APPS                        ";
+    $sql .= "WHERE 	ID = 3                      ";
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $apps = pg_fetch_assoc($query);
+    }
+    return $apps;
 }
 
 ?>
