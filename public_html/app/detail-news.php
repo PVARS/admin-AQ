@@ -640,7 +640,7 @@ function getFirebaseConfig($con, $func_id)
     $sql  = "";
     $sql .= "SELECT FIREBASECONFIG      ";
     $sql .= "FROM APPS                  ";
-    $sql .= "WHERE ID = 3               ";
+    $sql .= "WHERE ID = 1               ";
     $query = pg_query($con, $sql);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql);

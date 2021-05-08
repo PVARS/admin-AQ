@@ -321,7 +321,7 @@ function updateApps($con, $funcId, $param){
     $sql .= "		MAILPORT = $8,               ";
     $sql .= "		MAILBODY = $9,               ";
     $sql .= "		FIREBASECONFIG = $10         ";
-    $sql .= " WHERE ID = 3;                      ";
+    $sql .= " WHERE ID = 1;                      ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
@@ -358,7 +358,7 @@ function getApps($con, $funcId){
     $sql .= "		MAILBODY,                   ";
     $sql .= "		FIREBASECONFIG              ";
     $sql .= " FROM 	APPS                        ";
-    $sql .= "WHERE 	ID = 3                      ";
+    $sql .= "WHERE 	ID = 1                      ";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
