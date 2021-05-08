@@ -47,7 +47,21 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
 
 if ($param){
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
-        $mes = checkValidate($con, $func_id, $param);
+        $mes = array();
+
+        // delete
+        if ($mode == 'delete'){
+            if (countNewsByCategory($con, $func_id, $cid) > 0){
+                $emtyCategory = true;
+                $mes[] = 'Không thể xoá danh mục có chứa bài viết';
+            } else {
+                deleteCategory($con, $func_id, $param);
+            }
+        }
+
+        if (empty($mes)) {
+            $mes = checkValidate($con, $func_id, $param);
+        }
 
         $message = join('<br>', $mes);
         if (strlen($message)) {
@@ -55,14 +69,10 @@ if ($param){
             $iconClass = 'fas fa-ban';
         }
 
-        if ($mode == 'delete'){
-            deleteCategory($con, $func_id, $param);
-        }
-
         if (empty($mes)) {
-            if ($mode == 'new'){
+            if ($mode == 'new'){ // insert
                 insertCategory($con, $func_id, $param, $loginid);
-            } else if ($mode == 'update'){
+            } else if ($mode == 'update'){ // update
                 updateCategory($con, $func_id, $param, $loginid);
             }
 
@@ -475,6 +485,38 @@ function deleteCategory($con, $func_id, $param){
 
     header('location: list-categories.php');
     exit();
+}
+
+/**
+ * Count news by category
+ * @param $con
+ * @param $func_id
+ * @param $idCate
+ * @return mixed
+ */
+function countNewsByCategory($con, $func_id, $idCate){
+    $recCnt = 0;
+    $cntNews = array();
+    $pg_param = array();
+    $pg_param[] = $idCate;
+
+    $sql = "";
+    $sql .= "SELECT COUNT(*)             ";
+    $sql .= "  FROM news                 ";
+    $sql .= " WHERE deldate IS NULL      ";
+    $sql .= "   AND category = $1        ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $cntNews = pg_fetch_assoc($query);
+    }
+    return $cntNews['count'];
 }
 
 /**

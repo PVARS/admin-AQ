@@ -64,7 +64,7 @@ if ($param) {
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
         /*Delete New*/
         if ($mode == 'delete'){
-            deleteNews($con, $func_id, $nid);
+            deleteNews($con, $func_id, $nid, $_SESSION['loginId']);
         }
         if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
             updateNews($con, $func_id, $param, $userLogin['loginid']);
@@ -600,17 +600,20 @@ function updateNews($con, $func_id, $param, $idUser)
  * @param $func_id
  * @param $nid
  */
-function deleteNews($con, $func_id, $nid)
+function deleteNews($con, $func_id, $nid, $loginId)
 {
 
     $pg_param   = array();
     $pg_param[] = getDatetimeNow();
+    $pg_param[] = $loginId;
     $pg_param[] = $nid;
 
     $sql  = "";
     $sql .= "UPDATE news                     ";
-    $sql .= "SET    deldate = $1             ";
-    $sql .= "WHERE  id = $2                  ";
+    $sql .= "SET    deldate = $1,            ";
+    $sql .= "       updateby = $2,           ";
+    $sql .= "       updatedate = $1          ";
+    $sql .= "WHERE  id = $4                  ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {

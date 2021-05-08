@@ -62,7 +62,7 @@ $validate = validateDataSearch($f_title, $f_keyword, $f_dateForm, $f_dateTo, $ma
 if ($param){
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
         if ($mode == "delete"){
-            deleteNew($con, $func_id, $nid);
+            deleteNew($con, $func_id, $nid, $_SESSION['loginId']);
         }
 
         $mes = $validate;
@@ -531,19 +531,22 @@ EOF;
  * @param $func_id
  * @param $nid
  */
-function deleteNew($con, $func_id, $nid){
+function deleteNew($con, $func_id, $nid, $loginId){
     $datenow = '';
     date_default_timezone_set('Asia/Ho_Chi_Minh');
     $datenow = date("Y-m-d H:i:s");
 
     $pg_param   = array();
     $pg_param[] = $datenow;
+    $pg_param[] = $loginId;
     $pg_param[] = $nid;
 
     $sql  = "";
     $sql .= "UPDATE news                     ";
-    $sql .= "SET    deldate = $1             ";
-    $sql .= "WHERE  id = $2                  ";
+    $sql .= "SET    deldate = $1,            ";
+    $sql .= "       updateby = $2,           ";
+    $sql .= "       updatedate = $1          ";
+    $sql .= "WHERE  id = $4                  ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
