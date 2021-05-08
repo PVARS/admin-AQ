@@ -410,20 +410,16 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
     $wheresql = join(' ', $pg_sql);
 
     $sql  = "";
-    $sql .= "SELECT news.id,                    ";
-    $sql .= "       news.title,                 ";
-    $sql .= "       news.createdate,            ";
-    $sql .= "       news.view,                  ";
-    $sql .= "       news.title,                 ";
-    $sql .= "       users.fullname              ";
+    $sql .= "SELECT id,                         ";
+    $sql .= "       title,                      ";
+    $sql .= "       createdate,                 ";
+    $sql .= "       view,                       ";
+    $sql .= "       title,                      ";
+    $sql .= "       createby                    ";
     $sql .= "FROM   news                        ";
-    $sql .= "INNER JOIN users                   ";
-    $sql .= "ON news.createby = users.loginid   ";
-    $sql .= "INNER JOIN category                ";
-    $sql .= "ON news.category = category.id     ";
-    $sql .= "WHERE news.deldate IS NULL         ";
+    $sql .= "WHERE deldate IS NULL              ";
     $sql .= $wheresql;
-    $sql .= "ORDER BY news.id ASC               ";
+    $sql .= "ORDER BY id ASC                    ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
@@ -439,7 +435,7 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
                 <tr>
                    <td style="width: 5%;">{$count}</td>
                    <td style="width: 35%;">{$row['title']}</td>
-                   <td style="width: 20%;">{$row['fullname']}</td>
+                   <td style="width: 20%;">{$row['createby']}</td>
                    <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
                    <td style="text-align: center; width: 20%;">{$row['view']}</td>
                    <td style="text-align: center; width: 5%;">

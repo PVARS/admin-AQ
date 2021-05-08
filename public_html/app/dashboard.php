@@ -334,17 +334,15 @@ function getNewsTopView($con, $funcId){
     $cnt = 0;
     $recCnt = 0;
     $sql = "";
-    $sql .= "SELECT news.id                         ";
-    $sql .= "     , news.title                      ";
-    $sql .= "     , news.createdate                 ";
-    $sql .= "     , news.view                       ";
-    $sql .= "     , users.fullname                  ";
-    $sql .= "  FROM news                            ";
-    $sql .= " INNER JOIN users                      ";
-    $sql .= "   ON news.createby = users.loginid    ";
-    $sql .= " WHERE news.deldate IS NULL            ";
-    $sql .= " ORDER BY news.view DESC               ";
-    $sql .= " LIMIT 20                              ";
+    $sql .= "SELECT id                         ";
+    $sql .= "     , title                      ";
+    $sql .= "     , createdate                 ";
+    $sql .= "     , view                       ";
+    $sql .= "     , createby                   ";
+    $sql .= "  FROM news                       ";
+    $sql .= " WHERE deldate IS NULL            ";
+    $sql .= " ORDER BY view DESC               ";
+    $sql .= " LIMIT 20                         ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -361,7 +359,7 @@ function getNewsTopView($con, $funcId){
                  <tr>
                      <td class="text-center" style="width: 10%;">{$cnt}</td>
                      <td style="width: 20%;">{$row['title']}</td>
-                     <td class="text-center" style="width: 20%;">{$row['fullname']}</td>
+                     <td class="text-center" style="width: 20%;">{$row['createby']}</td>
                      <td class="text-center" style="width: 20%;">{$row['createdate']}</td>
                      <td class="text-center" style="width: 20%;">{$row['view']}</td>
                      <td class="text-center" style="width: 10%;">
@@ -493,12 +491,10 @@ function postOfDayByCategory($con, $funcId, $idCate){
     $sql .= "SELECT news.id                                                                                 ";
     $sql .= "     , news.title                                                                              ";
     $sql .= "     , news.createdate                                                                         ";
-    $sql .= "     , users.fullname                                                                          ";
+    $sql .= "     , news.createby                                                                          ";
     $sql .= "  FROM news                                                                                    ";
     $sql .= "  INNER JOIN category                                                                          ";
     $sql .= "    ON news.category = category.id                                                             ";
-    $sql .= "  INNER JOIN users                                                                             ";
-    $sql .= "    ON news.createby = users.loginid                                                           ";
     $sql .= " WHERE news.deldate IS NULL                                                                    ";
     $sql .= "   AND news.createdate BETWEEN '" . date('Y/m/d') . "' AND '" . date('Y/m/d') . " 23:59:59'    ";
     $sql .= "   AND category.deldate IS NULL                                                                ";
@@ -519,7 +515,7 @@ function postOfDayByCategory($con, $funcId, $idCate){
                 <tr>
                     <td class="text-center" style="width: 10%;">{$cnt}</td>
                     <td style="width: 40%;">{$row['title']}</td>
-                    <td class="text-center" style="width: 20%;">{$row['fullname']}</td>
+                    <td class="text-center" style="width: 20%;">{$row['createby']}</td>
                     <td class="text-center" style="text-align: center; width: 20%;">{$row['createdate']}</td>
                     <td class="text-center" style="width: 10%;">
                         <form action="detail-news.php" method="POST">
