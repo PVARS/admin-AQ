@@ -144,7 +144,6 @@ $(function() {
         sweetConfirm(numberMessage, message, function(result) {
             e.preventDefault();
             if (result){
-                $('.mode').val('delete');
                 form.submit();
             }
         });
@@ -494,11 +493,11 @@ function deleteCategory($con, $func_id, $param){
  * @param $idCate
  * @return mixed
  */
-function countNewsByCategory($con, $func_id, $idCate){
+function countNewsByCategory($con, $func_id, $cid){
     $recCnt = 0;
     $cntNews = array();
     $pg_param = array();
-    $pg_param[] = $idCate;
+    $pg_param[] = $cid;
 
     $sql = "";
     $sql .= "SELECT COUNT(*)             ";

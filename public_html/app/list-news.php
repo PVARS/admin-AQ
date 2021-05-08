@@ -546,7 +546,7 @@ function deleteNew($con, $func_id, $nid, $loginId){
     $sql .= "SET    deldate = $1,            ";
     $sql .= "       updateby = $2,           ";
     $sql .= "       updatedate = $1          ";
-    $sql .= "WHERE  id = $4                  ";
+    $sql .= "WHERE  id = $3                  ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
