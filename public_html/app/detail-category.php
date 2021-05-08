@@ -8,6 +8,7 @@ require_once ('lib.php');
 $func_id    = 'list_student';
 $message = '';
 $messageClass = '';
+$htmlDelete = '';
 $titlePage      = "Thêm danh mục";
 $titleButton    = "Lưu";
 
@@ -54,13 +55,17 @@ if ($param){
             $iconClass = 'fas fa-ban';
         }
 
+        if ($mode == 'delete'){
+            deleteCategory($con, $func_id, $param);
+        }
+
         if (empty($mes)) {
             if ($mode == 'new'){
                 insertCategory($con, $func_id, $param, $loginid);
-            }
-            if ($mode == 'update'){
+            } else if ($mode == 'update'){
                 updateCategory($con, $func_id, $param, $loginid);
             }
+
         }
 
     }
@@ -74,6 +79,10 @@ if (isset($cid) && (mb_strlen($cid) > 0)) {
     $arr_category   = getCategoryById($con, $func_id, $cid);
     $category       = $arr_category['category'];
     $fullname       = $arr_category['fullname'];
+
+    $htmlDelete     = <<<EOF
+    <a class="btn btn-danger btn-sm btnDelete"><i class="fas fa-trash"></i>&nbsp;Xóa</a>
+EOF;
 } else {
     $category       = '';
     $fullname       = $_SESSION['fullname'] ?? '';
@@ -111,8 +120,8 @@ $titleHTML = '';
 $cssHTML = '';
 $scriptHTML = <<<EFO
 <script>
-      
-    $('.btn_saveOrUpdate').on('click', function(e) {
+$(function() {
+  $('.btn_saveOrUpdate').on('click', function(e) {
         /* SET Message */
         if ('{$mode}' == 'update'){
             var message = "Bạn có muốn chỉnh sửa danh mục này?";
@@ -121,16 +130,29 @@ $scriptHTML = <<<EFO
             var message = "Bạn có muốn thêm mới danh mục này?";
             var numberMessage = 5;
         }
-        
+        var form = $(this).closest("form");
         sweetConfirm(numberMessage, message, function(result) {
             e.preventDefault();
             if (result){
-                document.getElementById("ismForm").submit();
+                $('.mode').val('delete');
+                form.submit();
             }
         });
     });
-        
-    
+  
+    //Button delete
+    $('.btnDelete').on('click', function(e) {
+        e.preventDefault();
+        var message = "Danh mục này sẽ bị xoá. Bạn chắc chứ?";
+        var form = $(this).closest("form");
+        sweetConfirm(1, message, function(result) {
+            if (result){
+                $('.mode').val('delete');
+                form.submit();
+            }
+        });
+    });
+}) 
 </script>
 EFO;
 
@@ -197,7 +219,7 @@ echo <<<EOF
                     <div class="row">
                         <div class="card-body">
                             {$messageHtml}
-                            <form action="{$_SERVER['SCRIPT_NAME']}" id="ismForm" method="POST">
+                            <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
                                 <div class="card card-info">
                                     <div class="card-header">
                                         <h3 class="card-title">{$titlePage}</h3>
@@ -215,13 +237,14 @@ echo <<<EOF
                                     </div>
                                     <!-- /.card-body -->
                                     <div class="card-footer">
-                                        <input type="hidden" name="mode" value="{$mode}">
+                                        <input type="hidden" class="mode" name="mode" value="{$mode}">
                                         <input type="hidden" name="cid" value="{$cid}">
                                         <input type="hidden" name="registFlg" value="1">
-                                        <a href="javascript:void(0)" class="btn btn-primary float-right btn_saveOrUpdate" style="background-color: #17a2b8;">
+                                        <a class="btn btn-primary float-right btn_saveOrUpdate" style="background-color: #17a2b8;">
                                             <i class="fas fa-save"></i>
                                             &nbsp{$titleButton}
                                         </a>
+                                        {$htmlDelete}
                                     </div>
                                 </div>
                             </form>
@@ -316,7 +339,7 @@ function checkValidate($con, $func_id, $param){
 
             $arr_category = getCategoryById($con, $func_id, $param['cid']);
             if ($param['f_category'] === $arr_category['category']) {
-                $msg[0] = 'Tên danh mục được nhập bị trùng với trước đó.';
+                $msg = array();
             }
         }
 
@@ -381,7 +404,10 @@ function insertCategory($con, $func_id, $param, $loginId){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['messageSwal'] = 1;
+    $_SESSION['message'] = 'Danh mục đã được thêm thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
     header('location: list-categories.php');
     exit();
 }
@@ -411,7 +437,42 @@ function updateCategory($con, $func_id, $param, $loginId){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['messageSwal'] = 2;
+    $_SESSION['message'] = 'Danh mục đã được cập nhật thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
+    header('location: list-categories.php');
+    exit();
+}
+
+/**
+ * Delete category
+ * @param $con
+ * @param $func_id
+ * @param $param
+ */
+function deleteCategory($con, $func_id, $param){
+    $pg_param = array();
+    $pg_param[] = $_SESSION['loginId'];
+    $pg_param[] = $param['cid'];
+    $pg_param[] = getDatetimeNow();
+
+    $sql  = "";
+    $sql .= "UPDATE category SET                                ";
+    $sql .= "       deldate = $3                                ";
+    $sql .= "     , updatedate = $3                             ";
+    $sql .= "     , updateby = $1                               ";
+    $sql .= " WHERE id = $2                                     ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+
+    $_SESSION['message'] = 'Danh mục đã được xoá thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
     header('location: list-categories.php');
     exit();
 }

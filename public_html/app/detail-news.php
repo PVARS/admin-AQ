@@ -12,7 +12,6 @@ $valuecategory = '';
 $titlePage     = 'Thêm bài viết';
 $titleButton   = 'Lưu';
 $htmlDeleteNew = '';
-$messageSwal   = 0; // 0: invisible; 1: visible
 
 session_start();
 
@@ -91,7 +90,6 @@ if (isset($nid) && (mb_strlen($nid) > 0)) {
     <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
         <input type="hidden" name="nid" value="{$nid}">
         <input type="hidden" name="mode" value="delete">
-        <input type="hidden" name="messageSwal" value="3">
         <input type="hidden" name="registFlg" value="1">
         <a href="javascript:void(0)" class="btn btn-danger btn_delete" title="Xóa bài">
             <i class="fas fa-trash"></i> Xóa
@@ -138,7 +136,7 @@ $scriptHTML = <<<EOF
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.analytics();
-    
+        
     /*Check file user input*/
     function validateFileType(){
         let file = document.getElementById("thumbnail");
@@ -146,7 +144,7 @@ $scriptHTML = <<<EOF
             idxDot = fileName.lastIndexOf(".") + 1,
             extFile = fileName.substr(idxDot, fileName.length).toLowerCase();
 
-        if (extFile=="jpg" || extFile=="jpeg" || extFile=="png"){ /*return true*/
+        if (extFile=="jpg" || extFile=="jpeg" || extFile=="png"){ /*return true*/          
             // Show image seleced
             var selectedFile = event.target.files[0];
             var reader = new FileReader();
@@ -158,14 +156,12 @@ $scriptHTML = <<<EOF
             reader.onload = function(event) {
                 imgtag.src = event.target.result;
             };
-            reader.readAsDataURL(selectedFile);
-            // Set name file
-            $('#thumbnail').change(function() {
-              // var i = $(this).prev('label').clone();
-              var file = $('#thumbnail')[0].files[0].name;
-              console.log(file);
-              $(this).next('.custom-file-label').html(file);
-            });
+            reader.readAsDataURL(selectedFile);       
+            
+            // Set namefile
+            let file = $('#thumbnail')[0].files[0].name;
+            $('#thumbnail').next('.custom-file-label').html(file);
+                        
         } else { /*return false*/
             Swal.fire({
                 position: 'top',
@@ -178,6 +174,7 @@ $scriptHTML = <<<EOF
             document.getElementById("urlImage").value = '';
             document.getElementById("image").style.display = "none";
             document.getElementById("image").src = '';
+            $('#thumbnail').next('.custom-file-label').html('Chọn file');
         }
     }
     
@@ -361,7 +358,6 @@ echo <<<EOF
                                     <!-- /.card-body -->
                                     <div class="card-footer">
                                         <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
-                                            <input type="hidden" name="messageSwal" value="1">
                                             <input type="hidden" name="mode" value="{$mode}">
                                             <input type="hidden" name="registFlg" value="1">
                                             <span class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
@@ -524,6 +520,7 @@ function insertNews($con, $func_id, $param, $idUser)
     $pg_param[] = $param['content'];
     $pg_param[] = getDatetimeNow();
     $pg_param[] = $idUser;
+    $pg_param[] = 0;
 
     $sql  = "";
     $sql .= "INSERT INTO news(              ";
@@ -533,7 +530,8 @@ function insertNews($con, $func_id, $param, $idUser)
     $sql .= "          , thumbnail          ";
     $sql .= "          , content            ";
     $sql .= "          , createdate         ";
-    $sql .= "          , createby)          ";
+    $sql .= "          , createby           ";
+    $sql .= "          , view)              ";
     $sql .= "  VALUES(                      ";
     $sql .= "            $1                 ";
     $sql .= "          , $2                 ";
@@ -542,6 +540,7 @@ function insertNews($con, $func_id, $param, $idUser)
     $sql .= "          , $5                 ";
     $sql .= "          , $6                 ";
     $sql .= "          , $7                 ";
+    $sql .= "          , $8                 ";
     $sql .= "  )                            ";
 
     $query = pg_query_params($con, $sql, $pg_param);
@@ -549,7 +548,10 @@ function insertNews($con, $func_id, $param, $idUser)
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['messageSwal'] = 1;
+    $_SESSION['message'] = 'Bài viết đã được thêm thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
     header("location: list-news.php");
     exit();
 
@@ -590,7 +592,10 @@ function updateNews($con, $func_id, $param, $idUser)
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['messageSwal'] = 2;
+    $_SESSION['message'] = 'Bài viết đã được cập nhật thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
     header("location: list-news.php");
     exit();
 
@@ -618,7 +623,10 @@ function deleteNews($con, $func_id, $nid)
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['messageSwal'] = 3;
+    $_SESSION['message'] = 'Bài viết đã được xoá thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
     header("location: list-news.php");
     exit();
 

@@ -52,11 +52,6 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     exit();
 }
 
-$messageSwal = $_SESSION['messageSwal'] ?? 0;
-if ($messageSwal != 0){
-    unset($_SESSION['messageSwal']);
-}
-
 $htmlListNews = getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f_keyword, $f_dateForm);
 $htmlCategory = getComboboxCategory($con, $func_id, $f_category);
 $htmlCreateby = getComboboxCreateby($con, $func_id, $f_createby);
@@ -164,36 +159,6 @@ $scriptHTML = <<<EOF
         });
                   
     })
-    
-    if ({$messageSwal} == 1){
-        Swal.fire({
-            position: 'top',
-            icon: 'success',
-            title: 'Bản tin đã thêm thành công',
-            showConfirmButton: false,
-            timer: 2000
-        })
-     }
-     
-     if ({$messageSwal} == 2){
-        Swal.fire({
-                position: 'top',
-                icon: 'success',
-                title: 'Bản tin đã cập nhật thành công',
-                showConfirmButton: false,
-                timer: 2000
-        })
-     }
-    
-    if ({$messageSwal} == 3){
-        Swal.fire({
-            position: 'top',
-            icon: 'success',
-            title: 'Bản tin đã được xóa thành công',
-            showConfirmButton: false,
-            timer: 2000
-        })
-     }
     
 </script>
 EOF;
@@ -449,7 +414,6 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
                       <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
                          <input type="hidden" name="nid" value="{$row['id']}">
                          <input type="hidden" name="mode" value="delete">
-                         <input type="hidden" name="messageSwal" value="3">
                          <input type="hidden" name="registFlg" value="1">
                          <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm btn_delete" title="Xóa bài">
                             <i class="fas fa-trash"></i>
@@ -586,7 +550,10 @@ function deleteNew($con, $func_id, $nid){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['messageSwal'] = 3;
+    $_SESSION['message'] = 'Bài viết đã được xoá thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
     header("location: list-news.php");
     exit();
 }

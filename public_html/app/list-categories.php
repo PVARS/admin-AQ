@@ -45,11 +45,6 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 3) {
     exit();
 }
 
-$messageSwal = $_SESSION['messageSwal'] ?? 0;
-if ($messageSwal != 0){
-    unset($_SESSION['messageSwal']);
-}
-
 $htmlCategory = '';
 $htmlCategory = getCategoryAndSearch($con, $func_id, $param, $mode);
 
@@ -85,7 +80,6 @@ if ($param){
         $iconClass = 'fas fa-ban';
     }
 }
-
 
 //Message HTML
 if (isset($_SESSION['message']) && strlen($_SESSION['message'])) {
@@ -169,33 +163,6 @@ $(function() {
             }
         });
     });
-    
-    /* SWAL MESSAGE FROM DetailCategory */
-    if ({$messageSwal} == 1){
-        Swal.fire({
-            position: 'top',
-            icon: 'success',
-            title: 'Danh mục đã thêm thành công',
-            showConfirmButton: false,
-            timer: 2000
-        })
-     } else if ({$messageSwal} == 2){
-        Swal.fire({
-                position: 'top',
-                icon: 'success',
-                title: 'Danh mục đã cập nhật thành công',
-                showConfirmButton: false,
-                timer: 2000
-        })
-     } else if ({$messageSwal} == 3){
-        Swal.fire({
-            position: 'top',
-            icon: 'success',
-            title: 'Bản tin đã được xóa thành công',
-            showConfirmButton: false,
-            timer: 2000
-        })
-     }     
      
 })
 </script>
@@ -511,11 +478,10 @@ function deleteCategory($con, $func_id, $param){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-//    $_SESSION['message'] = 'Danh mục đã được xoá thành công';
-//    $_SESSION['messageClass'] = 'alert-success';
-//    $_SESSION['iconClass'] = 'fas fa-check';
+    $_SESSION['message'] = 'Danh mục đã được xoá thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
 
-    $_SESSION['messageSwal'] = 3;
     header('location: list-categories.php');
     exit();
 }
