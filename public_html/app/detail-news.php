@@ -5,10 +5,10 @@ require_once('config.php');
 require_once('lib.php');
 
 //Initialization
-$func_id       = 'list_student';
+$func_id       = 'detail_news';
 $userLogin     = array();
 $imageAtt      = '';
-$valuecategory = '';
+
 $titlePage     = 'Thêm bài viết';
 $titleButton   = 'Lưu';
 $htmlDeleteNew = '';
@@ -31,6 +31,7 @@ $f_thumbnail = $param['thumbnail'] ?? '';
 $f_urlImamge = $param['urlImage'] ?? '';
 $f_content   = $param['content'] ?? '';
 
+$valuecategory = $param['idCategory'] ?? '';
 //Connect DB
 $con = openDB();
 
@@ -302,6 +303,14 @@ echo <<<EOF
             <!-- Main content -->
             <section class="content">
                 <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <a href="list-news.php" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Danh sách bài viết">
+                                <i class="fas fa-backward"></i>
+                                &nbspTrở lại
+                            </a>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="card-body">
                             <form action="{$_SERVER['SCRIPT_NAME']}" id="ismForm" method="POST">

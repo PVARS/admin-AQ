@@ -10,7 +10,7 @@ require_once('../app/plugins/PHPMailer/SMTP.php');
 require_once('../app/plugins/PHPMailer/Exception.php');
 
 //Initialization
-$func_id = 'send-password';
+$func_id = 'send_mail';
 $apps = array();
 $message = '';
 $messageHtml = '';

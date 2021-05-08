@@ -239,7 +239,7 @@ echo <<<EOF
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <a href="list-users.php" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;">
+                    <a href="list-users.php" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Danh sách người dùng">
                         <i class="fas fa-backward"></i>
                         &nbspTrở lại
                     </a>

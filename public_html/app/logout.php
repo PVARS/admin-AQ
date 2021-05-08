@@ -5,7 +5,7 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'list_student';
+$func_id = 'logout';
 
 session_start();
 
