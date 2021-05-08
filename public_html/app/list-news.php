@@ -13,7 +13,6 @@ $iconClass    = '';
 $htmlListNews = '';
 $htmlCategory = '';
 $htmlCreateby = '';
-$messageSwal  = 0; // 0: invisible; 1: visible
 
 session_start();
 
@@ -27,7 +26,6 @@ $f_dateForm  = $param['dateForm'] ?? '';
 $f_dateTo    = $param['dateTo'] ?? '';
 $nid         = $param['nid'] ?? '';
 $mode        = $param['mode'] ?? '';
-$messageSwal = $param['messageSwal'] ?? 0;
 
 $role        = $_SESSION['role'] ?? '';
 
