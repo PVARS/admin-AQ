@@ -45,6 +45,11 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 3) {
     exit();
 }
 
+$messageSwal = $_SESSION['messageSwal'] ?? 0;
+if ($messageSwal != 0){
+    unset($_SESSION['messageSwal']);
+}
+
 $htmlCategory = '';
 $htmlCategory = getCategoryAndSearch($con, $func_id, $param, $mode);
 
@@ -164,6 +169,34 @@ $(function() {
             }
         });
     });
+    
+    /* SWAL MESSAGE FROM DetailCategory */
+    if ({$messageSwal} == 1){
+        Swal.fire({
+            position: 'top',
+            icon: 'success',
+            title: 'Danh mục đã thêm thành công',
+            showConfirmButton: false,
+            timer: 2000
+        })
+     } else if ({$messageSwal} == 2){
+        Swal.fire({
+                position: 'top',
+                icon: 'success',
+                title: 'Danh mục đã cập nhật thành công',
+                showConfirmButton: false,
+                timer: 2000
+        })
+     } else if ({$messageSwal} == 3){
+        Swal.fire({
+            position: 'top',
+            icon: 'success',
+            title: 'Bản tin đã được xóa thành công',
+            showConfirmButton: false,
+            timer: 2000
+        })
+     }     
+     
 })
 </script>
 EOF;
@@ -411,7 +444,7 @@ function getCategoryAndSearch($con, $func_id, $param, $mode){
                     <td style="text-align: center; width: 20%;">{$cntNews}</td>
                     <td style="text-align: center; width: 5%;">
                         <form action="detail-category.php" method="POST">
-                            <input type="hidden" name="idCategory" value="{$row['id']}">
+                            <input type="hidden" name="cid" value="{$row['id']}">
                             <input type="hidden" name="dispFrom" value="list-categories">
                             <input type="hidden" name="mode" class="mode" value="{$mode}">
                             <a class="btn btn-primary btn-sm btnEdit"><i class="fas fa-edit"></i></a>
@@ -464,11 +497,12 @@ function deleteCategory($con, $func_id, $param){
     $pg_param = array();
     $pg_param[] = $_SESSION['loginId'];
     $pg_param[] = $param['idCategory'];
+    $pg_param[] = getDatetimeNow();
 
     $sql  = "";
     $sql .= "UPDATE category SET                                ";
-    $sql .= "       deldate = '".date('Y/m/d')."'        ";
-    $sql .= "     , updatedate = '".date('Y/m/d')."'     ";
+    $sql .= "       deldate = $3                                ";
+    $sql .= "     , updatedate = $3                             ";
     $sql .= "     , updateby = $1                               ";
     $sql .= " WHERE id = $2                                     ";
 
@@ -477,12 +511,24 @@ function deleteCategory($con, $func_id, $param){
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['message'] = 'Danh mục đã được xoá thành công';
-    $_SESSION['messageClass'] = 'alert-success';
-    $_SESSION['iconClass'] = 'fas fa-check';
+//    $_SESSION['message'] = 'Danh mục đã được xoá thành công';
+//    $_SESSION['messageClass'] = 'alert-success';
+//    $_SESSION['iconClass'] = 'fas fa-check';
 
+    $_SESSION['messageSwal'] = 3;
     header('location: list-categories.php');
     exit();
+}
+
+/**
+ * Get date time now
+ * @return string
+ */
+function getDatetimeNow(){
+    $datenow = '';
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+    $datenow = date("Y-m-d H:i:s");
+    return $datenow;
 }
 ?>
 
