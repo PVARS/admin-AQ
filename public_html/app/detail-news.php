@@ -54,6 +54,9 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     exit();
 }
 
+// Get my web app's Firebase configuration
+$htmlFirebaseConfig = getFirebaseConfig($con, $func_id);
+
 // Get id and fullname user
 $userLogin = getUserByLoginId($con, $func_id, $_SESSION['loginId']);
 
@@ -122,16 +125,7 @@ $cssHTML    = '';
 $scriptHTML = <<<EOF
 <script>
     // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    var firebaseConfig = {
-        apiKey: "AIzaSyBTF-NeiTUHRLqArhelm_AfCJ-bWgq8Umg",
-        authDomain: "arsenalquan-82401.firebaseapp.com",
-        projectId: "arsenalquan-82401",
-        storageBucket: "arsenalquan-82401.appspot.com",
-        messagingSenderId: "426824354942",
-        appId: "1:426824354942:web:1acc2d5be62d6d72191c2f",
-        measurementId: "G-B0TKQTF919"
-    };
+    {$htmlFirebaseConfig}
     
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
@@ -630,6 +624,35 @@ function deleteNews($con, $func_id, $nid)
     header("location: list-news.php");
     exit();
 
+}
+
+/**
+ * @param $con
+ * @param $func_id
+ * @return string
+ */
+function getFirebaseConfig($con, $func_id)
+{
+    $arr_apps       = array();
+    $firebaseConfig = '';
+    $recCnt         = 0;
+
+    $sql  = "";
+    $sql .= "SELECT FIREBASECONFIG      ";
+    $sql .= "FROM APPS                  ";
+    $sql .= "WHERE ID = 3               ";
+    $query = pg_query($con, $sql);
+    if (!$query) {
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql);
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+    if ($recCnt != 0) {
+        $arr_apps = pg_fetch_assoc($query);
+        $firebaseConfig = html_entity_decode($arr_apps['firebaseconfig']);
+    }
+
+    return $firebaseConfig;
 }
 
 /**

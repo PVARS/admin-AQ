@@ -52,15 +52,16 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
 
 $arr_apps = getApps($con, $funcId);
 if (!empty($arr_apps)) {
-    $fromName     = $arr_apps['mailname'];
-    $username     = $arr_apps['mailusername'];
-    $password     = $arr_apps['mailpassword'];
-    $charset      = $arr_apps['mailcharset'];
-    $host         = $arr_apps['mailhost'];
-    $smtpAuth     = $arr_apps['mailsmtpauth'];
-    $smtpSecure   = $arr_apps['mailsmtpsecure'];
-    $port         = $arr_apps['mailport'];
-    $body         = $arr_apps['mailbody'];
+    $fromName       = $arr_apps['mailname'];
+    $username       = $arr_apps['mailusername'];
+    $password       = $arr_apps['mailpassword'];
+    $charset        = $arr_apps['mailcharset'];
+    $host           = $arr_apps['mailhost'];
+    $smtpAuth       = $arr_apps['mailsmtpauth'];
+    $smtpSecure     = $arr_apps['mailsmtpsecure'];
+    $port           = $arr_apps['mailport'];
+    $body           = $arr_apps['mailbody'];
+    $firebaseConfig = $arr_apps['firebaseconfig'];
 
     $selected0 = '';
     $selected1 = '';
@@ -70,15 +71,16 @@ if (!empty($arr_apps)) {
         $selected1 = 'selected="selected"';
     }
 } else {
-    $fromName     = '';
-    $username     = '';
-    $password     = '';
-    $charset      = '';
-    $host         = '';
-    $smtpAuth     = '';
-    $smtpSecure   = '';
-    $port         = '';
-    $body         = '';
+    $fromName         = '';
+    $username         = '';
+    $password         = '';
+    $charset          = '';
+    $host             = '';
+    $smtpAuth         = '';
+    $smtpSecure       = '';
+    $port             = '';
+    $body             = '';
+    $firebaseConfig   = '';
 }
 
 if ($param) {
@@ -197,7 +199,7 @@ echo <<<EOF
                             <div class="card-header">
                                 <h3 class="card-title">Cài đặt</h3>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body">                                                        
                                 <label>Tên email</label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Tên email" name="fromname" value="{$fromName}">
@@ -247,18 +249,24 @@ echo <<<EOF
                                 </div>
                                 
                                 <label>Nội dung email</label>
-                                <textarea id="summernote" name="body">{$body}</textarea>
                                 <ul class="text-muted font-italic">
                                     <li>Tên của người nhận phải để mặc định là <b>\$fullname</b>.</li>
                                     <li>Đường dẫn của người nhận phải để mặc định là <b>\$emailLink</b>.</li>
                                 </ul>
+                                <textarea id="summernote" name="body">{$body}</textarea>
+                                                                
+                                <label class="mt-3">Cấu hình Firebase</label>
+                                <div class="input-group">
+                                    <textarea name="firebaseConfig" class="form-control" rows="9">{$firebaseConfig}</textarea>
+                                </div>
+                                
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
                                 <input type="hidden" name="registFlg" value="1">
                                 <button type="submit" class="btn btn-primary float-right" style="background-color: #17a2b8;">
-                                  <i class="fas fa-save"></i>
-                                  &nbspLưu
+                                  <i class="fas fa-cog"></i>
+                                  &nbspCài đặt
                                 </button>
                             </div>
                         </div>
@@ -299,11 +307,11 @@ function updateApps($con, $funcId, $param){
     $pg_param[] = $param['smtpsecure'];
     $pg_param[] = $param['port'];
     $pg_param[] = $param['body'];
+    $pg_param[] = $param['firebaseConfig'];
 
     $sql = '';
     $sql .= "UPDATE APPS                         ";
-    $sql .= "	SET                              ";
-    $sql .= "		MAILNAME = $1,               ";
+    $sql .= "	SET MAILNAME = $1,               ";
     $sql .= "		MAILUSERNAME = $2,           ";
     $sql .= "		MAILPASSWORD = $3,           ";
     $sql .= "		MAILCHARSET = $4,            ";
@@ -311,7 +319,8 @@ function updateApps($con, $funcId, $param){
     $sql .= "		MAILSMTPAUTH = $6,           ";
     $sql .= "		MAILSMTPSECURE = $7,         ";
     $sql .= "		MAILPORT = $8,               ";
-    $sql .= "		MAILBODY = $9                ";
+    $sql .= "		MAILBODY = $9,               ";
+    $sql .= "		FIREBASECONFIG = $10         ";
     $sql .= " WHERE ID = 3;                      ";
 
     $query = pg_query_params($con, $sql, $pg_param);
@@ -346,7 +355,8 @@ function getApps($con, $funcId){
     $sql .= "		MAILSMTPAUTH,               ";
     $sql .= "		MAILSMTPSECURE,             ";
     $sql .= "		MAILPORT,                   ";
-    $sql .= "		MAILBODY                    ";
+    $sql .= "		MAILBODY,                   ";
+    $sql .= "		FIREBASECONFIG              ";
     $sql .= " FROM 	APPS                        ";
     $sql .= "WHERE 	ID = 3                      ";
     $query = pg_query_params($con, $sql, $pg_param);
