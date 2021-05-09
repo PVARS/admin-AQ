@@ -1,4 +1,9 @@
 <?php
+// Get Css hover
+$navs          = getCssOfMenu('system') ?? array();
+$navLinkActive = $navs['navLinkActive'] ?? '';
+$navLinkOnlick = $navs['navLinkOnlick'] ?? 'info';
+
 //Output HTML
 print <<<EOF
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
@@ -24,13 +29,13 @@ print <<<EOF
     <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <li class="nav-item">
-                <a href="dashboard.php" class="nav-link">
+                <a href="dashboard.php" class="nav-link nav-link-dashboard">
                     <i class="nav-icon fas fa-home"></i>
                     <p>Trang chủ</p>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="javascript:void(0)" class="nav-link">
+                <a href="javascript:void(0)" class="nav-link nav-link-category">
                     <i class="nav-icon fas fa-briefcase"></i>
                     <p>
                         Quản lí danh mục
@@ -39,13 +44,13 @@ print <<<EOF
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="detail-category.php" class="nav-link">
+                        <a href="detail-category.php" class="nav-link nav-link-category-detail">
                             <i class="fas fa-folder-plus nav-icon"></i>
                             <p>Thêm danh mục</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="list-categories.php" class="nav-link">
+                        <a href="list-categories.php" class="nav-link nav-link-categories-list">
                             <i class="fas fa-list nav-icon"></i>
                             <p>Danh sách danh mục</p>
                         </a>
@@ -53,7 +58,7 @@ print <<<EOF
                 </ul>
             </li>
             <li class="nav-item">
-                <a href="javascript:void(0)" class="nav-link">
+                <a href="javascript:void(0)" class="nav-link nav-link-new">
                     <i class="nav-icon fas fa-newspaper"></i>
                     <p>
                         Quản lí bài viết
@@ -62,13 +67,13 @@ print <<<EOF
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="detail-news.php" class="nav-link">
+                        <a href="detail-news.php" class="nav-link nav-link-new-detail">
                             <i class="fas fa-plus-square nav-icon"></i>
                             <p>Thêm bài viết</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="list-news.php" class="nav-link">
+                        <a href="list-news.php" class="nav-link nav-link-new-list">
                             <i class="fas fa-list-ul nav-icon"></i>
                             <p>Danh sách bài viết</p>
                         </a>
@@ -76,7 +81,7 @@ print <<<EOF
                 </ul>
             </li>
             <li class="nav-item">
-                <a href="javascript:void(0)" class="nav-link">
+                <a href="javascript:void(0)" class="nav-link nav-link-user">
                     <i class="nav-icon fas fa-user"></i>
                     <p>
                         Quản lí tài khoản
@@ -85,13 +90,13 @@ print <<<EOF
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="detail-user.php" class="nav-link">
+                        <a href="detail-user.php" class="nav-link nav-link-user-detail">
                             <i class="fas fa-user-plus nav-icon"></i>
                             <p>Tạo tài khoản</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="list-users.php" class="nav-link">
+                        <a href="list-users.php" class="nav-link nav-link-user-list">
                             <i class="fas fa-list-ul nav-icon"></i>
                             <p>Danh sách tài khoản</p>
                         </a>
@@ -99,7 +104,7 @@ print <<<EOF
                 </ul>
             </li>
             <li class="nav-item">
-                <a href="setting-system.php" class="nav-link">
+                <a href="setting-system.php" class="nav-link nav-link-setting-system">
                     <i class="fas fa-cog nav-icon"></i>
                     <p>
                         Cài đặt hệ thống

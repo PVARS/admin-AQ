@@ -26,3 +26,16 @@
 .swal2-styled.swal2-confirm{
     background-color: #17a2b8 !important;
 }
+
+.nav-sidebar .nav-item > .nav-link {
+    margin-bottom: 0rem;
+}
+
+.nav-sidebar .nav-item {
+    margin-bottom: 0.2rem;
+}
+
+.nav-active, .nav-active:hover {
+     background-color: rgba(255,255,255,.9) !important;
+     color: #343a40 !important;
+}

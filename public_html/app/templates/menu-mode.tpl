@@ -1,4 +1,9 @@
 <?php
+// Get Css hover
+$navs          = getCssOfMenu('mode') ?? array();
+$navLinkActive = $navs['navLinkActive'] ?? '';
+$navLinkOnlick = $navs['navLinkOnlick'] ?? 'info';
+
 //Output HTML
 print <<<EOF
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
@@ -24,13 +29,13 @@ print <<<EOF
     <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <li class="nav-item">
-                <a href="dashboard.php" class="nav-link">
+                <a href="dashboard.php" class="nav-link nav-link-dashboard">
                     <i class="nav-icon fas fa-home"></i>
                     <p>Trang chủ</p>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="javascript:void(0)" class="nav-link">
+                <a href="javascript:void(0)" class="nav-link nav-link-new">
                     <i class="nav-icon fas fa-newspaper"></i>
                     <p>
                         Quản lí bài viết
@@ -39,13 +44,13 @@ print <<<EOF
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="detail-news.php" class="nav-link">
+                        <a href="detail-news.php" class="nav-link nav-link-new-detail">
                             <i class="fas fa-plus-square nav-icon"></i>
                             <p>Thêm bài viết</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="list-news.php" class="nav-link">
+                        <a href="list-news.php" class="nav-link nav-link-new-list">
                             <i class="fas fa-list-ul nav-icon"></i>
                             <p>Danh sách bài viết</p>
                         </a>

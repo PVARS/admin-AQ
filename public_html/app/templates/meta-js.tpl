@@ -1,5 +1,12 @@
 <?php
 $scriptHTML = !isset($scriptHTML) ? '' : $scriptHTML;
+$scriptMenu = '';
+if (isset($navLinkOnlick) && isset($navLinkActive)) {
+    $scriptMenu = <<<EOF
+        $('.{$navLinkOnlick}').trigger('click');
+        $('.{$navLinkActive}').addClass('nav-active');
+EOF;
+}
 
 // Output HTML
 print <<< EOF
@@ -47,7 +54,11 @@ print <<< EOF
 <script>
     $(function() {
         // Summernote
-        $('#summernote').summernote()
+        $('#summernote').summernote();
+
+        // Script Menu
+        {$scriptMenu}
+
     })
 </script>
 {$scriptHTML}
