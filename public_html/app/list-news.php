@@ -47,7 +47,7 @@ if (checkStatusUser($con, $_SESSION['loginId']) == 'f'){
     exit();
 }
 
-if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
+if (!isset($_SESSION['role'])) {
     header('location: error404.php');
     exit();
 }
@@ -183,10 +183,15 @@ EOF;
 include($TEMP_APP_HEADER_PATH);
 
 //Menu
-if ($role == '1') {
-    include($TEMP_APP_MENUSYSTEM_PATH);
-} else {
-    include($TEMP_APP_MENU_PATH);
+if ($role == '1'){
+    include ($TEMP_APP_MENUSYSTEM_PATH);
+}
+if ($role == '2') {
+    include ($TEMP_APP_MENU_PATH);
+}
+
+if ($role == '3'){
+    include ($TEMP_APP_MENU_MOD_PATH);
 }
 
 //Conntent

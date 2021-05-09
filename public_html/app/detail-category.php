@@ -40,7 +40,7 @@ if (checkStatusUser($con, $_SESSION['loginId']) == 'f'){
     exit();
 }
 
-if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
+if (isset($_SESSION['role']) && $_SESSION['role'] == 3) {
     header('location: error404.php');
     exit();
 }
