@@ -492,7 +492,6 @@ function validationData($param){
 
     $mes = [
         'chk_required'   => [],
-        'chk_format'     => [],
         'chk_max_length' => []
     ];
 
@@ -508,7 +507,6 @@ function validationData($param){
 
     $msg = array_merge(
         $mes['chk_required'],
-        $mes['chk_format'],
         $mes['chk_max_length']
     );
 }
