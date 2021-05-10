@@ -282,112 +282,122 @@ if ($role == '3'){
 //Conntent
 echo <<<EOF
 <div class="content-wrapper">
-            <!-- Content Header (Page header) -->
-            <div class="content-header">
-                <div class="container-fluid">
-                    <div class="row mb-2">
-                        <div class="col-sm-6">
-                            <h1 class="m-0">
-                                <i class="fas fa-plus-square"></i>&nbsp{$titlePage}</h1>
-                        </div>
-                        <!-- /.col -->
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
-                                <li class="breadcrumb-item active">Danh sách bài viết</li>
-                            </ol>
-                        </div>
-                        <!-- /.col -->
-                    </div>
-                    <!-- /.row -->
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-plus-square"></i>&nbsp{$titlePage}</h1>
                 </div>
-                <!-- /.container-fluid -->
+                <!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
+                        <li class="breadcrumb-item active">Danh sách bài viết</li>
+                    </ol>
+                </div>
+                <!-- /.col -->
             </div>
-            <!-- /.content-header -->
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
 
-            <!-- Main content -->
-            <section class="content">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12">
-                            <a href="list-news.php" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Danh sách bài viết">
-                                <i class="fas fa-backward"></i>
-                                &nbspTrở lại
-                            </a>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="card-body">
-                            <form action="{$_SERVER['SCRIPT_NAME']}" id="ismForm" method="POST">
-                                <input type="hidden" name="nid" value="{$nid}">
-                                <div class="card card-info">
-                                    <div class="card-header">
-                                        <h3 class="card-title">{$titlePage}</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <label>Danh mục</label>
-                                        <div class="input-group mb-3">
-                                            {$showcategoryhtml}
-                                        </div>
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <a href="list-news.php" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Danh sách bài viết">
+                        <i class="fas fa-backward"></i>
+                        &nbspTrở lại
+                    </a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="card-body">
+                    <form action="{$_SERVER['SCRIPT_NAME']}" id="ismForm" method="POST">
+                        <input type="hidden" name="nid" value="{$nid}">
+                        <div class="card card-info">
+                            <div class="card-header">
+                                <h3 class="card-title">{$titlePage}</h3>
+                            </div>
+                            <div class="card-body">
+                                <label>Danh mục</label>
+                                <div class="input-group mb-3">
+                                    {$showcategoryhtml}
+                                </div>
 
-                                        <label>Tiêu đề</label>
-                                        <div class="input-group mb-3">
-                                            <input type="text" name="title" class="form-control" placeholder="Tiêu đề" value="{$valuetitle}">
-                                        </div>
+                                <label>Tiêu đề</label>
+                                <div class="input-group mb-3">
+                                    <input type="text" name="title" class="form-control" placeholder="Tiêu đề" value="{$valuetitle}">
+                                </div>
 
-                                        <label>Mô tả ngắn</label>
-                                        <div class="input-group mb-3">
-                                            <input type="text" name="shortdescription" class="form-control" placeholder="Mô tả ngắn" value="{$valueshortdes}">
-                                        </div>
+                                <label>Mô tả ngắn</label>
+                                <div class="input-group mb-3">
+                                    <input type="text" name="shortdescription" class="form-control" placeholder="Mô tả ngắn" value="{$valueshortdes}">
+                                </div>
 
-                                        <label>Người đăng</label>
-                                        <div class="input-group mb-3">
-                                            <input type="text" name="fullname" class="form-control" value="{$valueusers}" readonly>
-                                        </div>
+                                <label>Người đăng</label>
+                                <div class="input-group mb-3">
+                                    <input type="text" name="fullname" class="form-control" value="{$valueusers}" readonly>
+                                </div>
 
-                                        <label>Thumbnail</label>
-                                        <input type="hidden" class="form-control" name="urlImage" id="urlImage" value="{$f_urlImamge}" readonly>
-                                        <div class="input-group">
-                                            <img id="image" class="mb-2" height="100" style="display: none;"/>
-                                        </div>
-                                        <div class="input-group">
-                                            <img id="image_db" {$imageAtt}/>
-                                        </div>
-                                        <div class="input-group mb-3">
-                                            <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="thumbnail" value="{$valuethumbnail}" accept=".jpg,.jpeg,.png" onchange="validateFileType()">
-                                                <label class="custom-file-label" for="customFile">{$valuethumbnail}</label>
-                                            </div>
-                                        </div>
-
-                                        <label>Nội dung</label>
-                                        <textarea id="summernote" name="content">{$valuecontent}</textarea>
-                                    </div>
-                                    <!-- /.card-body -->
-                                    <div class="card-footer">
-                                        <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
-                                            <input type="hidden" name="mode" value="{$mode}">
-                                            <input type="hidden" name="registFlg" value="1">
-                                            <span class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
-                                                <i class="fas fa-save"></i>&nbsp{$titleButton}
-                                            </span>
-                                            <button class="btn btn-primary float-right" id="submit_disable" disabled style="display: none;">
-                                                <i class="fas fa-save"></i>&nbspLưu
-                                            </button>
-                                        </form>
-                                        {$htmlDeleteNew}
+                                <label>Thumbnail</label>
+                                <input type="hidden" class="form-control" name="urlImage" id="urlImage" value="{$f_urlImamge}" readonly>
+                                <div class="input-group">
+                                    <img id="image" class="mb-2" height="100" style="display: none;"/>
+                                </div>
+                                <div class="input-group">
+                                    <img id="image_db" {$imageAtt}/>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="thumbnail" value="{$valuethumbnail}" accept=".jpg,.jpeg,.png" onchange="validateFileType()">
+                                        <label class="custom-file-label" for="customFile">{$valuethumbnail}</label>
                                     </div>
                                 </div>
-                            </form>
+
+                                <label>Nội dung</label>
+                                <textarea id="summernote" name="content">{$valuecontent}</textarea>
+                            </div>
+                            <!-- /.card-body -->
+                            <div class="card-footer">
+                                <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                                    <input type="hidden" name="mode" value="{$mode}">
+                                    <input type="hidden" name="registFlg" value="1">
+                                    <span class="btn btn-primary float-right" onclick="uploadImage()" name="submit_saveOrUpdate" id="submit_saveOrUpdate" style="background-color: #17a2b8;">
+                                        <i class="fas fa-save"></i>&nbsp{$titleButton}
+                                    </span>
+                                    <button class="btn btn-primary float-right" id="submit_disable" disabled style="display: none;">
+                                        <i class="fas fa-save"></i>&nbspLưu
+                                    </button>
+                                </form>
+                                {$htmlDeleteNew}
+                            </div>
                         </div>
-                    </div>
-                    <!-- /.row -->
-                    <!-- /.row (main row) -->
+                    </form>
                 </div>
-                <!-- /.container-fluid -->
-            </section>
-            <!-- /.content -->
+            </div>
+            <!-- /.row -->
+            <!-- /.row (main row) -->
         </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+EOF;
+
+//Footer
+include($TEMP_APP_FOOTER_PATH);
+//Meta JS
+include($TEMP_APP_METAJS_PATH);
+echo <<<EOF
+    </div>
+</body>
+</html>
 EOF;
 
 /**
@@ -457,6 +467,7 @@ function show_category($con, $func_id, $valuecategory)
     }
 
     $html = '<select class="custom-select" name="category">';
+    $html .= '<option value="0">Chọn danh mục</option>';
     if ($recCnt != 0) {
         while ($row = pg_fetch_assoc($query)) {
             $selected = '';
@@ -471,15 +482,36 @@ function show_category($con, $func_id, $valuecategory)
 
 }
 
-//Footer
-include($TEMP_APP_FOOTER_PATH);
-//Meta JS
-include($TEMP_APP_METAJS_PATH);
-echo <<<EOF
-    </div>
-</body>
-</html>
-EOF;
+/**
+ * Validation data
+ * @param $param
+ */
+function validationData($param){
+    $maxStr = 1000;
+    $minStr = 1;
+
+    $mes = [
+        'chk_required'   => [],
+        'chk_format'     => [],
+        'chk_max_length' => []
+    ];
+
+    if (isset($param['category']) && $param['category'] == 0){
+        $mes['chk_required'][] = 'Vui lòng chọn danh mục cho bài viết.';
+    }
+
+    if (empty($param['title'])){
+        $mes['chk_required'][] = 'Vui lòng nhập tiêu đề bài viết.';
+    } elseif (mb_strlen($param['title']) > $maxStr || mb_strlen($param['title']) < $minStr){
+        $mes['chk_max_length'][] = 'Vui lòng nhập tiêu đề bài viết lớn hơn '.$minStr.' ký tự và không vượt quá '.$maxStr.' ký tự.';
+    }
+
+    $msg = array_merge(
+        $mes['chk_required'],
+        $mes['chk_format'],
+        $mes['chk_max_length']
+    );
+}
 
 /**
  * Get id, fullname of user by loginid
