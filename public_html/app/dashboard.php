@@ -68,6 +68,25 @@ $(function() {
         });
     });
 });
+
+//paginate
+$(document).ready(function() {
+    $(".tableNewsTopView").paginate({
+        rows: 5,           // Set number of rows per page. Default: 5
+        position: "top",   // Set position of pager. Default: "bottom"
+        jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
+        showIfLess: false, // Don't show pager if table has only one page. Default: true
+        numOfPages: 5
+    });
+    
+    $(".tableNewsByCate").paginate({
+        rows: 5,           // Set number of rows per page. Default: 5
+        position: "top",   // Set position of pager. Default: "bottom"
+        jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
+        showIfLess: false, // Don't show pager if table has only one page. Default: true
+        numOfPages: 5
+    });
+});
 </script>
 EOF;
 
@@ -210,7 +229,7 @@ echo <<<EOF
                 </div>
                 <div class="col-sm-12" style="margin-top: 20px;">
                     <div class="card-body table-responsive p-0">
-                        <table class="table table-hover text-nowrap table-bordered tableNews" style="background-color: #FFFFFF;">
+                        <table class="table table-hover text-nowrap table-bordered tableNewsTopView" style="background-color: #FFFFFF;">
                             <thead style="background-color: #17A2B8;">
                                 <tr>
                                     <th style="width: 10%;" class="text-th text-center">STT</th>
@@ -289,7 +308,7 @@ function getCategoryPostDay($con, $funcId){
 
                 <div id="collapse_{$cnt}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion" style="">
                     <div class="card-body table-responsive p-0">
-                        <table class="table table-hover text-nowrap table-bordered">
+                        <table class="table table-hover text-nowrap table-bordered tableNewsByCate">
                             <thead>
                                 <tr>
                                     <th class="text-center" style="width: 10%;">STT</th>
