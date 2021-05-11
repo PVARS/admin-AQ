@@ -8,7 +8,7 @@ require_once('lib.php');
 $func_id       = 'detail_news';
 $userLogin     = array();
 $imageAtt      = '';
-
+$message       = '';
 $titlePage     = 'Thêm bài viết';
 $titleButton   = 'Lưu';
 $htmlDeleteNew = '';
@@ -22,16 +22,9 @@ $nid   = $param['nid'] ?? '';
 
 $role  = $_SESSION['role'] ?? '';
 
-/*data in form*/
-$f_category  = $param['category'] ?? '';
-$f_title     = $param['title'] ?? '';
-$f_shortdes  = $param['shortdescription'] ?? '';
-$f_fullname  = $param['fullname'] ?? '';
-$f_thumbnail = $param['thumbnail'] ?? '';
-$f_urlImamge = $param['urlImage'] ?? '';
-$f_content   = $param['content'] ?? '';
-
+$f_urlImamge   = $param['urlImage'] ?? '';
 $valuecategory = $param['idCategory'] ?? '';
+
 //Connect DB
 $con = openDB();
 
@@ -67,10 +60,23 @@ if ($param) {
         if ($mode == 'delete'){
             deleteNews($con, $func_id, $nid, $_SESSION['loginId']);
         }
-        if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
-            updateNews($con, $func_id, $param, $userLogin['loginid']);
-        } else {/*Insert News*/
-            insertNews($con, $func_id, $param, $userLogin['loginid']);
+
+        if (empty($mes)) {
+            $mes = validationDataNews($param);
+        }
+
+        $message = join('<br>', $mes);
+        if (strlen($message)) {
+            $messageClass = 'alert-danger';
+            $iconClass = 'fas fa-ban';
+        }
+
+        if (empty($mes)) {
+            if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
+                updateNews($con, $func_id, $param, $userLogin['loginid']);
+            } else {/*Insert News*/
+                insertNews($con, $func_id, $param, $userLogin['loginid']);
+            }
         }
     }
 }
@@ -102,6 +108,7 @@ if (isset($nid) && (mb_strlen($nid) > 0)) {
 EOF;
 
 } else {
+    $valuecategory  = $param['category'] ?? '';
     $valuetitle     = $param['title'] ?? '';
     $valueRole      = $param['category'] ?? '';
     $valueshortdes  = $param['shortdescription'] ?? '';
@@ -118,6 +125,30 @@ if (isset($f_urlImamge) && (mb_strlen($f_urlImamge) > 0)) {
 //get combobox
 $showcategoryhtml = show_category($con, $func_id, $valuecategory);
 
+//Message HTML
+if(isset($_SESSION['message']) && strlen($_SESSION['message'])){
+    $message      .= $_SESSION['message'];
+    $messageClass .= $_SESSION['messageClass'];
+    $iconClass    .= $_SESSION['iconClass'];
+    $_SESSION['message']      = '';
+    $_SESSION['messageClass'] = '';
+    $_SESSION['iconClass']    = '';
+}
+$messageHtml  = '';
+if(strlen($message)){
+    $messageHtml = <<< EOF
+    <div class="alert {$messageClass} alert-dismissible">
+        <div class="row">
+            <div class="icon">
+                <i class="{$iconClass}"></i>
+            </div>
+            <div class="col-10">
+                {$message}
+            </div>
+        </div>
+    </div>
+EOF;
+}
 //-----------------------------------------------------------
 // HTML
 //-----------------------------------------------------------
@@ -177,6 +208,8 @@ $scriptHTML = <<<EOF
     function uploadImage() {
         var file_image = document.getElementById("thumbnail");
         var url_image = document.getElementById("urlImage");
+        var category = document.getElementById("category");
+        var title = document.getElementById("title");
         
         /* SET Message */
         if ('{$mode}' == 'update'){
@@ -186,24 +219,36 @@ $scriptHTML = <<<EOF
             var message = "Bạn có muốn thêm mới bài viết này?";
             var numberMessage = 5;
         }
-        
+
         /*Check file exist*/
         if (url_image.value == "" && file_image.files.length == 0){
-            Swal.fire({
-                position: 'top',
-                icon: 'warning',
-                title: 'Vui lòng chọn hình ảnh tải lên!',
-                showConfirmButton: false,
-                timer: 1500
-            });
-        } else if (file_image.files.length == 0){ /* return true */
             var that = $(this)[0];
             sweetConfirm(numberMessage, message, function(result) {
                 if (result){
                     document.getElementById("ismForm").submit(); /*Submit form*/
                 }
             });
-        } else { /* return true */
+        } 
+        /*Check validate data*/
+        else if (category.value == "" || title.value == ""){ 
+            var that = $(this)[0];
+            sweetConfirm(numberMessage, message, function(result) {
+                if (result){
+                    document.getElementById("ismForm").submit(); /*Submit form*/
+                }
+            });
+        } 
+        /*Check update image when no select*/
+        else if (file_image.files.length == 0){ 
+            var that = $(this)[0];
+            sweetConfirm(numberMessage, message, function(result) {
+                if (result){
+                    document.getElementById("ismForm").submit(); /*Submit form*/
+                }
+            });
+        } 
+        /* return true */
+        else { 
             var that = $(this)[0];
             sweetConfirm(numberMessage, message, function(result) {
                 if (result){
@@ -318,6 +363,7 @@ echo <<<EOF
             </div>
             <div class="row">
                 <div class="card-body">
+                    {$messageHtml}
                     <form action="{$_SERVER['SCRIPT_NAME']}" id="ismForm" method="POST">
                         <input type="hidden" name="nid" value="{$nid}">
                         <div class="card card-info">
@@ -332,7 +378,7 @@ echo <<<EOF
 
                                 <label>Tiêu đề</label>
                                 <div class="input-group mb-3">
-                                    <input type="text" name="title" class="form-control" placeholder="Tiêu đề" value="{$valuetitle}">
+                                    <input type="text" name="title" class="form-control" id="title" placeholder="Tiêu đề" value="{$valuetitle}">
                                 </div>
 
                                 <label>Mô tả ngắn</label>
@@ -466,7 +512,7 @@ function show_category($con, $func_id, $valuecategory)
         $recCnt = pg_num_rows($query);
     }
 
-    $html = '<select class="custom-select" name="category">';
+    $html = '<select class="custom-select" id="category" name="category">';
     $html .= '<option value="0">Chọn danh mục</option>';
     if ($recCnt != 0) {
         while ($row = pg_fetch_assoc($query)) {
@@ -486,7 +532,7 @@ function show_category($con, $func_id, $valuecategory)
  * Validation data
  * @param $param
  */
-function validationData($param){
+function validationDataNews($param){
     $maxStr = 1000;
     $minStr = 1;
 
@@ -509,6 +555,8 @@ function validationData($param){
         $mes['chk_required'],
         $mes['chk_max_length']
     );
+
+    return $msg;
 }
 
 /**
