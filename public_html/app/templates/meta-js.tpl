@@ -52,9 +52,12 @@ print <<< EOF
 <!-- TODO: Add SDKs for Firebase products that you want to use https://firebase.google.com/docs/web/setup#available-libraries -->
 <script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-analytics.js"></script>
 <script>
-    $(function() {
+    $(function () {
         // Summernote
-        $('#summernote').summernote();
+        $('#summernote').summernote({
+            fontSizes: ['8', '9', '10', '11', '12', '14', '15', '16', '18'],
+            toolbar: [['style', ['style']], ['fontsize', ['fontsize']], ['font', ['bold', 'underline', 'clear']], ['fontname', ['fontname']], ['color', ['color']], ['para', ['ul', 'ol', 'paragraph']], ['table', ['table']], ['insert', ['link', 'picture', 'video']], ['view', ['fullscreen', 'codeview', 'help']]],
+        });
 
         // Script Menu
         {$scriptMenu}

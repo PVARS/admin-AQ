@@ -89,12 +89,14 @@ if (isset($cid) && (mb_strlen($cid) > 0)) {
     $arr_category   = getCategoryById($con, $func_id, $cid);
     $category       = $arr_category['category'];
     $fullname       = $arr_category['fullname'];
+    $icon           = $arr_category['icon'];
 
     $htmlDelete     = <<<EOF
     <a class="btn btn-danger btn-sm btnDelete"><i class="fas fa-trash"></i>&nbsp;Xóa</a>
 EOF;
 } else {
-    $category       = '';
+    $category       = $param['f_category'] ?? '';
+    $icon           = $param['icon'] ?? '';
     $fullname       = $_SESSION['fullname'] ?? '';
 }
 
@@ -246,6 +248,12 @@ echo <<<EOF
                                         <div class="input-group mb-3">
                                             <input type="text" class="form-control" placeholder="Tên danh mục" name="f_category" value="{$category}">
                                         </div>
+                                        
+                                        <label>Icon</label>
+                                        <small id="emailHelp" class="text-muted" style="color: red!important;">(Truy cập https://fontawesome.com để sử dụng icon cho danh mục)</small>
+                                        <div class="input-group mb-3">
+                                            <input type="text" class="form-control" placeholder="Icon" name="icon" value="{$icon}">
+                                        </div>
 
                                         <label>Người tạo</label>
                                         <div class="input-group mb-3">
@@ -299,6 +307,7 @@ function getCategoryById($con, $func_id, $cid){
 
     $sql  = "";
     $sql .= "SELECT CATEGORY.CATEGORY,                                  ";
+    $sql .= "       CATEGORY.ICON,                                      ";
     $sql .= "	    USERS.FULLNAME                                      ";
     $sql .= " FROM CATEGORY                                             ";
     $sql .= " INNER JOIN USERS ON CATEGORY.CREATEBY = USERS.LOGINID     ";
@@ -408,13 +417,15 @@ function insertCategory($con, $func_id, $param, $loginId){
     $pg_param[] = $param['f_category'];
     $pg_param[] = getDatetimeNow();
     $pg_param[] = $loginId;
+    $pg_param[] = $param['icon'];
 
     $sql  = "";
     $sql .= "INSERT INTO CATEGORY(                  ";
     $sql .= "					CATEGORY,           ";
     $sql .= "					CREATEDATE,         ";
-    $sql .= "					CREATEBY)           ";
-    $sql .= " VALUES ($1, $2, $3);                  ";
+    $sql .= "					CREATEBY,           ";
+    $sql .= "					ICON)               ";
+    $sql .= " VALUES ($1, $2, $3, $4);              ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -440,14 +451,16 @@ function updateCategory($con, $func_id, $param, $loginId){
     $pg_param[] = $param['f_category'];
     $pg_param[] = getDatetimeNow();
     $pg_param[] = $loginId;
+    $pg_param[] = $param['icon'];
     $pg_param[] = $param['cid'];
 
     $sql  = "";
     $sql .= "UPDATE CATEGORY                ";
     $sql .= " SET CATEGORY   = $1,          ";
     $sql .= "	  UPDATEDATE = $2,          ";
-    $sql .= "	  UPDATEBY   = $3           ";
-    $sql .= " WHERE ID = $4;                ";
+    $sql .= "	  UPDATEBY   = $3,          ";
+    $sql .= "	  ICON       = $4           ";
+    $sql .= " WHERE ID = $5;                ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
