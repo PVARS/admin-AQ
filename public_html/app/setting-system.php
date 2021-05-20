@@ -5,11 +5,12 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$funcId = 'setting-system';
-$arr_apps = array();
-$message = '';
-$messageClass = '';
-$iconClass = '';
+$funcId         = 'setting-system';
+$arr_apps       = array();
+$message        = '';
+$messageClass   = '';
+$iconClass      = '';
+$maxId          = '';
 
 session_start();
 
@@ -18,17 +19,8 @@ $con = openDB();
 
 //Get param
 $param = getParam();
-$f_fromname     = $param['fromname'] ?? '';
-$f_username     = $param['username'] ?? '';
-$f_password     = $param['password'] ?? '';
-$f_charset      = $param['charset'] ?? '';
-$f_host         = $param['host'] ?? '';
-$f_smtpauth     = $param['smtpauth'] ?? '';
-$f_smtpsecure   = $param['smtpsecure'] ?? '';
-$f_port         = $param['port'] ?? '';
-$f_body         = $param['body'] ?? '';
-
-$role = $_SESSION['role'] ?? '';
+$mode  = $param['mode'] ?? 'new';
+$role  = $_SESSION['role'] ?? '';
 
 if (!isset($_SESSION['loginId'])) {
     header('location: login.php');
@@ -50,8 +42,12 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     exit();
 }
 
-$arr_apps = getApps($con, $funcId);
-if (!empty($arr_apps)) {
+$strPost = "Cập nhật chuyển nhượng 20-05-2021: Tương lai của Emile Smith-Rowe, Martin Ødegaard; Lucas Torreira và Willian nhiều khả năng sẽ rời Arsenal";
+echo 'Trước: ' . $strPost . '<br/>Sau: ' . convert_name($strPost);
+
+$maxId = getMaxIdApps($con, $funcId);
+if (!empty($maxId)) {
+    $arr_apps       = getApps($con, $funcId, $maxId);
     $fromName       = $arr_apps['mailname'];
     $username       = $arr_apps['mailusername'];
     $password       = $arr_apps['mailpassword'];
@@ -65,12 +61,16 @@ if (!empty($arr_apps)) {
 
     $selected0 = '';
     $selected1 = '';
-    if ($smtpAuth == 'f'){
-        $selected0 = 'selected="selected"';
-    } else {
-        $selected1 = 'selected="selected"';
+    if (!empty($smtpAuth)) {
+        if ($smtpAuth == 'f'){
+            $selected0 = 'selected="selected"';
+        } else {
+            $selected1 = 'selected="selected"';
+        }
     }
-} else {
+    $mode = 'update';
+}
+else {
     $fromName         = '';
     $username         = '';
     $password         = '';
@@ -81,11 +81,19 @@ if (!empty($arr_apps)) {
     $port             = '';
     $body             = '';
     $firebaseConfig   = '';
+    $selected0        = '';
+    $selected1        = '';
 }
 
 if ($param) {
     if (isset($param['registFlg']) && $param['registFlg'] == 1) {
-        updateApps($con, $funcId, $param);
+        if ($mode == 'new') {
+            insertApps($con, $funcId, $param);
+        }
+        if ($mode == 'update') {
+            updateApps($con, $funcId, $param, $maxId);
+        }
+
     }
 }
 
@@ -264,6 +272,7 @@ echo <<<EOF
                             <!-- /.card-body -->
                             <div class="card-footer">
                                 <input type="hidden" name="registFlg" value="1">
+                                <input type="hidden" name="mode" value="{$mode}">
                                 <button type="submit" class="btn btn-primary float-right" style="background-color: #17a2b8;">
                                   <i class="fas fa-cog"></i>
                                   &nbspCài đặt
@@ -292,11 +301,59 @@ echo <<<EOF
 EOF;
 
 /**
+ * Insert apps
  * @param $con
  * @param $funcId
  * @param $param
  */
-function updateApps($con, $funcId, $param){
+function insertApps($con, $funcId, $param){
+    $pg_param   = array();
+    $pg_param[] = 1;
+    $pg_param[] = $param['fromname'];
+    $pg_param[] = $param['username'];
+    $pg_param[] = $param['password'];
+    $pg_param[] = $param['charset'];
+    $pg_param[] = $param['host'];
+    $pg_param[] = $param['smtpauth'];
+    $pg_param[] = $param['smtpsecure'];
+    $pg_param[] = $param['port'];
+    $pg_param[] = $param['body'];
+    $pg_param[] = $param['firebaseConfig'];
+
+    $sql = '';
+    $sql .= "INSERT INTO PUBLIC.APPS(";
+    $sql .= "						ID,                                 ";
+    $sql .= "						MAILNAME,                           ";
+    $sql .= "						MAILUSERNAME,                       ";
+    $sql .= "						MAILPASSWORD,                       ";
+    $sql .= "						MAILCHARSET,                        ";
+    $sql .= "						MAILHOST,                           ";
+    $sql .= "						MAILSMTPAUTH,                       ";
+    $sql .= "						MAILSMTPSECURE,                     ";
+    $sql .= "						MAILPORT,                           ";
+    $sql .= "						MAILBODY,                           ";
+    $sql .= "						FIREBASECONFIG)                     ";
+    $sql .= " VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);    ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+
+    $_SESSION['message'] = 'Tạo cài đặt thành công!';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
+    header('location: setting-system.php');
+    exit();
+}
+
+/**
+ * @param $con
+ * @param $funcId
+ * @param $param
+ */
+function updateApps($con, $funcId, $param, $maxId){
     $pg_param   = array();
     $pg_param[] = $param['fromname'];
     $pg_param[] = $param['username'];
@@ -308,6 +365,7 @@ function updateApps($con, $funcId, $param){
     $pg_param[] = $param['port'];
     $pg_param[] = $param['body'];
     $pg_param[] = $param['firebaseConfig'];
+    $pg_param[] = $maxId;
 
     $sql = '';
     $sql .= "UPDATE APPS                         ";
@@ -321,14 +379,14 @@ function updateApps($con, $funcId, $param){
     $sql .= "		MAILPORT = $8,               ";
     $sql .= "		MAILBODY = $9,               ";
     $sql .= "		FIREBASECONFIG = $10         ";
-    $sql .= " WHERE ID = 1;                      ";
+    $sql .= " WHERE ID = $11;                    ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['message'] = 'Cài đặt thành công!';
+    $_SESSION['message'] = 'Lưu cài đặt thành công!';
     $_SESSION['messageClass'] = 'alert-success';
     $_SESSION['iconClass'] = 'fas fa-check';
 
@@ -341,10 +399,11 @@ function updateApps($con, $funcId, $param){
  * @param $funcId
  * @return array
  */
-function getApps($con, $funcId){
-    $pg_param = array();
-    $apps = array();
-    $recCnt = 0;
+function getApps($con, $funcId, $maxId){
+    $pg_param   = array();
+    $pg_param[] = $maxId;
+    $apps       = array();
+    $recCnt     = 0;
 
     $sql = "";
     $sql .= "SELECT MAILNAME,                   ";
@@ -358,7 +417,7 @@ function getApps($con, $funcId){
     $sql .= "		MAILBODY,                   ";
     $sql .= "		FIREBASECONFIG              ";
     $sql .= " FROM 	APPS                        ";
-    $sql .= "WHERE 	ID = 1                      ";
+    $sql .= "WHERE 	ID = $1                     ";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
@@ -370,6 +429,31 @@ function getApps($con, $funcId){
         $apps = pg_fetch_assoc($query);
     }
     return $apps;
+}
+
+/**
+ * @param $con
+ * @param $funcId
+ * @return mixed
+ */
+function getMaxIdApps($con, $funcId){
+    $pg_param = array();
+    $apps = array();
+    $recCnt = 0;
+
+    $sql = "";
+    $sql .= "SELECT MAX(ID) id FROM apps          ";
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $funcId . ') SQL Error：', $sql . print_r($pg_param, true));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0){
+        $apps = pg_fetch_assoc($query);
+    }
+    return $apps['id'];
 }
 
 ?>
