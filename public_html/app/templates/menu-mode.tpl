@@ -34,8 +34,8 @@ print <<<EOF
                     <p>Trang chủ</p>
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="javascript:void(0)" class="nav-link nav-link-new">
+            <li class="nav-item nav-link-new">
+                <a href="javascript:void(0)" class="nav-link">
                     <i class="nav-icon fas fa-newspaper"></i>
                     <p>
                         Quản lí bài viết

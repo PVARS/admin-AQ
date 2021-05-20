@@ -3,7 +3,7 @@ $scriptHTML = !isset($scriptHTML) ? '' : $scriptHTML;
 $scriptMenu = '';
 if (isset($navLinkOnlick) && isset($navLinkActive)) {
     $scriptMenu = <<<EOF
-        $('.{$navLinkOnlick}').trigger('click');
+        $('.{$navLinkOnlick}').addClass('menu-is-opening menu-open');
         $('.{$navLinkActive}').addClass('nav-active');
 EOF;
 }
