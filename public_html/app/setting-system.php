@@ -42,9 +42,6 @@ if (isset($_SESSION['role']) && $_SESSION['role'] != 1) {
     exit();
 }
 
-$strPost = "Cập nhật chuyển nhượng 20-05-2021: Tương lai của Emile Smith-Rowe, Martin Ødegaard; Lucas Torreira và Willian nhiều khả năng sẽ rời Arsenal";
-echo 'Trước: ' . $strPost . '<br/>Sau: ' . convert_name($strPost);
-
 $maxId = getMaxIdApps($con, $funcId);
 if (!empty($maxId)) {
     $arr_apps       = getApps($con, $funcId, $maxId);
