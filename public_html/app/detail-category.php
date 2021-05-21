@@ -92,7 +92,7 @@ if (isset($cid) && (mb_strlen($cid) > 0)) {
     $icon           = $arr_category['icon'];
 
     $htmlDelete     = <<<EOF
-    <a class="btn btn-danger btn-sm btnDelete"><i class="fas fa-trash"></i>&nbsp;Xóa</a>
+        <a class="btn btn-danger btn-sm btnDelete"><i class="fas fa-trash"></i>&nbsp;Xóa</a>
 EOF;
 } else {
     $category       = $param['f_category'] ?? '';
@@ -252,7 +252,7 @@ echo <<<EOF
                                         <label>Icon</label>
                                         <small id="emailHelp" class="text-muted" style="color: red!important;">(Truy cập https://fontawesome.com để sử dụng icon cho danh mục)</small>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Icon" name="icon" value="{$icon}">
+                                            <input type="text" class="form-control" placeholder="Icon" name="icon" value='{$icon}'>
                                         </div>
 
                                         <label>Người tạo</label>
