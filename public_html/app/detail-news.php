@@ -19,7 +19,6 @@ session_start();
 $param = getParam();
 $mode  = $param['mode'] ?? 'new';
 $nid   = $param['nid'] ?? '';
-
 $role  = $_SESSION['role'] ?? '';
 
 $f_urlImamge   = $param['urlImage'] ?? '';
