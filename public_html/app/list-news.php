@@ -297,11 +297,11 @@ echo <<<EOF
                             <table class="table table-hover text-nowrap table-bordered" style="background-color: #FFFFFF;">
                                 <thead style="background-color: #17A2B8;">
                                     <tr>
-                                        <th style="width: 5%;" class="text-th">STT</th>
-                                        <th style="width: 35%;" class="text-th">Tiêu đề</th>
-                                        <th style="width: 20%;" class="text-th">Người đăng</th>
-                                        <th style="text-align: center; width: 20%;" class="text-th">Ngày đăng</th>
-                                        <th style="text-align: center; width: 20%;" class="text-th">Lượt xem</th>
+                                        <th style="width: 5%;" class="text-th text-center">STT</th>
+                                        <th style="width: 35%;" class="text-th text-center">Tiêu đề</th>
+                                        <th style="width: 20%;" class="text-th text-center">Người đăng</th>
+                                        <th style="text-align: center; width: 20%;" class="text-th text-center">Ngày đăng</th>
+                                        <th style="text-align: center; width: 20%;" class="text-th text-center">Lượt xem</th>
                                         <th colspan="3"></th>
                                     </tr>
                                 </thead>
@@ -389,7 +389,7 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
     $sql .= "FROM   news                        ";
     $sql .= "WHERE deldate IS NULL              ";
     $sql .= $wheresql;
-    $sql .= "ORDER BY id ASC                    ";
+    $sql .= "ORDER BY createdate DESC           ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
@@ -403,11 +403,11 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
             $count++;
             $html .= <<<EOF
                 <tr>
-                   <td style="width: 5%;">{$count}</td>
+                   <td style="width: 5%;" class="text-center">{$count}</td>
                    <td style="width: 35%;">{$row['title']}</td>
-                   <td style="width: 20%;">{$row['createby']}</td>
-                   <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
-                   <td style="text-align: center; width: 20%;">{$row['view']}</td>
+                   <td style="width: 20%;" class="text-center">{$row['createby']}</td>
+                   <td style="text-align: center; width: 20%;" class="text-center">{$row['createdate']}</td>
+                   <td style="text-align: center; width: 20%;" class="text-center">{$row['view']}</td>
                    <td style="text-align: center; width: 5%;">
                        <form action="detail-news.php" method="POST">
                             <input type="hidden" name="mode" value="update">

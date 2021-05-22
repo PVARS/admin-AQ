@@ -617,7 +617,7 @@ function insertNews($con, $func_id, $param, $idUser)
     $sql .= "          , content            ";
     $sql .= "          , createdate         ";
     $sql .= "          , createby           ";
-    $sql .= "          , view)              ";
+    $sql .= "          , view               ";
     $sql .= "          , urlkey)            ";
     $sql .= "  VALUES(                      ";
     $sql .= "            $1                 ";
