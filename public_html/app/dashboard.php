@@ -385,6 +385,7 @@ function getNewsTopView($con, $funcId){
                          <form action="detail-news.php" method="POST">
                              <input type="hidden" name="nid" value="{$row['id']}">
                              <input type="hidden" class="mode" name="mode" value="update">
+                             <input type="hidden" name="dispFrom" value="dashboard">
                              <a class="btn btn-primary btn-sm editNews"><i class="fas fa-edit"></i></a>
                          </form>
                      </td>
@@ -540,6 +541,7 @@ function postOfDayByCategory($con, $funcId, $idCate){
                         <form action="detail-news.php" method="POST">
                             <input type="hidden" name="nid" value="{$row['id']}">
                             <input type="hidden" class="mode" name="mode" value="update">
+                            <input type="hidden" name="dispFrom" value="dashboard">
                             <a href="" class="btn btn-primary btn-sm editNews"><i class="fas fa-edit"></i></a>
                         </form>
                     </td>

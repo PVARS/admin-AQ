@@ -12,6 +12,7 @@ $message       = '';
 $titlePage     = 'Thêm bài viết';
 $titleButton   = 'Lưu';
 $htmlDeleteNew = '';
+$urlRedirect   = 'list-news.php';
 
 session_start();
 
@@ -45,6 +46,16 @@ if (checkStatusUser($con, $_SESSION['loginId']) == 'f'){
 if (!isset($_SESSION['role'])) {
     header('location: error404.php');
     exit();
+}
+
+if (isset($param['dispFrom'])){
+    if ($param['dispFrom'] = 'list-categories'){
+        $urlRedirect = 'list-categories.php';
+    }
+
+    if ($param['dispFrom'] = 'dashboard'){
+        $urlRedirect = 'dashboard.php';
+    }
 }
 
 // Get my web app's Firebase configuration
@@ -354,7 +365,7 @@ echo <<<EOF
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <a href="list-news.php" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Danh sách bài viết">
+                    <a href="{$urlRedirect}" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Danh sách bài viết">
                         <i class="fas fa-backward"></i>
                         &nbspTrở lại
                     </a>

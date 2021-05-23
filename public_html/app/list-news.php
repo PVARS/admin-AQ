@@ -362,25 +362,25 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
     if (!empty($f_createby) && (mb_strlen($f_createby) > 0)) {
         $pg_param[] = $f_createby;
         $count++;
-        $pg_sql[] = " AND users.id = $" . $count. "                     ";
+        $pg_sql[] = " AND users.id = $" . $count. "                    ";
     }
 
     if (!empty($f_keyword) && (mb_strlen($f_keyword) > 0)) {
         $pg_param[] = '%' . $f_keyword . '%';
         $count++;
-        $pg_sql[] = " AND news.content ILIKE $" . $count . "   ";
+        $pg_sql[] = " AND news.content ILIKE $" . $count . "          ";
     }
 
     if (!empty($f_dateForm) && (mb_strlen($f_dateForm) > 0)){
         $pg_param[] = $f_dateForm;
         $count++;
-        $pg_sql[] = " AND news.createdate >= $" . $count . "                 ";
+        $pg_sql[] = " AND news.createdate >= $" . $count . "          ";
     }
 
     if (!empty($f_keyword) && (mb_strlen($f_keyword) > 0)) {
         $pg_param[] = '%' . $f_keyword . '%';
         $count++;
-        $pg_sql[] = " AND news.shortdescription ILIKE $" . $count . "   ";
+        $pg_sql[] = " AND news.shortdescription ILIKE $" . $count . " ";
     }
 
     $wheresql = join(' ', $pg_sql);
