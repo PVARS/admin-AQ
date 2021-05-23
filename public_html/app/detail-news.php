@@ -49,11 +49,11 @@ if (!isset($_SESSION['role'])) {
 }
 
 if (isset($param['dispFrom'])){
-    if ($param['dispFrom'] = 'list-categories'){
+    if ($param['dispFrom'] == 'list-categories'){
         $urlRedirect = 'list-categories.php';
     }
 
-    if ($param['dispFrom'] = 'dashboard'){
+    if ($param['dispFrom'] == 'dashboard'){
         $urlRedirect = 'dashboard.php';
     }
 }
@@ -365,7 +365,7 @@ echo <<<EOF
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <a href="{$urlRedirect}" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Danh sách bài viết">
+                    <a href="{$urlRedirect}" class="btn btn-primary float-right mr-3" style="background-color: #17a2b8;" title="Back">
                         <i class="fas fa-backward"></i>
                         &nbspTrở lại
                     </a>
