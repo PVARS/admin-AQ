@@ -231,16 +231,11 @@ $scriptHTML = <<<EOF
         }
 
         /*Check file exist*/
-        if (url_image.value == "" && file_image.files.length == 0){
-            var that = $(this)[0];
-            sweetConfirm(numberMessage, message, function(result) {
-                if (result){
-                    document.getElementById("ismForm").submit(); /*Submit form*/
-                }
-            });
+        if (category.value == "" || title.value == ""){ 
+            document.getElementById("ismForm").submit(); /*Submit form*/
         } 
         /*Check validate data*/
-        else if (category.value == "" || title.value == ""){ 
+        else if (url_image.value == "" && file_image.files.length == 0){
             var that = $(this)[0];
             sweetConfirm(numberMessage, message, function(result) {
                 if (result){
