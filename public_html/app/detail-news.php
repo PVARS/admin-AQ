@@ -508,7 +508,7 @@ function show_category($con, $func_id, $valuecategory)
     $recCnt   = 0;
 
     $sql  = '';
-    $sql .= "SELECT id, category FROM category ";
+    $sql .= "SELECT id, category FROM category WHERE deldate IS NULL";
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));

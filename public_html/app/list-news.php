@@ -465,11 +465,12 @@ function getComboboxCategory($con, $func_id, $f_category)
     $recCnt   = 0;
 
     $sql  = "";
-    $sql .= "SELECT DISTINCT     ";
-    $sql .= "       id,          ";
-    $sql .= "       category     ";
-    $sql .= "  FROM category     ";
-    $sql .= "  ORDER BY id ASC   ";
+    $sql .= "SELECT DISTINCT            ";
+    $sql .= "       id,                 ";
+    $sql .= "       category            ";
+    $sql .= "  FROM category            ";
+    $sql .= " WHERE deldate IS NULL     ";
+    $sql .= "  ORDER BY id ASC          ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
@@ -488,7 +489,7 @@ function getComboboxCategory($con, $func_id, $f_category)
             }
 
             $html .= <<<EOF
-            <option value="{$row['id']}" {$selected}>{$row['category']}</option>
+                <option value="{$row['id']}" {$selected}>{$row['category']}</option>
 EOF;
 
         }
