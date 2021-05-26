@@ -199,11 +199,11 @@ $scriptHTML = <<<EOF
                         
         } else { /*return false*/
             Swal.fire({
-                position: 'top',
+                position: 'center',
                 icon: 'warning',
-                title: 'Chỉ cho phép các tệp jpg/jpeg và png!',
-                showConfirmButton: false,
-                timer: 2000
+                title: 'Chỉ cho phép các tệp .jpg, .jpeg và .png',
+                showConfirmButton: true,
+                timer: 5000
             });
             file.value = "";  // Reset the input so no files are uploaded
             document.getElementById("urlImage").value = '';
