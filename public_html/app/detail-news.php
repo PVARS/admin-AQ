@@ -107,20 +107,19 @@ if (isset($nid) && (mb_strlen($nid) > 0)) {
     $valuethumbnail = getNameFileToLink($valuethumbnail);
 
     $htmlDeleteNew  = <<<EOF
-    <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
-        <input type="hidden" name="nid" value="{$nid}">
-        <input type="hidden" name="mode" value="delete">
-        <input type="hidden" name="registFlg" value="1">
-        <a href="javascript:void(0)" class="btn btn-danger btn_delete" title="Xóa bài">
-            <i class="fas fa-trash"></i> Xóa
-        </a>
-    </form>
+        <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+            <input type="hidden" name="nid" value="{$nid}">
+            <input type="hidden" name="mode" value="delete">
+            <input type="hidden" name="registFlg" value="1">
+            <a href="javascript:void(0)" class="btn btn-danger btn_delete" title="Xóa bài">
+                <i class="fas fa-trash"></i> Xóa
+            </a>
+        </form>
 EOF;
 
 } else {
-    $valuecategory  = $param['category'] ?? '';
+    $valuecategory  = $param['idCategory'] ?? $param['category'] ?? '';
     $valuetitle     = $param['title'] ?? '';
-    $valueRole      = $param['category'] ?? '';
     $valueshortdes  = $param['shortdescription'] ?? '';
     $valueusers     = $userLogin['fullname'];
     $valuecontent   = $param['content'] ?? '';

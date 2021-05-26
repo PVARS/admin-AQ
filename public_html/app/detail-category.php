@@ -92,7 +92,7 @@ if (isset($cid) && (mb_strlen($cid) > 0)) {
     $icon           = $arr_category['icon'];
 
     $htmlDelete     = <<<EOF
-        <a class="btn btn-danger btn-sm btnDelete"><i class="fas fa-trash"></i>&nbsp;Xóa</a>
+        <a class="btn btn-danger btnDelete"><i class="fas fa-trash"></i>&nbsp;Xóa</a>
 EOF;
 } else {
     $category       = $param['f_category'] ?? '';
