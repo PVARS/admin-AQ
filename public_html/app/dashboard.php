@@ -275,7 +275,7 @@ function getCategoryPostDay($con, $funcId){
     $sql .= "    ON category.id = news.category                                                             ";
     $sql .= " WHERE category.deldate IS NULL                                                                ";
     $sql .= "   AND news.deldate IS NULL                                                                    ";
-    $sql .= "   AND news.createdate BETWEEN '" . date('Y/m/d') . "' AND '" . date('Y/m/d') . " 23:59:59'    ";
+    $sql .= "   AND news.createdate BETWEEN '" .getDayNow(). "' AND '".getDatetimeNow()."'                  ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -294,37 +294,37 @@ function getCategoryPostDay($con, $funcId){
             $cntNews       = countPostOfDayByCategory($con, $funcId, $categoryArray[$k]['id']);
 
             $html .= <<< EOF
-            <div class="card">
-                <div class="card-header title-collapse" id="headingOne">
-                    <h5 class="mb-0 col-6">
-                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapse_{$cnt}" aria-expanded="true" aria-controls="collapseOne">
-                            {$categoryArray[$k]['category']}
-                        </button>
-                    </h5>
-                    <h5 class="count-news">
-                        Số lượng - {$cntNews['coutnews']}
-                    </h5>
-                </div>
-
-                <div id="collapse_{$cnt}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion" style="">
-                    <div class="card-body table-responsive p-0">
-                        <table class="table table-hover text-nowrap table-bordered tableNewsByCate">
-                            <thead>
-                                <tr>
-                                    <th class="text-center" style="width: 10%;">STT</th>
-                                    <th class="text-center" style="width: 40%;">Tiêu đề</th>
-                                    <th class="text-center" style="width: 20%;">Người đăng</th>
-                                    <th class="text-center" style="width: 20%;">Thời gian</th>
-                                    <th class="text-center" style="width: 10%;">&nbsp</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {$htmlPostOfDay}
-                            </tbody>
-                        </table>
+                <div class="card">
+                    <div class="card-header title-collapse" id="headingOne">
+                        <h5 class="mb-0 col-6">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapse_{$cnt}" aria-expanded="true" aria-controls="collapseOne">
+                                {$categoryArray[$k]['category']}
+                            </button>
+                        </h5>
+                        <h5 class="count-news">
+                            Số lượng - {$cntNews['coutnews']}
+                        </h5>
+                    </div>
+    
+                    <div id="collapse_{$cnt}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion" style="">
+                        <div class="card-body table-responsive p-0">
+                            <table class="table table-hover text-nowrap table-bordered tableNewsByCate">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 10%;">STT</th>
+                                        <th class="text-center" style="width: 40%;">Tiêu đề</th>
+                                        <th class="text-center" style="width: 20%;">Người đăng</th>
+                                        <th class="text-center" style="width: 20%;">Thời gian</th>
+                                        <th class="text-center" style="width: 10%;">&nbsp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {$htmlPostOfDay}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 EOF;
         }
     } else {

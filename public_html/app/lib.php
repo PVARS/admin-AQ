@@ -217,4 +217,18 @@ function getCssOfMenu($role){
 
     return $navs;
 }
+
+function getDatetimeNow(){
+    $datenow = '';
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+    $datenow = date("Y-m-d H:i:s");
+    return $datenow;
+}
+
+function getDayNow(){
+    $datenow = '';
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+    $datenow = date("Y-m-d");
+    return $datenow;
+}
 ?>

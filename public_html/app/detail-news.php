@@ -106,16 +106,18 @@ if (isset($nid) && (mb_strlen($nid) > 0)) {
     $valuecontent   = $edit_new['content'];
     $valuethumbnail = getNameFileToLink($valuethumbnail);
 
-    $htmlDeleteNew  = <<<EOF
-        <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
-            <input type="hidden" name="nid" value="{$nid}">
-            <input type="hidden" name="mode" value="delete">
-            <input type="hidden" name="registFlg" value="1">
-            <a href="javascript:void(0)" class="btn btn-danger btn_delete" title="Xóa bài">
-                <i class="fas fa-trash"></i> Xóa
-            </a>
-        </form>
+    if ($_SESSION['role'] != 3){
+        $htmlDeleteNew  = <<<EOF
+            <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                <input type="hidden" name="nid" value="{$nid}">
+                <input type="hidden" name="mode" value="delete">
+                <input type="hidden" name="registFlg" value="1">
+                <a href="javascript:void(0)" class="btn btn-danger btn_delete" title="Xóa bài">
+                    <i class="fas fa-trash"></i> Xóa
+                </a>
+            </form>
 EOF;
+    }
 
 } else {
     $valuecategory  = $param['idCategory'] ?? $param['category'] ?? '';
@@ -772,17 +774,6 @@ function getNameFileToLink($link)
     $str  = $link;
     $str  = explode("?alt", $link);
     return $str[0];
-}
-
-/**
- * Get date time now
- * @return string
- */
-function getDatetimeNow(){
-    $datenow = '';
-    date_default_timezone_set('Asia/Ho_Chi_Minh');
-    $datenow = date("Y-m-d H:i:s");
-    return $datenow;
 }
 
 /**

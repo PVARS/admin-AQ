@@ -488,16 +488,5 @@ function deleteCategory($con, $func_id, $param){
     header('location: list-categories.php');
     exit();
 }
-
-/**
- * Get date time now
- * @return string
- */
-function getDatetimeNow(){
-    $datenow = '';
-    date_default_timezone_set('Asia/Ho_Chi_Minh');
-    $datenow = date("Y-m-d H:i:s");
-    return $datenow;
-}
 ?>
 

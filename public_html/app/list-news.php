@@ -408,6 +408,24 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
 
     if ($recCnt != 0) {
         while ($row = pg_fetch_assoc($query)) {
+
+            $htmlBtnDelete = '';
+            if ($_SESSION['role'] != 3){
+                $htmlBtnDelete .= <<< EOF
+                    <td style="text-align: center; width: 5%;">
+                        <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                             <input type="hidden" name="nid" value="{$row['id']}">
+                             <input type="hidden" name="mode" value="delete">
+                             <input type="hidden" name="registFlg" value="1">
+                             <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm btn_delete" title="Xóa bài">
+                                <i class="fas fa-trash"></i>
+                             </a>
+                         </form>
+                    </td>
+EOF;
+
+            }
+
             $count++;
             $html .= <<<EOF
                 <tr>
@@ -423,16 +441,7 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
                             <button href="javascript:void(0)" class="btn btn-block btn-primary btn-sm edit_new" title="Chỉnh sửa"><i class="fas fa-edit"></i></button>
                         </form>
                    </td>
-                   <td style="text-align: center; width: 5%;">
-                      <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
-                         <input type="hidden" name="nid" value="{$row['id']}">
-                         <input type="hidden" name="mode" value="delete">
-                         <input type="hidden" name="registFlg" value="1">
-                         <a href="javascript:void(0)" class="btn btn-block btn-danger btn-sm btn_delete" title="Xóa bài">
-                            <i class="fas fa-trash"></i>
-                         </a>
-                      </form>
-                   </td>
+                   {$htmlBtnDelete}
                 </tr>                                    
 EOF;
 
