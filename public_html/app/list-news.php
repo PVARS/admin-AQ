@@ -386,17 +386,19 @@ function getNewsAndSearch($con, $func_id, $f_title, $f_category, $f_createby, $f
     $wheresql = join(' ', $pg_sql);
 
     $sql  = "";
-    $sql .= "SELECT id,                         ";
-    $sql .= "       title,                      ";
-    $sql .= "       createdate,                 ";
-    $sql .= "       view,                       ";
-    $sql .= "       title,                      ";
-    $sql .= "       createby                    ";
-    $sql .= "FROM   news                        ";
-    $sql .= "WHERE deldate IS NULL              ";
+    $sql .= "SELECT NEWS.ID,                                        ";
+    $sql .= "	NEWS.TITLE,                                         ";
+    $sql .= "	NEWS.CREATEDATE,                                    ";
+    $sql .= "	NEWS.VIEW,                                          ";
+    $sql .= "   NEWS.TITLE,                                         ";
+    $sql .= "	NEWS.CREATEBY                                       ";
+    $sql .= "FROM NEWS                                              ";
+    $sql .= "INNER JOIN USERS ON NEWS.CREATEBY = USERS.LOGINID      ";
+    $sql .= "WHERE NEWS.DELDATE IS NULL                             ";
     $sql .= $wheresql;
-    $sql .= "ORDER BY createdate DESC           ";
+    $sql .= "ORDER BY NEWS.CREATEDATE DESC                          ";
 
+    //echo $sql; die();
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));

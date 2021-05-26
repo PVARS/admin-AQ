@@ -132,6 +132,7 @@ $titleHTML = '';
 $cssHTML = '';
 $scriptHTML = <<<EFO
 <script>
+
 $(function() {
   $('.btn_saveOrUpdate').on('click', function(e) {
         /* SET Message */
@@ -143,12 +144,20 @@ $(function() {
             var numberMessage = 5;
         }
         var form = $(this).closest("form");
-        sweetConfirm(numberMessage, message, function(result) {
-            e.preventDefault();
-            if (result){
-                form.submit();
-            }
-        });
+        var category = document.getElementById("category");
+        var icon = document.getElementById("icon");
+        
+        if (category.value == "" || icon.value == "") {
+            form.submit();
+        } else {
+            sweetConfirm(numberMessage, message, function(result) {
+                e.preventDefault();
+                if (result){
+                    form.submit();
+                }
+            });
+        }
+        
     });
   
     //Button delete
@@ -246,13 +255,13 @@ echo <<<EOF
                                     <div class="card-body">
                                         <label>Tên danh mục</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Tên danh mục" name="f_category" value="{$category}">
+                                            <input type="text" class="form-control" placeholder="Tên danh mục" id="category" name="f_category" value="{$category}">
                                         </div>
                                         
                                         <label>Icon</label>
                                         <small id="emailHelp" class="text-muted" style="color: red!important;">(Truy cập https://fontawesome.com để sử dụng icon cho danh mục)</small>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" placeholder="Icon" name="icon" value='{$icon}'>
+                                            <input type="text" class="form-control" id="icon" placeholder="Icon" name="icon" value='{$icon}'>
                                         </div>
 
                                         <label>Người tạo</label>
