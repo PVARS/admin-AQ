@@ -400,6 +400,9 @@ function getCategoryAndSearch($con, $func_id, $param, $mode){
     $html = '';
     if ($recCnt != 0){
         while ($row = pg_fetch_assoc($query)){
+            $day = date('d-m-Y', strtotime($row['createdate']));
+            $time = date('H:i', strtotime($row['createdate']));
+
             $cnt++;
             $cntNews = countNewsByCategory($con, $func_id, $row['id']);
             $html .= <<< EOF
@@ -407,7 +410,7 @@ function getCategoryAndSearch($con, $func_id, $param, $mode){
                     <td style="text-align: center; width: 5%;">{$cnt}</td>
                     <td style="text-align: center; width: 20%;">{$row['category']}</td>
                     <td style="text-align: center; width: 20%;">{$row['createby']}</td>
-                    <td style="text-align: center; width: 20%;">{$row['createdate']}</td>
+                    <td style="text-align: center; width: 20%;">{$day} - {$time}</td>
                     <td style="text-align: center; width: 20%;">{$cntNews}</td>
                     <td style="text-align: center; width: 5%;">
                         <form action="detail-category.php" method="POST">

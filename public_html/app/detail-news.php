@@ -541,6 +541,7 @@ function show_category($con, $func_id, $valuecategory)
 /**
  * Validation data
  * @param $param
+ * @return array
  */
 function validationDataNews($param){
     $maxStr = 1000;
@@ -583,9 +584,10 @@ function getUserByLoginId($con, $func_id, $uid)
     $pg_param[] = $uid;
 
     $sql  = "";
-    $sql .= "SELECT loginid, fullname   ";
-    $sql .= "FROM users                 ";
-    $sql .= "WHERE loginid = $1         ";
+    $sql .= "SELECT loginid, fullname     ";
+    $sql .= "  FROM users                 ";
+    $sql .= " WHERE loginid = $1          ";
+
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
@@ -748,9 +750,9 @@ function getFirebaseConfig($con, $func_id)
     $recCnt         = 0;
 
     $sql  = "";
-    $sql .= "SELECT FIREBASECONFIG      ";
-    $sql .= "FROM APPS                  ";
-    $sql .= "WHERE ID = 1               ";
+    $sql .= "SELECT FIREBASECONFIG        ";
+    $sql .= "  FROM APPS                  ";
+    $sql .= " WHERE ID = 1                ";
     $query = pg_query($con, $sql);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql);
