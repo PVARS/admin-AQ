@@ -253,12 +253,12 @@ echo <<<EOF
                                         <h3 class="card-title">{$titlePage}</h3>
                                     </div>
                                     <div class="card-body">
-                                        <label>Tên danh mục</label>
+                                        <label>Tên danh mục&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                         <div class="input-group mb-3">
                                             <input type="text" class="form-control" placeholder="Tên danh mục" id="category" name="f_category" value="{$category}">
                                         </div>
                                         
-                                        <label>Icon</label>
+                                        <label>Icon&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                         <small id="emailHelp" class="text-muted" style="color: red!important;">(Truy cập https://fontawesome.com để sử dụng icon cho danh mục)</small>
                                         <div class="input-group mb-3">
                                             <input type="text" class="form-control" id="icon" placeholder="Icon" name="icon" value='{$icon}'>
@@ -357,6 +357,10 @@ function checkValidate($con, $func_id, $param){
         $mes['chk_required'][] = 'Vui lòng nhập tên danh mục.';
     } elseif (mb_strlen($param['f_category']) > 254){
         $mes['chk_max_length'][] = 'Tên danh mục phải bé hơn 254 ký tự.';
+    }
+
+    if (empty($param['icon'])){
+        $mes['chk_required'][] = 'Vui lòng chọn 1 icon cho danh mục này.';
     }
 
     $msg = array_merge(

@@ -205,17 +205,17 @@ echo <<<EOF
                                 <h3 class="card-title">Cài đặt</h3>
                             </div>
                             <div class="card-body">                                                        
-                                <label>Tên email</label>
+                                <label>Tên email&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Tên email" name="fromname" value="{$fromName}">
                                 </div>
                             
-                                <label>Email</label>
+                                <label>Email&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Email" name="username" value="{$username}">
                                 </div>
 
-                                <label>Mật khẩu</label>
+                                <label>Mật khẩu&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="password" class="form-control" id="ipnPassword" placeholder="Mật khẩu" name="password" value="{$password}">
                                     <div class="input-group-append">
@@ -225,17 +225,17 @@ echo <<<EOF
                                     </div>
                                 </div>
 
-                                <label>Charset</label>
+                                <label>Charset&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Charset" name="charset" value="{$charset}">
                                 </div>
                                 
-                                <label>Host</label>
+                                <label>Host&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Host" name="host" value="{$host}">
                                 </div>
                                 
-                                <label>SMTP Auth</label>
+                                <label>SMTP Auth&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <select class="custom-select" name="smtpauth">
                                         <option value="1" {$selected1}>Có</option>
@@ -243,24 +243,24 @@ echo <<<EOF
                                     </select>
                                 </div>
                                 
-                                <label>SMTP Secure</label>
+                                <label>SMTP Secure&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="SMTP Secure" name="smtpsecure" value="{$smtpSecure}">
                                 </div>
                                 
-                                <label>Port</label>
+                                <label>Port&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Port" name="port" value="{$port}">
                                 </div>
                                 
-                                <label>Nội dung email</label>
+                                <label>Nội dung email&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <ul class="text-muted font-italic">
                                     <li>Tên của người nhận phải để mặc định là <b>\$fullname</b>.</li>
                                     <li>Đường dẫn của người nhận phải để mặc định là <b>\$emailLink</b>.</li>
                                 </ul>
                                 <textarea id="summernote" name="body">{$body}</textarea>
                                                                 
-                                <label class="mt-3">Cấu hình Firebase</label>
+                                <label class="mt-3">Cấu hình Firebase&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group">
                                     <textarea name="firebaseConfig" class="form-control" rows="9">{$firebaseConfig}</textarea>
                                 </div>

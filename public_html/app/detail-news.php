@@ -377,12 +377,12 @@ echo <<<EOF
                                 <h3 class="card-title">{$titlePage}</h3>
                             </div>
                             <div class="card-body">
-                                <label>Danh mục</label>
+                                <label>Danh mục&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     {$showcategoryhtml}
                                 </div>
 
-                                <label>Tiêu đề</label>
+                                <label>Tiêu đề&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" name="title" class="form-control" id="title" placeholder="Tiêu đề" value="{$valuetitle}">
                                 </div>

@@ -106,7 +106,7 @@ EOF;
     $valuePassword = $param['password'] ?? '';
 
     $htmlInputPassword .= <<< EOF
-        <label>Mật khẩu</label>
+        <label>Mật khẩu&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
         <div class="input-group mb-3">
             <input type="password" class="form-control" placeholder="Mật khẩu" name="password" value="{$valuePassword}">
         </div>
@@ -264,7 +264,7 @@ echo <<<EOF
                                 <h3 class="card-title">Tạo tài khoản</h3>
                             </div>
                             <div class="card-body">
-                                <label>Họ tên</label>
+                                <label>Họ tên&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Họ tên" name="fullname" value="{$valueFullname}">
                                 </div>
@@ -274,17 +274,17 @@ echo <<<EOF
                                     <input type="text" class="form-control" value="{$_SESSION['fullname']}" readonly name="createBy">
                                 </div>
 
-                                <label>Vai trò</label>
+                                <label>Vai trò&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     {$htmlRoleSelect}
                                 </div>
 
-                                <label>Email</label>
+                                <label>Email&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text"  class="form-control" placeholder="Email" name="email" value="{$valueEmail}">
                                 </div>
 
-                                <label>Tên đăng nhập</label>
+                                <label>Tên đăng nhập&nbsp<span class="badge badge-danger">Bắt buộc</span></label>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Tên đăng nhập" name="loginId" value="{$valueLoginId}">
                                 </div>
