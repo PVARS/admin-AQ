@@ -176,7 +176,7 @@ function checkLoginId($con, $func_id, $loginId, $password){
     $pg_param = array();
     $userInf = array();
     $pg_param[] = $loginId;
-    $pg_param[] = $password;
+    $pg_param[] = md5($password);
     
     $sql = "";
     $sql .="SELECT loginid              ";
@@ -251,7 +251,6 @@ function validateData($loginId, $password, $minStr, $maxLoginId, $maxPassword, $
     
     if (empty($msg)){
         if (!empty($checkLogin)){
-
             if ($checkLogin['status'] == 'f'){
                 header('location: block-page.php');
                 exit();

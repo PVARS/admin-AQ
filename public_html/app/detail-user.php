@@ -9,6 +9,7 @@ $func_id = 'detail_user';
 $message = '';
 $messageClass = '';
 $displayPopupConfirm = 1; //0: show popup, 1: not show
+$strTitle = 'Tạo tài khoản';
 
 session_start();
 
@@ -77,7 +78,9 @@ if ($param){
 }
 
 $htmlBtnDelete = '';
+$htmlInputPassword = '';
 if (isset($uid) && (mb_strlen($uid) > 0)){
+    $strTitle = 'Cập nhật tài khoản';
     //Get user inf
     $userInf = getUserInf($con, $func_id, $uid);
     
@@ -91,7 +94,7 @@ if (isset($uid) && (mb_strlen($uid) > 0)){
         $htmlBtnDelete .= <<< EOF
             <a href="" id="deleteUser" class="btn btn-danger">
                 <i class="fas fa-trash"></i>
-                &nbspXoá tài khoản
+                &nbspXoá
             </a>
 EOF;
     }
@@ -101,6 +104,13 @@ EOF;
     $valueEmail = $param['email'] ?? '';
     $valueLoginId = $param['loginId'] ?? '';
     $valuePassword = $param['password'] ?? '';
+
+    $htmlInputPassword .= <<< EOF
+        <label>Mật khẩu</label>
+        <div class="input-group mb-3">
+            <input type="password" class="form-control" placeholder="Mật khẩu" name="password" value="{$valuePassword}">
+        </div>
+EOF;
 }
 
 //Get role combox
@@ -217,7 +227,7 @@ echo <<<EOF
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1 class="m-0">
-                        <i class="fas fa-folder-plus"></i>&nbspTạo tài khoản</h1>
+                        <i class="fas fa-folder-plus"></i>&nbsp{$strTitle}</h1>
                 </div>
                 <!-- /.col -->
                 <div class="col-sm-6">
@@ -278,11 +288,8 @@ echo <<<EOF
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control" placeholder="Tên đăng nhập" name="loginId" value="{$valueLoginId}">
                                 </div>
-
-                                <label>Mật khẩu</label>
-                                <div class="input-group mb-3">
-                                    <input type="password" class="form-control" placeholder="Mật khẩu" name="password" value="{$valuePassword}">
-                                </div>
+                                
+                                {$htmlInputPassword}
                             </div>
                             <!-- /.card-body -->
                             <div class="card-footer">
@@ -476,7 +483,7 @@ function insertUser($con, $func_id, $param){
     $pg_param[] = $param['email'];
     $pg_param[] = $param['loginId'];
     $pg_param[] = $_SESSION['loginId'];
-    $pg_param[] = $param['password'];
+    $pg_param[] = md5($param['password']);
 
     $sql = "";
     $sql .= "INSERT INTO users(                          ";
@@ -522,7 +529,6 @@ function updatetUser($con, $func_id, $param, $uid){
     $pg_param[] = $param['role'];
     $pg_param[] = $param['email'];
     $pg_param[] = $param['loginId'];
-    $pg_param[] = $param['password'];
     $pg_param[] = $_SESSION['loginId'];
     $pg_param[] = $uid;
     
@@ -533,9 +539,8 @@ function updatetUser($con, $func_id, $param, $uid){
     $sql .= "     , role = $2                                      ";
     $sql .= "     , email = $3                                     ";
     $sql .= "     , loginid = $4                                   ";
-    $sql .= "     , password = $5                                  ";
-    $sql .= "     , updateby = $6                                  ";
-    $sql .= " WHERE id = $7                                        ";
+    $sql .= "     , updateby = $5                                  ";
+    $sql .= " WHERE id = $6                                        ";
     
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -610,7 +615,7 @@ function validateData($con, $func_id, $param){
     
     if (empty($param['email'])){
         $mes['chk_required'][] = 'Vui lòng nhập email.';
-    } elseif (!preg_match('/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/', $param['email'])){
+    } elseif (!preg_match('/^[\w\.\-_]+@[\w\.\-_]+\.\w+$/', $param['email'])){
         $mes['chk_format'][] = 'Email không đúng định dạng. Ví dụ: abc@gmail.com';
     } elseif (mb_strlen($param['email']) > 254 || mb_strlen($param['email']) < 6){
         $mes['chk_max_length'][] = 'Email phải lớn hơn 6 ký tự và bé hơn 254 ký tự.';
@@ -624,14 +629,16 @@ function validateData($con, $func_id, $param){
     elseif (mb_strlen($param['loginId']) > 254 || mb_strlen($param['loginId']) < 6){
         $mes['chk_max_length'][] = 'Tên đăng nhập phải hơn 6 ký tự và bé hơn 254 ký tự.';
     }
-    
-    if (empty($param['password'])){
-        $mes['chk_required'][] = 'Vui lòng nhập mật khẩu.';
-    } elseif (!preg_match('/^(?=.*[0-9A-Za-z])/', $param['password']) || !preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $param['password'])){
-        $mes['chk_format'][] = 'Mật khẩu không đúng định dạng, phải có ít nhất 1 chữ hoặc số và ký tự đặc biệt.';
-    }
-    elseif (mb_strlen($param['password']) > 16 || mb_strlen($param['password']) < 6){
-        $mes['chk_max_length'][] = 'Mật khẩu phải lớn hơn 6 ký tự và bé hơn 16 ký tự.';
+
+    if ($param['mode'] == 'new'){
+        if (empty($param['password'])){
+            $mes['chk_required'][] = 'Vui lòng nhập mật khẩu.';
+        } elseif (!preg_match('/^(?=.*[0-9A-Za-z])/', $param['password']) || !preg_match('/^(?=.*[@#\-_$%^&+=§!\?])/', $param['password'])){
+            $mes['chk_format'][] = 'Mật khẩu không đúng định dạng, phải có ít nhất 1 chữ hoặc số và ký tự đặc biệt.';
+        }
+        elseif (mb_strlen($param['password']) > 254 || mb_strlen($param['password']) < 6){
+            $mes['chk_max_length'][] = 'Mật khẩu phải lớn hơn 6 ký tự và bé hơn 254 ký tự.';
+        }
     }
     
     $msg = array_merge(
