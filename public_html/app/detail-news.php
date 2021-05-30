@@ -56,6 +56,10 @@ if (isset($param['dispFrom'])){
     if ($param['dispFrom'] == 'dashboard'){
         $urlRedirect = 'dashboard.php';
     }
+
+    if ($param['dispFrom'] == 'accept-post'){
+        $urlRedirect = 'accept-post.php';
+    }
 }
 
 // Get my web app's Firebase configuration
