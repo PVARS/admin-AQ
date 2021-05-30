@@ -5,8 +5,7 @@ require_once ('config.php');
 require_once ('lib.php');
 
 //Initialization
-$func_id = 'list_categories';
-$maxStr = 200;
+$func_id = 'accept-post';
 $message = '';
 $messageClass = '';
 $iconClass = '';
@@ -17,9 +16,6 @@ session_start();
 $param = getParam();
 
 $role           = $_SESSION['role'] ?? '';
-$valueCategory  = $param['category'] ?? '';
-$valueDateTo    = $param['dateTo'] ?? '';
-$valueDateFrom  = $param['dateFrom'] ?? '';
 $mode           = $param['mode'] ?? '';
 
 //Connect DB
@@ -46,32 +42,16 @@ if (isset($_SESSION['role']) && $_SESSION['role'] == 3) {
 }
 
 $htmlCategory = '';
-$htmlCategory = getCategoryAndSearch($con, $func_id, $param, $mode);
+$htmlCategory = getNewsByStatusIsFalse($con, $func_id, $param, $mode);
 
 if ($param){
-    if (isset($param['registFlg']) && $param['registFlg'] == 1){
-        $mes = array();
 
-        if (mb_strlen($valueCategory) > $maxStr) {
-            $mes[] = 'Tên danh mục không được nhập quá ' . $maxStr . ' ký tự.';
-        }
-
-        if (!empty($valueDateFrom) && !empty($valueDateTo) && (strtotime($valueDateFrom) > strtotime($valueDateTo))){
-            $mes[] = 'Không thể tìm kiếm với thông tin ' .$valueDateFrom. ' lớn hơn '.$valueDateTo.'';
-        }
-
-        if (empty($mes)){
-            getCategoryAndSearch($con, $func_id, $param, $mode);
-        }
+    if (isset($param['mode']) && $param['mode'] == 'accept-post'){
+        acceptPost($con, $func_id, $param, $_SESSION['loginId']);
     }
 
     if (isset($param['mode']) && $param['mode'] == 'delete'){
-        if (countNewsByCategory($con, $func_id, $param['idCategory']) > 0){
-            $emtyCategory = true;
-            $mes[] = 'Không thể xoá danh mục có chứa bài viết';
-        } else {
-            deleteCategory($con, $func_id, $param);
-        }
+        deleteNew($con, $func_id, $param, $_SESSION['loginId']);
     }
 
     $message = join('<br>', $mes);
@@ -113,35 +93,11 @@ $cssHTML = '';
 $scriptHTML = <<< EOF
 <script>
 $(function() {
-    //Button clear
-    $('#btnClear').on('click', function(e) {
-        e.preventDefault();
-        var message = "Đặt màn hình tìm kiếm về trạng thái ban đầu?";
-        var that = $(this)[0];
-        sweetConfirm(1, message, function(result) {
-            if (result){
-                window.location.href = that.href;
-            }
-        });
-    });
-    
-    //Button Add news
-    $('.btnAddNews').on('click', function(e) {
-        e.preventDefault();
-        var message = "Đi đến màn hình thêm bài viết cho danh mục này. Bạn chắc chứ?";
-        var form = $(this).closest("form");
-        sweetConfirm(5, message, function(result) {
-            if (result){
-                $('.mode').val('new');
-                form.submit();
-            }
-        });
-    });
     
     //Button Edit
     $('.btnEdit').on('click', function(e) {
         e.preventDefault();
-        var message = "Đi đến màn hình chỉnh sửa thông tin. Bạn có chắc chắn?";
+        var message = "Đi đến màn hình chỉnh sửa bài viết. Bạn có chắc chắn?";
         var form = $(this).closest("form");
         sweetConfirm(3, message, function(result) {
             if (result){
@@ -151,10 +107,23 @@ $(function() {
         });
     });
     
+    //Button Add news
+    $('.btnAcceptPost').on('click', function(e) {
+        e.preventDefault();
+        var message = "Bài viết này sẽ được duyệt và hiển thị trên trang chủ. Bạn chắc chứ?";
+        var form = $(this).closest("form");
+        sweetConfirm(6, message, function(result) {
+            if (result){
+                $('.mode').val('accept-post');
+                form.submit();
+            }
+        });
+    });
+    
     //Button Delete
     $('.btnDelete').on('click', function(e) {
         e.preventDefault();
-        var message = "Danh mục này sẽ bị xoá. Bạn có chắc chắn?";
+        var message = "Bài viết này sẽ bị xoá. Bạn có chắc chắn?";
         var form = $(this).closest("form");
         sweetConfirm(1, message, function(result) {
             if (result){
@@ -162,6 +131,15 @@ $(function() {
                 form.submit();
             }
         });
+    });
+    
+    // Paginate
+    $(".table").paginate({
+        rows: 6,           // Set number of rows per page. Default: 5
+        position: "top",   // Set position of pager. Default: "bottom"
+        jqueryui: false,   // Allows using jQueryUI theme for pager buttons. Default: false
+        showIfLess: false, // Don't show pager if table has only one page. Default: true
+        numOfPages: 5
     });
      
 })
@@ -207,7 +185,7 @@ echo <<<EOF
             <!-- Content Header (Page header) -->
             <div class="content-header">
                 <div class="container-fluid">
-                    <div class="row mb-2">
+                    <div class="row row mb-2">
                         <div class="col-sm-6">
                             <h1 class="m-0">
                                 <i class="fas fa-check-square"></i>&nbspBài viết chờ phê duyệt</h1>
@@ -230,14 +208,15 @@ echo <<<EOF
             <!-- Main content -->
             <section class="content">
                 <div class="container-fluid">
+                    {$messageHtml}
                     <div class="row">
-                        <div class="card-body table-responsive">
+                        <div class="card-body table-responsive pt-0">
                             <table class="table table-hover text-nowrap table-bordered" style="background-color: #FFFFFF;">
                                 <thead style="background-color: #17A2B8;">
                                     <tr>
                                         <th style="text-align: center; width: 5%;" class="text-th">STT</th>
                                         <th style="text-align: center; width: 20%;" class="text-th">Tiêu đề</th>
-                                        <th style="text-align: center; width: 20%;" class="text-th">Mô tả ngắn</th>
+                                        <th style="text-align: center; width: 20%;" class="text-th">Danh mục</th>
                                         <th style="text-align: center; width: 20%;" class="text-th">Người đăng</th>
                                         <th style="text-align: center; width: 20%;" class="text-th">Ngày tạo</th>
                                         <th colspan="3" class="text-center" style="width: 15px"></th>
@@ -268,79 +247,30 @@ echo <<<EOF
 EOF;
 
 /**
- * Count news by category
- * @param $con
- * @param $func_id
- * @param $idCate
- * @return mixed
- */
-function countNewsByCategory($con, $func_id, $idCate){
-    $recCnt = 0;
-    $cntNews = array();
-    $pg_param = array();
-    $pg_param[] = $idCate;
-
-    $sql = "";
-    $sql .= "SELECT COUNT(*)             ";
-    $sql .= "  FROM news                 ";
-    $sql .= " WHERE deldate IS NULL      ";
-    $sql .= "   AND category = $1        ";
-
-    $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query){
-        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
-    } else {
-        $recCnt = pg_num_rows($query);
-    }
-
-    if ($recCnt != 0){
-        $cntNews = pg_fetch_assoc($query);
-    }
-    return $cntNews['count'];
-}
-
-/**
  * Search function
  * @param $con
  * @param $func_id
  * @param $param
  * @return string
  */
-function getCategoryAndSearch($con, $func_id, $param, $mode){
+function getNewsByStatusIsFalse($con, $func_id, $param, $mode){
     $pg_param = array();
     $pg_sql = array();
     $recCnt = 0;
     $cnt = 0;
 
-    if (!empty($param['category']) && (mb_strlen($param['category']) > 0)){
-        $pg_param[] = '%'.$param['category'].'%';
-        $cnt++;
-        $pg_sql[] = " AND category ILIKE $".$cnt."             ";
-    }
-
-    if (!empty($param['dateFrom']) && (mb_strlen($param['dateFrom']) > 0)){
-        $pg_param[] = $param['dateFrom'];
-        $cnt++;
-        $pg_sql[] = " AND createDate >= $".$cnt."              ";
-    }
-
-    if (!empty($param['dateTo']) && (mb_strlen($param['dateTo']) > 0)){
-        $pg_param[] = $param['dateTo'];
-        $cnt++;
-        $pg_sql[] = " AND createDate <= $".$cnt."              ";
-    }
-
-    $wheresql = join(' ', $pg_sql);
-
     $sql = "";
-    $sql .= "SELECT id                  ";
-    $sql .= "     , category            ";
-    $sql .= "     , createby            ";
-    $sql .= "     , createdate          ";
-    $sql .= "  FROM category            ";
-    $sql .= " WHERE deldate IS NULL     ";
-    $sql .= $wheresql;
-    $sql .= " ORDER BY id ASC           ";
+    $sql .= "SELECT                                                 ";
+    $sql .= "	    NEWS.ID,                                        ";
+    $sql .= "	    NEWS.TITLE,                                     ";
+    $sql .= " 	    CATEGORY.CATEGORY,                              ";
+    $sql .= " 	    NEWS.CREATEBY,                                  ";
+    $sql .= "       NEWS.CREATEDATE                                 ";
+    $sql .= "  FROM NEWS                                            ";
+    $sql .= " INNER JOIN CATEGORY ON NEWS.CATEGORY = CATEGORY.ID    ";
+    $sql .= " WHERE NEWS.DELDATE IS NULL                            ";
+    $sql .= "   AND NEWS.STATUS IS FALSE                            ";
+    $sql .= " ORDER BY CREATEDATE DESC                              ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query){
@@ -352,39 +282,36 @@ function getCategoryAndSearch($con, $func_id, $param, $mode){
     $html = '';
     if ($recCnt != 0){
         while ($row = pg_fetch_assoc($query)){
-            $day = date('d-m-Y', strtotime($row['createdate']));
-            $time = date('H:i', strtotime($row['createdate']));
+            $dateFormat = date('d/m/Y H:i', strtotime($row['createdate']));
 
             $cnt++;
-            $cntNews = countNewsByCategory($con, $func_id, $row['id']);
             $html .= <<< EOF
                 <tr>
                     <td style="text-align: center; width: 5%;">{$cnt}</td>
-                    <td style="width: 20%;">{$row['category']}</td>
-                    <td style="width: 20%;">{$row['createby']}</td>
-                    <td style="text-align: center; width: 20%;">{$day} - {$time}</td>
-                    <td style="text-align: center; width: 20%;">{$cntNews}</td>
+                    <td style="width: 20%;">{$row['title']}</td>
+                    <td style="width: 20%;text-align: center;">{$row['category']}</td>
+                    <td style="text-align: center; width: 20%;">{$row['createby']}</td>
+                    <td style="text-align: center; width: 20%;">{$dateFormat}</td>
                     <td style="text-align: center; width: 5%;">
-                        <form action="detail-category.php" method="POST">
-                            <input type="hidden" name="cid" value="{$row['id']}">
-                            <input type="hidden" name="dispFrom" value="list-categories">
+                        <form action="detail-news.php" method="POST">
+                            <input type="hidden" name="nid" value="{$row['id']}">
+                            <input type="hidden" name="dispFrom" value="accept-post">
                             <input type="hidden" name="mode" class="mode" value="{$mode}">
                             <a class="btn btn-primary btn-sm btnEdit"><i class="fas fa-edit"></i></a>
                         </form>
                     </td>
                     <td style="text-align: center; width: 5%;">
-                        <form action="detail-news.php" method="POST">
-                            <input type="hidden" name="idCategory" value="{$row['id']}">
+                        <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                            <input type="hidden" name="idNew" value="{$row['id']}">
                             <input type="hidden" name="mode" class="mode" value="{$mode}">
-                            <input type="hidden" name="dispFrom" value="list-categories">
-                            <a class="btn btn-success btn-sm btnAddNews">
+                            <a class="btn btn-success btn-sm btnAcceptPost">
                                 <i class="fas fa-check"></i>
                             </a>
                         </form>
                     </td>
                     <td style="text-align: center; width: 5%;">
                         <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
-                            <input type="hidden" name="idCategory" value="{$row['id']}">
+                            <input type="hidden" name="idNew" value="{$row['id']}">
                             <input type="hidden" name="mode" class="mode" value="{$mode}">
                             <a class="btn btn-danger btn-sm btnDelete"><i class="fas fa-trash"></i></a>
                         </form>
@@ -402,7 +329,7 @@ EOF;
                         Không có dữ liệu
                     </h3>
                 </td>
-            </tr>
+            </tr
 EOF;
 
     }
@@ -410,35 +337,72 @@ EOF;
 }
 
 /**
- * Delete category
+ * Delete New
  * @param $con
  * @param $func_id
- * @param $param
+ * @param $nid
  */
-function deleteCategory($con, $func_id, $param){
-    $pg_param = array();
-    $pg_param[] = $_SESSION['loginId'];
-    $pg_param[] = $param['idCategory'];
+function deleteNew($con, $func_id, $param, $loginId)
+{
+
+    $pg_param   = array();
     $pg_param[] = getDatetimeNow();
+    $pg_param[] = $loginId;
+    $pg_param[] = $param['idNew'];
 
     $sql  = "";
-    $sql .= "UPDATE category SET                                ";
-    $sql .= "       deldate = $3                                ";
-    $sql .= "     , updatedate = $3                             ";
-    $sql .= "     , updateby = $1                               ";
-    $sql .= " WHERE id = $2                                     ";
+    $sql .= "UPDATE news                     ";
+    $sql .= "SET    deldate = $1,            ";
+    $sql .= "       updateby = $2,           ";
+    $sql .= "       updatedate = $1          ";
+    $sql .= "WHERE  id = $3                  ";
 
     $query = pg_query_params($con, $sql, $pg_param);
-    if (!$query){
+    if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['message'] = 'Danh mục đã được xoá thành công';
+    $_SESSION['message'] = 'Bài viết đã được xoá thành công';
     $_SESSION['messageClass'] = 'alert-success';
     $_SESSION['iconClass'] = 'fas fa-check';
 
-    header('location: list-categories.php');
+    header("location: accept-post.php");
     exit();
+
+}
+
+/**
+ * Delete New
+ * @param $con
+ * @param $func_id
+ * @param $nid
+ */
+function acceptPost($con, $func_id, $param, $loginId)
+{
+
+    $pg_param   = array();
+    $pg_param[] = $loginId;
+    $pg_param[] = 1;
+    $pg_param[] = $param['idNew'];
+
+    $sql  = "";
+    $sql .= "UPDATE news                    ";
+    $sql .= "SET    acceptby = $1,          ";
+    $sql .= "       status = $2             ";
+    $sql .= "WHERE  id = $3                 ";
+
+    $query = pg_query_params($con, $sql, $pg_param);
+    if (!$query) {
+        systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
+    }
+
+    $_SESSION['message'] = 'Bài viết đã được duyệt thành công';
+    $_SESSION['messageClass'] = 'alert-success';
+    $_SESSION['iconClass'] = 'fas fa-check';
+
+    header("location: accept-post.php");
+    exit();
+
 }
 ?>
 
