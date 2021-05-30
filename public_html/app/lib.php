@@ -222,6 +222,10 @@ function getCssOfMenu($role){
     return $navs;
 }
 
+/**
+ * Get Datetime mpw
+ * @return false|string
+ */
 function getDatetimeNow(){
     $datenow = '';
     date_default_timezone_set('Asia/Ho_Chi_Minh');
@@ -229,10 +233,45 @@ function getDatetimeNow(){
     return $datenow;
 }
 
+/**
+ * Get Day now
+ * @return false|string
+ */
 function getDayNow(){
     $datenow = '';
     date_default_timezone_set('Asia/Ho_Chi_Minh');
     $datenow = date("Y-m-d");
     return $datenow;
 }
+
+/**
+ * Get Count Accept Post in News
+ * @param $db
+ * @return mixed
+ */
+function getCountAcceptPost($db){
+    $pg_param = array();
+    $arr_news = array();
+    $recCnt = 0;
+
+    $sql = "";
+    $sql .= "SELECT COUNT(ID) count                 ";
+    $sql .= "  FROM NEWS                            ";
+    $sql .= " WHERE NEWS.DELDATE IS NULL            ";
+    $sql .= "   AND NEWS.STATUS IS FALSE            ";
+
+    $query = pg_query_params($db, $sql, $pg_param);
+    if (!$query){
+        systemError('systemError(getDelDate) SQL Error：',$sql.print_r($pg_param, TRUE));
+    } else {
+        $recCnt = pg_num_rows($query);
+    }
+
+    if ($recCnt != 0) {
+        $arr_news = pg_fetch_assoc($query);
+    }
+
+    return $arr_news['count'];
+}
+
 ?>

@@ -1,8 +1,9 @@
 <?php
 // Get Css hover
-$navs          = getCssOfMenu('system') ?? array();
-$navLinkActive = $navs['navLinkActive'] ?? '';
-$navLinkOnlick = $navs['navLinkOnlick'] ?? 'info';
+$navs            = getCssOfMenu('system') ?? array();
+$navLinkActive   = $navs['navLinkActive'] ?? '';
+$navLinkOnlick   = $navs['navLinkOnlick'] ?? 'info';
+$countAcceptPost = getCountAcceptPost($con);
 
 //Output HTML
 print <<<EOF
@@ -108,7 +109,7 @@ print <<<EOF
                     <i class="fas fa-check-square nav-icon"></i>
                     <p>
                         Phê duyệt bài viết
-                        <span class="right badge badge-danger">99</span>
+                        <span class="right badge badge-danger">{$countAcceptPost}</span>
                     </p>
                 </a>
             </li>
