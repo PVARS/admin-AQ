@@ -54,11 +54,6 @@ if ($param){
         deleteNew($con, $func_id, $param, $_SESSION['loginId']);
     }
 
-    $message = join('<br>', $mes);
-    if (strlen($message)) {
-        $messageClass = 'alert-danger';
-        $iconClass = 'fas fa-ban';
-    }
 }
 
 //Message HTML
@@ -316,7 +311,7 @@ function getNewsByStatusIsFalse($con, $func_id, $param, $mode){
                             <a class="btn btn-danger btn-sm btnDelete"><i class="fas fa-trash"></i></a>
                         </form>
                     </td>
-                </tr>
+                </tr> 
 EOF;
 
         }
@@ -329,7 +324,7 @@ EOF;
                         Không có dữ liệu
                     </h3>
                 </td>
-            </tr
+            </tr>
 EOF;
 
     }

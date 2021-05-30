@@ -86,10 +86,16 @@ if ($param) {
         }
 
         if (empty($mes)) {
+            $status = 0;
+            if ($_SESSION['role'] == 1 || $_SESSION['role'] == 2)
+            {
+                $status = 1;
+            }
+
             if (isset($nid) && (mb_strlen($nid) > 0)) { /*Update News*/
-                updateNews($con, $func_id, $param, $userLogin['loginid']);
+                updateNews($con, $func_id, $param, $userLogin['loginid'], $status);
             } else {/*Insert News*/
-                insertNews($con, $func_id, $param, $userLogin['loginid']);
+                insertNews($con, $func_id, $param, $userLogin['loginid'], $status);
             }
         }
     }
@@ -608,7 +614,7 @@ function getUserByLoginId($con, $func_id, $uid)
  * @param $param
  * @param $idUser
  */
-function insertNews($con, $func_id, $param, $idUser)
+function insertNews($con, $func_id, $param, $idUser, $status)
 {
     $pg_param   = array();
     $pg_param[] = $param['category'];
@@ -620,6 +626,7 @@ function insertNews($con, $func_id, $param, $idUser)
     $pg_param[] = $idUser;
     $pg_param[] = 0;
     $pg_param[] = convert_urlkey($param['title']);
+    $pg_param[] = $status;
 
     $sql  = "";
     $sql .= "INSERT INTO news(              ";
@@ -631,7 +638,8 @@ function insertNews($con, $func_id, $param, $idUser)
     $sql .= "          , createdate         ";
     $sql .= "          , createby           ";
     $sql .= "          , view               ";
-    $sql .= "          , urlkey)            ";
+    $sql .= "          , urlkey             ";
+    $sql .= "          , status)            ";
     $sql .= "  VALUES(                      ";
     $sql .= "            $1                 ";
     $sql .= "          , $2                 ";
@@ -642,6 +650,7 @@ function insertNews($con, $func_id, $param, $idUser)
     $sql .= "          , $7                 ";
     $sql .= "          , $8                 ";
     $sql .= "          , $9                 ";
+    $sql .= "          , $10                ";
     $sql .= "  )                            ";
 
     $query = pg_query_params($con, $sql, $pg_param);
@@ -649,7 +658,15 @@ function insertNews($con, $func_id, $param, $idUser)
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['message'] = 'Bài viết đã được thêm thành công';
+    if ($status == 0)
+    {
+        $_SESSION['message'] = 'Bài viết thêm thành công và đang được chờ duyệt';
+    }
+    else
+    {
+        $_SESSION['message'] = 'Bài viết đã được thêm thành công';
+    }
+
     $_SESSION['messageClass'] = 'alert-success';
     $_SESSION['iconClass'] = 'fas fa-check';
 
@@ -665,7 +682,7 @@ function insertNews($con, $func_id, $param, $idUser)
  * @param $param
  * @param $idUser
  */
-function updateNews($con, $func_id, $param, $idUser)
+function updateNews($con, $func_id, $param, $idUser, $status)
 {
     $pg_param   = array();
     $pg_param[] = $param['category'];
@@ -676,6 +693,7 @@ function updateNews($con, $func_id, $param, $idUser)
     $pg_param[] = $idUser;
     $pg_param[] = getDatetimeNow();
     $pg_param[] = convert_urlkey($param['title']);
+    $pg_param[] = $status;
     $pg_param[] = $param['nid'];
 
     $sql  = "";
@@ -688,14 +706,23 @@ function updateNews($con, $func_id, $param, $idUser)
     $sql .= "       updateby = $6,           ";
     $sql .= "       updatedate = $7,         ";
     $sql .= "       urlkey = $8              ";
-    $sql .= " WHERE id = $9                  ";
+    $sql .= "       urlkey = $9              ";
+    $sql .= " WHERE id = $10                 ";
 
     $query = pg_query_params($con, $sql, $pg_param);
     if (!$query) {
         systemError('systemError(' . $func_id . ') SQL Error：', $sql . print_r($pg_param, true));
     }
 
-    $_SESSION['message'] = 'Bài viết đã được cập nhật thành công';
+    if ($status == 0)
+    {
+        $_SESSION['message'] = 'Bài viết thêm thành công và đang được chờ duyệt';
+    }
+    else
+    {
+        $_SESSION['message'] = 'Bài viết đã được thêm thành công';
+    }
+
     $_SESSION['messageClass'] = 'alert-success';
     $_SESSION['iconClass'] = 'fas fa-check';
 
