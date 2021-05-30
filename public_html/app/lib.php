@@ -179,6 +179,10 @@ function getCssOfMenu($role){
     else if (strpos($requestURI, 'setting-system') !== false) {
         $navs['navLinkActive'] = 'nav-link-setting-system';
     }
+    // Is Accept post click?
+    else if (strpos($requestURI, 'accept-post') !== false) {
+        $navs['navLinkActive'] = 'nav-link-accept-post';
+    }
     // Is New click? Click on Detail or List
     else if (strpos($requestURI, 'new') !== false) {
         $navs['navLinkOnlick'] = 'nav-link-new';

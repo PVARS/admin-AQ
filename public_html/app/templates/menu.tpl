@@ -81,6 +81,15 @@ print <<<EOF
                 </ul>
             </li>
         </ul>
+        <li class="nav-item">
+            <a href="accept-post.php" class="nav-link nav-link-accept-post">
+                <i class="fas fa-check-square nav-icon"></i>
+                <p>
+                    Phê duyệt bài viết
+                    <span class="right badge badge-danger">99</span>
+                </p>
+            </a>
+        </li>
         <a href="logout.php" style="position: absolute; bottom: 0; margin-bottom: 20px">
             <i class="fas fa-sign-out-alt nav-icon" style="font-size: 20px"></i>&nbsp
             Đăng xuất
