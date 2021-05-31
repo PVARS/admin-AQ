@@ -242,7 +242,7 @@ $scriptHTML = <<<EOF
         }
 
         /*Check file exist*/
-        if (category.value == "" || title.value == ""){ 
+        if (category.value == 0  || title.value == ""){ 
             document.getElementById("ismForm").submit(); /*Submit form*/
         } 
         /*Check validate data*/

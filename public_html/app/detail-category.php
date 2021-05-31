@@ -11,6 +11,7 @@ $messageClass = '';
 $htmlDelete = '';
 $titlePage      = "Thêm danh mục";
 $titleButton    = "Lưu";
+$displayPopupConfirm = 1; //0: show popup, 1: not show
 
 session_start();
 
@@ -21,6 +22,7 @@ $cid        = $param['cid'] ?? '';
 
 $role       = $_SESSION['role'] ?? '';
 $loginid    = $_SESSION['loginId'] ?? '';
+$saveFlag = $param['saveFlag'] ?? '';
 
 //Connect DB
 $con = openDB();
@@ -67,15 +69,26 @@ if ($param){
         if (strlen($message)) {
             $messageClass = 'alert-danger';
             $iconClass = 'fas fa-ban';
+        } else {
+            $displayPopupConfirm = 0;
         }
 
-        if (empty($mes)) {
-            if ($mode == 'new'){ // insert
-                insertCategory($con, $func_id, $param, $loginid);
-            } else if ($mode == 'update'){ // update
-                updateCategory($con, $func_id, $param, $loginid);
+        if (empty($mes))
+        {
+            if (empty($param['createBy']))
+            {
+                $mes[] = 'Người tạo không tồn tại';
             }
-
+                else if ($saveFlag == 1)
+            {
+                if ($mode == 'new')           // insert
+                {
+                    insertCategory($con, $func_id, $param, $loginid);
+                } else if ($mode == 'update') // update
+                {
+                    updateCategory($con, $func_id, $param, $loginid);
+                }
+            }
         }
 
     }
@@ -87,9 +100,9 @@ if (isset($cid) && (mb_strlen($cid) > 0)) {
     $mode           = "update";
 
     $arr_category   = getCategoryById($con, $func_id, $cid);
-    $category       = $arr_category['category'];
-    $fullname       = $arr_category['fullname'];
-    $icon           = $arr_category['icon'];
+    $category       = $param['f_category'] ?? $arr_category['category'];
+    $fullname       = $param['fullname'] ?? $arr_category['fullname'];
+    $icon           = $param['icon'] ?? $arr_category['icon'];
 
     $htmlDelete     = <<<EOF
         <a class="btn btn-danger btnDelete"><i class="fas fa-trash"></i>&nbsp;Xóa</a>
@@ -134,31 +147,27 @@ $scriptHTML = <<<EFO
 <script>
 
 $(function() {
-  $('.btn_saveOrUpdate').on('click', function(e) {
+    if ({$displayPopupConfirm} == 0){
         /* SET Message */
         if ('{$mode}' == 'update'){
             var message = "Bạn có muốn chỉnh sửa danh mục này?";
-            var numberMessage = 3;
+            type = 3;
         } else {
             var message = "Bạn có muốn thêm mới danh mục này?";
-            var numberMessage = 5;
-        }
-        var form = $(this).closest("form");
-        var category = document.getElementById("category");
-        var icon = document.getElementById("icon");
-        
-        if (category.value == "" || icon.value == "") {
-            form.submit();
-        } else {
-            sweetConfirm(numberMessage, message, function(result) {
-                e.preventDefault();
-                if (result){
-                    form.submit();
-                }
-            });
+            type = 5;
         }
         
-    });
+        sweetConfirm(type, message, function(result) {
+            if (result){
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'saveFlag',
+                    value: 1
+                }).appendTo('form#form-edit');
+                $('#form-edit').submit();
+            }
+        });
+    }
   
     //Button delete
     $('.btnDelete').on('click', function(e) {
@@ -247,7 +256,7 @@ echo <<<EOF
                     <div class="row">
                         <div class="card-body">
                             {$messageHtml}
-                            <form action="{$_SERVER['SCRIPT_NAME']}" method="POST">
+                            <form action="{$_SERVER['SCRIPT_NAME']}" id="form-edit" method="POST">
                                 <div class="card card-info">
                                     <div class="card-header">
                                         <h3 class="card-title">{$titlePage}</h3>
@@ -266,7 +275,7 @@ echo <<<EOF
 
                                         <label>Người tạo</label>
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" value="{$fullname}" readonly>
+                                            <input type="text" class="form-control" name="createBy" value="{$fullname}" readonly>
                                         </div>
                                     </div>
                                     <!-- /.card-body -->
@@ -274,10 +283,10 @@ echo <<<EOF
                                         <input type="hidden" class="mode" name="mode" value="{$mode}">
                                         <input type="hidden" name="cid" value="{$cid}">
                                         <input type="hidden" name="registFlg" value="1">
-                                        <a class="btn btn-primary float-right btn_saveOrUpdate" style="background-color: #17a2b8;">
+                                        <button type="submit" class="btn btn-primary float-right" id="saveUser" style="background-color: #17a2b8;">
                                             <i class="fas fa-save"></i>
                                             &nbsp{$titleButton}
-                                        </a>
+                                        </button>
                                         {$htmlDelete}
                                     </div>
                                 </div>

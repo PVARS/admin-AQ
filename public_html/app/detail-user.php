@@ -151,22 +151,22 @@ $scriptHTML = <<< EOF
 $(function() {
     if ({$displayPopupConfirm} == 0){
         if ('{$mode}' == 'new'){
-                var message = "Thông tin tài khoản sẽ được tạo. Bạn chắc chứ?";
-                type = 5;
-            } else {
-                var message = "Thông tin tài khoản sẽ được cập nhật. Bạn chắc chứ?";
-                type = 3;
+            var message = "Thông tin tài khoản sẽ được tạo. Bạn chắc chứ?";
+            type = 5;
+        } else {
+            var message = "Thông tin tài khoản sẽ được cập nhật. Bạn chắc chứ?";
+            type = 3;
+        }
+        sweetConfirm(type, message, function(result) {
+            if (result){
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'saveFlag',
+                    value: 1
+                }).appendTo('form#form-edit');
+                $('#form-edit').submit();
             }
-            sweetConfirm(type, message, function(result) {
-                if (result){
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'saveFlag',
-                        value: 1
-                    }).appendTo('form#form-edit');
-                    $('#form-edit').submit();
-                }
-            });   
+        });   
     }
     
     //Button delete
