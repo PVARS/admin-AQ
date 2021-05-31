@@ -195,7 +195,7 @@ $scriptHTML = <<<EOF
             var html =
                 '<div class="loading-overlay"></div>' +
                 '<div class="loading-overlay-image-container">' +
-                    '<img src="dist/img/loading.gif" class="loading-overlay-img"/>' +
+                    '<img src="dist/img/btn-loading.gif" class="loading-overlay-img"/>' +
                 '</div>';
     
             // append our html to the DOM body
@@ -498,7 +498,7 @@ echo <<<EOF
     </div>
     <div class="loading-overlay"></div>
     <div class="loading-overlay-image-container">
-        <img src="dist/img/loading.gif" class="loading-overlay-img"/>
+        <img src="dist/img/btn-loading.gif" class="loading-overlay-img"/>
     </div>
 </body>
 </html>
