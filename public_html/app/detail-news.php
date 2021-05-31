@@ -183,6 +183,41 @@ $scriptHTML = <<<EOF
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.analytics();
+    
+    /**
+     * Handle loading overlays
+     */
+    var loader = {
+        /**
+         * Initialize our loading overlays for use
+         */
+        initialize : function () {
+            var html =
+                '<div class="loading-overlay"></div>' +
+                '<div class="loading-overlay-image-container">' +
+                    '<img src="dist/img/loading.gif" class="loading-overlay-img"/>' +
+                '</div>';
+    
+            // append our html to the DOM body
+            $( 'body' ).append( html );
+        },
+    
+        /**
+         * Show the loading overlay
+         */
+        showLoader : function () {
+            jQuery( '.loading-overlay' ).show();
+            jQuery( '.loading-overlay-image-container' ).show();
+        },
+    
+        /**
+         * Hide the loading overlay
+         */
+        hideLoader : function () {
+            jQuery( '.loading-overlay' ).hide();
+            jQuery( '.loading-overlay-image-container' ).hide();
+        }
+    }
         
     /*Check file user input*/
     function validateFileType(){
@@ -272,6 +307,9 @@ $scriptHTML = <<<EOF
                     document.getElementById("submit_saveOrUpdate").style.display = "none";
                     document.getElementById("submit_disable").style.display = "block";
                     
+                    // Show modal loading
+                    loader.showLoader();
+
                     /* Upload file to Firebase */
                     const ref = firebase.storage().ref();
                     const file = document.querySelector("#thumbnail").files[0];
@@ -457,6 +495,10 @@ include($TEMP_APP_FOOTER_PATH);
 //Meta JS
 include($TEMP_APP_METAJS_PATH);
 echo <<<EOF
+    </div>
+    <div class="loading-overlay"></div>
+    <div class="loading-overlay-image-container">
+        <img src="dist/img/loading.gif" class="loading-overlay-img"/>
     </div>
 </body>
 </html>
