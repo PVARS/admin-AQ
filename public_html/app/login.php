@@ -176,7 +176,6 @@ function checkLoginId($con, $func_id, $loginId, $password){
     $pg_param = array();
     $userInf = array();
     $pg_param[] = $loginId;
-    $pg_param[] = md5($password);
     
     $sql = "";
     $sql .="SELECT loginid              ";
@@ -186,7 +185,6 @@ function checkLoginId($con, $func_id, $loginId, $password){
     $sql .="     , status               ";
     $sql .="  FROM users                ";
     $sql .=" WHERE loginid = $1         ";
-    $sql .="   AND password  = $2       ";
     $sql .="   AND deldate IS NULL      ";
     
     $query = pg_query_params($con, $sql, $pg_param);
@@ -195,13 +193,23 @@ function checkLoginId($con, $func_id, $loginId, $password){
     } else {
         $recCnt = pg_num_rows($query);
     }
-    
+
     if ($recCnt != 0){
-        $userInf = pg_fetch_assoc($query);
-        $_SESSION['loginId'] = $userInf['loginid'];
-        $_SESSION['role'] = $userInf['role'];
-        $_SESSION['fullname'] = $userInf['fullname'];
+        $userInf        = pg_fetch_assoc($query);
+        $password_user  = $userInf['password'];
+        $password_md5   = md5($password);
+
+        // Check password
+        if (password_verify($password_md5, $password_user)) {
+            $_SESSION['loginId'] = $userInf['loginid'];
+            $_SESSION['role'] = $userInf['role'];
+            $_SESSION['fullname'] = $userInf['fullname'];
+        } else {
+            $userInf = null;
+        }
+
     }
+
     return $userInf;
 }
 

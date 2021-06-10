@@ -483,7 +483,7 @@ function insertUser($con, $func_id, $param){
     $pg_param[] = $param['email'];
     $pg_param[] = $param['loginId'];
     $pg_param[] = $_SESSION['loginId'];
-    $pg_param[] = md5($param['password']);
+    $pg_param[] = password_hash(md5($param['password']), PASSWORD_BCRYPT);
 
     $sql = "";
     $sql .= "INSERT INTO users(                          ";

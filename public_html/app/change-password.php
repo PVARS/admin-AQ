@@ -253,7 +253,7 @@ function updatePassword($con, $func_id, $uid, $password)
     $pg_param = array();
     $pg_param[] = $uid;
     $pg_param[] = null; // set token is empty in params
-    $pg_param[] = md5($password);
+    $pg_param[] = password_hash(md5($password), PASSWORD_BCRYPT);
 
     $sql = "";
     $sql .= "UPDATE users                          ";
